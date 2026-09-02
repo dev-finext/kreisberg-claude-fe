@@ -464,6 +464,12 @@ export const useBoqStore = defineStore("boq", {
         return copy;
       };
       const copy = cloneTree(src, src.parentId);
+      // insert the copy directly beneath the original (spec: "{name} - העתק 1" מתחת למקור)
+      const all = this.db.db.structureElements;
+      const copyIdx = all.findIndex((e) => e.id === copy.id);
+      const [moved] = all.splice(copyIdx, 1);
+      const srcIdx = all.findIndex((e) => e.id === src.id);
+      all.splice(srcIdx + 1, 0, moved);
       this.db.persist();
       return copy;
     },

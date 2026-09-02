@@ -388,6 +388,11 @@ const sealing = realItems.filter((i) => i.code.startsWith("05.") && i.type === "
 const electric = realItems.filter((i) => i.code.startsWith("08.") && i.type === "regular").slice(0, 6);
 const plumbing = realItems.filter((i) => i.code.startsWith("07.") && i.type === "regular").slice(0, 5);
 
+// guarantee a demonstrable linked-items pair: same unit, same element (חדר הורים)
+if (flooring.length >= 3 && flooring[0].unit && flooring[2].unit === flooring[0].unit) {
+  flooring[2].parentId = flooring[0].id;
+}
+
 let seiId = 1;
 const structureElementItems = [];
 function addSei(elementId, item, qty) {
@@ -469,7 +474,7 @@ const history = [
 
 /* ---------------- emit ---------------- */
 const db = {
-  generatedAt: "2026-09-02",
+  generatedAt: "2026-09-02-v2",
   catalog: { ...catalogMeta, chapters },
   tags,
   resourceTypes: RESOURCE_TYPES,

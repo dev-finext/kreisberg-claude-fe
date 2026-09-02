@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-02",
+ "generatedAt": "2026-09-02-v2",
  "catalog": {
   "id": 3,
   "name": "קטלוג מס' 3",
@@ -5003,7 +5003,7 @@
         "resourceTypeId": 1,
         "priority": "optional",
         "amortization": 0,
-        "parentId": null,
+        "parentId": 191,
         "alternativeIds": [],
         "subItems": []
        },
@@ -9680,7 +9680,7 @@
    "resourceId": null,
    "description": "ריצוף חדר מגורים+פינת אוכל+מטבח +שירותי אורחים, קומת קרקע התקנת אריחי גרניט פורצלן במידות 120/120 ס\"מ בעובי 2 ס\"מ  סימון: מסומן בירוק וורוד בתוכניות ריצוף ויזואלי של \"חישובים בראש טוב\"",
    "chosenAlternativeId": null,
-   "parentId": null
+   "parentId": 191
   },
   {
    "id": 4,
