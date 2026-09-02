@@ -21,7 +21,19 @@ const title = computed(() => {
   return props.refElementName ? `הוספת אח ל"${props.refElementName}"` : "הוספת מבנה";
 });
 
-const commonNames = ["בניין", "קומה", "דירה", "חדר", "חדרים רטובים", "מבואות", "מרפסת", "חניה", "מחסן", "גג", "פיתוח שטח"];
+const commonNames = [
+  "בניין",
+  "קומה",
+  "דירה",
+  "חדר",
+  "חדרים רטובים",
+  "מבואות",
+  "מרפסת",
+  "חניה",
+  "מחסן",
+  "גג",
+  "פיתוח שטח",
+];
 
 function save() {
   if (!name.value.trim()) return;
@@ -30,11 +42,23 @@ function save() {
 </script>
 
 <template>
-  <BaseModal :title="title" width="477px" :confirm-disabled="!name.trim()" @close="emit('close')" @confirm="save">
+  <BaseModal
+    :title="title"
+    width="477px"
+    :confirm-disabled="!name.trim()"
+    @close="emit('close')"
+    @confirm="save"
+  >
     <div class="fields">
       <div class="field">
         <label class="field-label">שם מבנה</label>
-        <input v-model="name" class="input" list="structure-name-options" placeholder="בחר שם מבנה" @keyup.enter="save" />
+        <input
+          v-model="name"
+          class="input"
+          list="structure-name-options"
+          placeholder="בחר שם מבנה"
+          @keyup.enter="save"
+        />
         <datalist id="structure-name-options">
           <option v-for="n in commonNames" :key="n" :value="n" />
         </datalist>

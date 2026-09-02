@@ -1,5 +1,6 @@
 {
- "generatedAt": "2026-09-02-v2",
+ "generatedAt": "2026-09-02-v3",
+ "currentUserId": 1,
  "catalog": {
   "id": 3,
   "name": "קטלוג מס' 3",
@@ -198,9 +199,9 @@
          4,
          8
         ],
-        "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "resourceTypeId": 2,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [
          4,
@@ -256,7 +257,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -286,7 +287,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -333,9 +334,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "resourceTypeId": 2,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -424,7 +425,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -444,7 +445,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": 13,
         "alternativeIds": [],
@@ -472,9 +473,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -501,8 +502,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "optional",
+        "resourceTypeId": null,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -521,9 +522,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "resourceTypeId": 2,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": 16,
         "alternativeIds": [],
         "subItems": []
@@ -554,7 +555,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -586,7 +587,7 @@
         ],
         "resourceTypeId": null,
         "priority": "mandatory",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -615,7 +616,7 @@
         "tags": [
          7
         ],
-        "resourceTypeId": null,
+        "resourceTypeId": 2,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -647,7 +648,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -864,7 +865,7 @@
          1
         ],
         "resourceTypeId": 2,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -917,8 +918,8 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 1,
-        "priority": "recommended",
+        "resourceTypeId": 2,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -948,7 +949,7 @@
         "tags": [
          7
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -999,7 +1000,7 @@
          7
         ],
         "resourceTypeId": 1,
-        "priority": "mandatory",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -1034,7 +1035,7 @@
         ],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [
          37,
@@ -1116,7 +1117,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -1165,7 +1166,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -1183,9 +1184,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "resourceTypeId": 2,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": 41,
         "alternativeIds": [],
         "subItems": []
@@ -1214,8 +1215,8 @@
         "tags": [
          8
         ],
-        "resourceTypeId": null,
-        "priority": "recommended",
+        "resourceTypeId": 1,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -1236,8 +1237,8 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 1,
-        "priority": "recommended",
+        "resourceTypeId": 2,
+        "priority": "optional",
         "amortization": 0,
         "parentId": 43,
         "alternativeIds": [],
@@ -1265,8 +1266,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "recommended",
+        "resourceTypeId": 1,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -1288,7 +1289,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": 45,
         "alternativeIds": [],
@@ -1642,7 +1643,7 @@
         "tags": [
          3
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -1669,7 +1670,7 @@
          3
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -1693,9 +1694,9 @@
         "tags": [
          3
         ],
-        "resourceTypeId": null,
-        "priority": "recommended",
-        "amortization": 0,
+        "resourceTypeId": 1,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [
          61,
@@ -1718,8 +1719,8 @@
         "tags": [
          1
         ],
-        "resourceTypeId": 2,
-        "priority": "recommended",
+        "resourceTypeId": 1,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -1749,7 +1750,7 @@
         "tags": [
          3
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -1775,8 +1776,8 @@
          1,
          3
         ],
-        "resourceTypeId": 2,
-        "priority": "optional",
+        "resourceTypeId": null,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -1801,9 +1802,9 @@
          3,
          8
         ],
-        "resourceTypeId": 1,
-        "priority": "mandatory",
-        "amortization": 0,
+        "resourceTypeId": 2,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [
          65,
@@ -1826,8 +1827,8 @@
         "tags": [
          1
         ],
-        "resourceTypeId": 1,
-        "priority": "recommended",
+        "resourceTypeId": null,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -1850,7 +1851,7 @@
         ],
         "resourceTypeId": 1,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": 68,
         "alternativeIds": [],
         "subItems": []
@@ -1873,7 +1874,7 @@
         ],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": 68,
         "alternativeIds": [],
         "subItems": []
@@ -1927,7 +1928,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -1951,7 +1952,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [
          71,
@@ -1975,9 +1976,9 @@
          3,
          5
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -1996,8 +1997,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 2,
-        "priority": "recommended",
-        "amortization": 0,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": 74,
         "alternativeIds": [],
         "subItems": []
@@ -2026,7 +2027,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "mandatory",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -2054,7 +2055,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -2082,7 +2083,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
+        "resourceTypeId": null,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -2131,9 +2132,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "mandatory",
-        "amortization": 0,
+        "resourceTypeId": 1,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [
          81,
@@ -2155,7 +2156,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -2180,7 +2181,7 @@
          3,
          8
         ],
-        "resourceTypeId": 2,
+        "resourceTypeId": 1,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -2234,8 +2235,8 @@
         "tags": [
          7
         ],
-        "resourceTypeId": 2,
-        "priority": "optional",
+        "resourceTypeId": 1,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -2254,8 +2255,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "optional",
+        "resourceTypeId": 2,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": 84,
         "alternativeIds": [],
@@ -2283,9 +2284,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "optional",
-        "amortization": 0,
+        "resourceTypeId": 1,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -2303,7 +2304,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
+        "resourceTypeId": null,
         "priority": "optional",
         "amortization": 0,
         "parentId": 86,
@@ -2498,7 +2499,7 @@
         ],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [
          94,
@@ -2521,8 +2522,8 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 1,
-        "priority": "recommended",
+        "resourceTypeId": 2,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -2596,9 +2597,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "mandatory",
-        "amortization": 0,
+        "resourceTypeId": 1,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [
          98,
@@ -2644,8 +2645,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "mandatory",
+        "resourceTypeId": null,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -2664,9 +2665,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "mandatory",
-        "amortization": 0,
+        "resourceTypeId": null,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": 101,
         "alternativeIds": [],
         "subItems": []
@@ -2733,7 +2734,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -2802,7 +2803,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -2832,7 +2833,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -2854,8 +2855,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "recommended",
+        "resourceTypeId": null,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -2877,8 +2878,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
-        "priority": "optional",
+        "resourceTypeId": 1,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [
@@ -2901,7 +2902,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -2942,8 +2943,8 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 1,
-        "priority": "optional",
+        "resourceTypeId": 2,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": 112,
         "alternativeIds": [],
@@ -2964,9 +2965,9 @@
         "tags": [
          7
         ],
-        "resourceTypeId": 1,
-        "priority": "mandatory",
-        "amortization": 0,
+        "resourceTypeId": null,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -2986,8 +2987,8 @@
         "tags": [
          4
         ],
-        "resourceTypeId": 2,
-        "priority": "mandatory",
+        "resourceTypeId": 1,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3015,8 +3016,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
-        "priority": "optional",
+        "resourceTypeId": 1,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3056,7 +3057,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3124,7 +3125,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -3146,7 +3147,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3184,8 +3185,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
-        "priority": "optional",
+        "resourceTypeId": 2,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3224,8 +3225,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "optional",
+        "resourceTypeId": 1,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3253,8 +3254,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "optional",
+        "resourceTypeId": 2,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3276,7 +3277,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3297,9 +3298,9 @@
         "tags": [
          8
         ],
-        "resourceTypeId": null,
+        "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3328,7 +3329,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3347,8 +3348,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "mandatory",
-        "amortization": 0,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3375,9 +3376,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
-        "priority": "mandatory",
-        "amortization": 0,
+        "resourceTypeId": 1,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3404,7 +3405,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
+        "resourceTypeId": 2,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -3424,8 +3425,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "optional",
+        "resourceTypeId": null,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3454,8 +3455,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3474,8 +3475,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3493,7 +3494,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -3513,9 +3514,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
-        "priority": "optional",
-        "amortization": 0,
+        "resourceTypeId": 1,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3533,9 +3534,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
+        "resourceTypeId": 1,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3582,9 +3583,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3633,9 +3634,9 @@
         "tags": [
          1
         ],
-        "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "resourceTypeId": 2,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3656,8 +3657,8 @@
          1
         ],
         "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3684,7 +3685,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
+        "resourceTypeId": 1,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -3705,8 +3706,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -3821,8 +3822,8 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 1,
-        "priority": "recommended",
+        "resourceTypeId": 2,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -3842,7 +3843,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -4168,8 +4169,8 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 2,
-        "priority": "mandatory",
+        "resourceTypeId": 1,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -4188,9 +4189,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
+        "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -4241,7 +4242,7 @@
          8
         ],
         "resourceTypeId": 2,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -4263,7 +4264,7 @@
          1
         ],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -4313,7 +4314,7 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -4342,8 +4343,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "optional",
+        "resourceTypeId": 1,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -4363,8 +4364,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -4392,7 +4393,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -4412,8 +4413,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -4431,8 +4432,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "recommended",
+        "resourceTypeId": 2,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -4798,8 +4799,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "mandatory",
-        "amortization": 0,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -4820,7 +4821,7 @@
          7,
          8
         ],
-        "resourceTypeId": null,
+        "resourceTypeId": 1,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -5001,8 +5002,8 @@
          5
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": 191,
         "alternativeIds": [],
         "subItems": []
@@ -5021,8 +5022,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -5345,8 +5346,8 @@
         "tags": [
          1
         ],
-        "resourceTypeId": 1,
-        "priority": "optional",
+        "resourceTypeId": null,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5368,7 +5369,7 @@
          1,
          8
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -5462,7 +5463,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5493,8 +5494,8 @@
          1
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -5516,7 +5517,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5546,9 +5547,9 @@
         "tags": [
          1
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -5569,7 +5570,7 @@
          1,
          8
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -5602,7 +5603,7 @@
          7
         ],
         "resourceTypeId": 1,
-        "priority": "mandatory",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5626,8 +5627,8 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -5656,7 +5657,7 @@
         "tags": [
          1
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -5679,7 +5680,7 @@
          1
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5739,8 +5740,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "mandatory",
-        "amortization": 0,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -5768,7 +5769,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5790,7 +5791,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5811,7 +5812,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -5841,7 +5842,7 @@
          7
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5863,7 +5864,7 @@
          7,
          8
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
@@ -5885,8 +5886,8 @@
         "tags": [
          7
         ],
-        "resourceTypeId": 2,
-        "priority": "recommended",
+        "resourceTypeId": 1,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -5934,7 +5935,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
+        "resourceTypeId": 1,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -5974,7 +5975,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -6004,7 +6005,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "mandatory",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -6034,7 +6035,7 @@
         "tags": [
          7
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -6289,7 +6290,7 @@
         "tags": [
          8
         ],
-        "resourceTypeId": null,
+        "resourceTypeId": 1,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -6310,8 +6311,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -6329,8 +6330,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "optional",
+        "resourceTypeId": 2,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -6381,7 +6382,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -6402,8 +6403,8 @@
         "tags": [
          1
         ],
-        "resourceTypeId": null,
-        "priority": "optional",
+        "resourceTypeId": 2,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -6453,7 +6454,7 @@
         "tags": [
          8
         ],
-        "resourceTypeId": null,
+        "resourceTypeId": 1,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -6475,8 +6476,8 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 2,
-        "priority": "recommended",
+        "resourceTypeId": 1,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -6528,7 +6529,7 @@
          7
         ],
         "resourceTypeId": 1,
-        "priority": "mandatory",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -6557,8 +6558,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -6595,7 +6596,7 @@
         "tags": [
          5
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
@@ -6624,8 +6625,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "mandatory",
+        "resourceTypeId": null,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -6722,8 +6723,8 @@
          7,
          8
         ],
-        "resourceTypeId": 1,
-        "priority": "recommended",
+        "resourceTypeId": 2,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7303,7 +7304,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7376,7 +7377,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "mandatory",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7426,8 +7427,8 @@
         "tags": [
          5
         ],
-        "resourceTypeId": 2,
-        "priority": "recommended",
+        "resourceTypeId": 1,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7456,7 +7457,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7504,9 +7505,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "resourceTypeId": 2,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -7565,7 +7566,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7636,7 +7637,7 @@
          1
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7664,8 +7665,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "optional",
+        "resourceTypeId": null,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7713,7 +7714,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -7792,8 +7793,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -7840,7 +7841,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": null,
         "priority": "optional",
         "amortization": 0,
         "parentId": null,
@@ -7861,8 +7862,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -7941,7 +7942,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -7963,7 +7964,7 @@
          1,
          8
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -8081,7 +8082,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "recommended",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8373,7 +8374,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -8391,8 +8392,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
-        "priority": "optional",
+        "resourceTypeId": 1,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8411,7 +8412,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
@@ -8460,9 +8461,9 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "recommended",
-        "amortization": 0,
+        "resourceTypeId": null,
+        "priority": "optional",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -8489,8 +8490,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "recommended",
+        "resourceTypeId": 2,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8509,7 +8510,7 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
+        "resourceTypeId": 1,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -8579,8 +8580,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -8598,8 +8599,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": null,
-        "priority": "optional",
+        "resourceTypeId": 1,
+        "priority": "mandatory",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8637,7 +8638,7 @@
         "tags": [],
         "resourceTypeId": 1,
         "priority": "optional",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -8672,8 +8673,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 2,
-        "priority": "recommended",
+        "resourceTypeId": null,
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8721,8 +8722,8 @@
         "isNote": false,
         "type": "regular",
         "tags": [],
-        "resourceTypeId": 1,
-        "priority": "optional",
+        "resourceTypeId": 2,
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8742,7 +8743,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "mandatory",
+        "priority": "optional",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8762,7 +8763,7 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8819,8 +8820,8 @@
         "type": "regular",
         "tags": [],
         "resourceTypeId": 2,
-        "priority": "optional",
-        "amortization": 0,
+        "priority": "mandatory",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -8849,9 +8850,9 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 2,
-        "priority": "optional",
-        "amortization": 0,
+        "resourceTypeId": null,
+        "priority": "recommended",
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -8890,7 +8891,7 @@
         ],
         "resourceTypeId": 1,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -8912,7 +8913,7 @@
         ],
         "resourceTypeId": 1,
         "priority": "recommended",
-        "amortization": 0,
+        "amortization": 15,
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
@@ -8932,7 +8933,7 @@
         "tags": [
          8
         ],
-        "resourceTypeId": 1,
+        "resourceTypeId": 2,
         "priority": "recommended",
         "amortization": 0,
         "parentId": null,
@@ -8955,7 +8956,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8977,7 +8978,7 @@
          8
         ],
         "resourceTypeId": 1,
-        "priority": "optional",
+        "priority": "recommended",
         "amortization": 0,
         "parentId": null,
         "alternativeIds": [],
@@ -8989,6 +8990,40 @@
    }
   ]
  },
+ "catalogs": [
+  {
+   "id": 1,
+   "name": "קטלוג 1",
+   "lang": "עברית",
+   "active": true,
+   "uploadedAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 2,
+   "name": "בנארית",
+   "lang": "עברית",
+   "active": true,
+   "uploadedAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 3,
+   "name": "קטלוג מס' 3",
+   "lang": "עברית",
+   "active": true,
+   "uploadedAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 4,
+   "name": "קטלוג מאסטר",
+   "lang": "עברית",
+   "active": true,
+   "uploadedAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  }
+ ],
  "tags": [
   {
    "id": 1,
@@ -9065,6 +9100,219 @@
    "id": 4,
    "name": "י.ד חשמל",
    "typeId": 4
+  },
+  {
+   "id": 5,
+   "name": "מולי קבלנות ויזמות בע\"מ",
+   "typeId": 1
+  },
+  {
+   "id": 6,
+   "name": "פאי ניהול וביצוע פרויקטים",
+   "typeId": 1
+  },
+  {
+   "id": 7,
+   "name": "רני הנדסה בע\"מ",
+   "typeId": 1
+  },
+  {
+   "id": 8,
+   "name": "אלכסנדר סטייל סטון בע\"מ",
+   "typeId": 5
+  },
+  {
+   "id": 9,
+   "name": "זד קונקריט בע\"מ",
+   "typeId": 1
+  },
+  {
+   "id": 10,
+   "name": "ציון בריגה ובניו חברה לבניה ופיתוח בע\"מ",
+   "typeId": 1
+  },
+  {
+   "id": 11,
+   "name": "א.י נבו בנתניה חברה קבלנית לבנין בע\"מ",
+   "typeId": 1
+  },
+  {
+   "id": 12,
+   "name": "נחום משה חב' להשקעות ובניה בע\"מ",
+   "typeId": 1
+  },
+  {
+   "id": 13,
+   "name": "קטש יזמות ובניה בע\"מ",
+   "typeId": 1
+  },
+  {
+   "id": 14,
+   "name": "בנימין זיגדון נדל\"ן ובניה בע\"מ",
+   "typeId": 5
+  },
+  {
+   "id": 15,
+   "name": "א.ד אדריכלים בע\"מ תל אביב",
+   "typeId": 2
+  }
+ ],
+ "contacts": [
+  {
+   "id": 1,
+   "firstName": "יוסי",
+   "lastName": "זילבר",
+   "role": "מנכ\"ל",
+   "phone": "052-5678900",
+   "email": "zila@gmail.com",
+   "hp": "511678900",
+   "address": "מנחם בגין 50, תל אביב-יפו",
+   "business": "ירון צמח",
+   "resourceTypeId": 2,
+   "constructorId": 1
+  },
+  {
+   "id": 2,
+   "firstName": "רן",
+   "lastName": "לוי",
+   "role": "מנהל זוטר",
+   "phone": "052-5678901",
+   "email": "levi@gmail.com",
+   "hp": "511678901",
+   "address": "מנחם בגין 51, תל אביב-יפו",
+   "business": "בני בטון בע\"מ",
+   "resourceTypeId": 1,
+   "constructorId": 2
+  },
+  {
+   "id": 3,
+   "firstName": "דנה",
+   "lastName": "כהן",
+   "role": "עובד",
+   "phone": "052-5678902",
+   "email": "cohen@gmail.com",
+   "hp": "511678902",
+   "address": "מנחם בגין 52, תל אביב-יפו",
+   "business": "אינסטלציית הצפון",
+   "resourceTypeId": 3,
+   "constructorId": 3
+  },
+  {
+   "id": 4,
+   "firstName": "אבי",
+   "lastName": "ברק",
+   "role": "מנכ\"ל",
+   "phone": "052-5678903",
+   "email": "barak@gmail.com",
+   "hp": "511678903",
+   "address": "מנחם בגין 53, תל אביב-יפו",
+   "business": "י.ד חשמל",
+   "resourceTypeId": 4,
+   "constructorId": 4
+  },
+  {
+   "id": 5,
+   "firstName": "מיכל",
+   "lastName": "פרץ",
+   "role": "מנהל זוטר",
+   "phone": "052-5678904",
+   "email": "peretz@gmail.com",
+   "hp": "511678904",
+   "address": "מנחם בגין 54, תל אביב-יפו",
+   "business": "מולי קבלנות ויזמות בע\"מ",
+   "resourceTypeId": 1,
+   "constructorId": 5
+  },
+  {
+   "id": 6,
+   "firstName": "עומר",
+   "lastName": "שמעוני",
+   "role": "עובד",
+   "phone": "052-5678905",
+   "email": "shimoni@gmail.com",
+   "hp": "511678905",
+   "address": "מנחם בגין 55, תל אביב-יפו",
+   "business": "פאי ניהול וביצוע פרויקטים",
+   "resourceTypeId": 1,
+   "constructorId": 6
+  },
+  {
+   "id": 7,
+   "firstName": "שרה",
+   "lastName": "אשכנזי",
+   "role": "מנכ\"ל",
+   "phone": "052-5678906",
+   "email": "ash@gmail.com",
+   "hp": "511678906",
+   "address": "מנחם בגין 56, תל אביב-יפו",
+   "business": "רני הנדסה בע\"מ",
+   "resourceTypeId": 1,
+   "constructorId": 7
+  },
+  {
+   "id": 8,
+   "firstName": "גיא",
+   "lastName": "מור",
+   "role": "מנהל זוטר",
+   "phone": "052-5678907",
+   "email": "mor@gmail.com",
+   "hp": "511678907",
+   "address": "מנחם בגין 57, תל אביב-יפו",
+   "business": "אלכסנדר סטייל סטון בע\"מ",
+   "resourceTypeId": 5,
+   "constructorId": 8
+  },
+  {
+   "id": 9,
+   "firstName": "נועה",
+   "lastName": "חדד",
+   "role": "עובד",
+   "phone": "052-5678908",
+   "email": "hadad@gmail.com",
+   "hp": "511678908",
+   "address": "מנחם בגין 58, תל אביב-יפו",
+   "business": "זד קונקריט בע\"מ",
+   "resourceTypeId": 1,
+   "constructorId": 9
+  },
+  {
+   "id": 10,
+   "firstName": "אלי",
+   "lastName": "ביטון",
+   "role": "מנכ\"ל",
+   "phone": "052-5678909",
+   "email": "biton@gmail.com",
+   "hp": "511678909",
+   "address": "מנחם בגין 59, תל אביב-יפו",
+   "business": "ציון בריגה ובניו חברה לבניה ופיתוח בע\"מ",
+   "resourceTypeId": 1,
+   "constructorId": 10
+  },
+  {
+   "id": 11,
+   "firstName": "תמר",
+   "lastName": "אזולאי",
+   "role": "מנהל זוטר",
+   "phone": "052-5678910",
+   "email": "azulay@gmail.com",
+   "hp": "511678910",
+   "address": "מנחם בגין 60, תל אביב-יפו",
+   "business": "א.י נבו בנתניה חברה קבלנית לבנין בע\"מ",
+   "resourceTypeId": 1,
+   "constructorId": 11
+  },
+  {
+   "id": 12,
+   "firstName": "דוד",
+   "lastName": "גל",
+   "role": "עובד",
+   "phone": "052-5678911",
+   "email": "gal@gmail.com",
+   "hp": "511678911",
+   "address": "מנחם בגין 61, תל אביב-יפו",
+   "business": "נחום משה חב' להשקעות ובניה בע\"מ",
+   "resourceTypeId": 1,
+   "constructorId": 12
   }
  ],
  "users": [
@@ -9084,14 +9332,52 @@
    "role": "מנהל מערכת"
   }
  ],
+ "projectTypes": [
+  {
+   "id": 1,
+   "name": "בית"
+  },
+  {
+   "id": 2,
+   "name": "דירה"
+  },
+  {
+   "id": 3,
+   "name": "בניין"
+  },
+  {
+   "id": 4,
+   "name": "מסחר"
+  },
+  {
+   "id": 5,
+   "name": "אחר"
+  }
+ ],
+ "projectTemplates": [
+  {
+   "id": 1,
+   "name": "תבנית שיפוץ דירה"
+  },
+  {
+   "id": 2,
+   "name": "תבנית תמ\"א 38"
+  },
+  {
+   "id": 3,
+   "name": "תבנית בנייה פרטית"
+  }
+ ],
  "projects": [
   {
    "id": 1,
    "name": "דירת משפ' קרייסברג",
-   "location": "תל אביב",
-   "typeName": "שיפוץ דירה",
+   "location": "אהוד מנור 12, נתניה",
+   "typeId": 2,
+   "typeName": "דירה",
    "author": "דני קרייסברג",
-   "createdAt": "2026-01-12",
+   "createdAt": "2026-01-05",
+   "status": "תומחר",
    "statusPills": [
     {
      "label": "כתב כמויות",
@@ -9103,15 +9389,29 @@
     }
    ],
    "description": "שיפוץ כללי לדירת מגורים כולל חדרים רטובים, ריצוף וחשמל.",
-   "active": true
+   "active": true,
+   "contactIds": [
+    1,
+    2,
+    3
+   ],
+   "specialFields": [
+    {
+     "name": "מספר היתר",
+     "value": "2024-118"
+    }
+   ],
+   "templateId": null
   },
   {
    "id": 2,
    "name": "מדנס - בית פרטי",
-   "location": "רמת השרון",
-   "typeName": "בנייה פרטית",
+   "location": "דובדבן 60, כפר חיטים",
+   "typeId": 1,
+   "typeName": "בית",
    "author": "מתי קרייסברג",
-   "createdAt": "2026-03-18",
+   "createdAt": "2026-02-08",
+   "status": "כתב כמויות",
    "statusPills": [
     {
      "label": "כתב כמויות",
@@ -9119,15 +9419,24 @@
     }
    ],
    "description": "תיאור ארוך של כתב כמויות",
-   "active": true
+   "active": true,
+   "contactIds": [
+    3,
+    4,
+    5
+   ],
+   "specialFields": [],
+   "templateId": null
   },
   {
    "id": 3,
    "name": "פרויקט תמ\"א 38 - הרצל 12",
-   "location": "גבעתיים",
-   "typeName": "תמ\"א 38",
+   "location": "הרצל 12, גבעתיים",
+   "typeId": 3,
+   "typeName": "בניין",
    "author": "דני קרייסברג",
-   "createdAt": "2026-03-26",
+   "createdAt": "2026-03-11",
+   "status": "כתב כמויות",
    "statusPills": [
     {
      "label": "כתב כמויות",
@@ -9135,7 +9444,406 @@
     }
    ],
    "description": "חיזוק ותוספת קומות לבניין קיים.",
-   "active": true
+   "active": true,
+   "contactIds": [
+    5,
+    6,
+    7
+   ],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 4,
+   "name": "בית משפחת חכם",
+   "location": "דובדבן 60, כפר חיטים",
+   "typeId": 1,
+   "typeName": "בית",
+   "author": "מתי קרייסברג",
+   "createdAt": "2026-04-14",
+   "status": "חוזה",
+   "statusPills": [
+    {
+     "label": "חוזה",
+     "kind": "neutral"
+    }
+   ],
+   "description": "---",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 5,
+   "name": "בית משפחת רוטר",
+   "location": "התמר 10, הרצליה",
+   "typeId": 1,
+   "typeName": "בית",
+   "author": "דני קרייסברג",
+   "createdAt": "2026-05-17",
+   "status": "חוזה",
+   "statusPills": [
+    {
+     "label": "חוזה",
+     "kind": "neutral"
+    }
+   ],
+   "description": "---",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 6,
+   "name": "בניין ברחוב אבן גבירול 10",
+   "location": "אבן גבירול 10, תל-אביב",
+   "typeId": 3,
+   "typeName": "בניין",
+   "author": "מתי קרייסברג",
+   "createdAt": "2026-06-20",
+   "status": "מכרז",
+   "statusPills": [
+    {
+     "label": "מכרז",
+     "kind": "info"
+    }
+   ],
+   "description": "בניין לשימור",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 7,
+   "name": "בוטיק נספרסו סניף עכו",
+   "location": "שדרות בן גוריון 2, עכו",
+   "typeId": 4,
+   "typeName": "מסחר",
+   "author": "דני קרייסברג",
+   "createdAt": "2026-07-23",
+   "status": "חדש",
+   "statusPills": [],
+   "description": "---",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 8,
+   "name": "בניין ברחוב גיבורי ישראל 7",
+   "location": "גיבורי ישראל 7, נתניה",
+   "typeId": 3,
+   "typeName": "בניין",
+   "author": "מתי קרייסברג",
+   "createdAt": "2026-08-26",
+   "status": "מכרז",
+   "statusPills": [
+    {
+     "label": "מכרז",
+     "kind": "info"
+    }
+   ],
+   "description": "כחלק מפרויקט שיכון ובינוי ערים של עיריית נתניה",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 9,
+   "name": "בניין ברחוב המלך דוד 6",
+   "location": "המלך דוד 6, ירושלים",
+   "typeId": 3,
+   "typeName": "בניין",
+   "author": "דני קרייסברג",
+   "createdAt": "2026-01-02",
+   "status": "כתב כמויות",
+   "statusPills": [
+    {
+     "label": "כתב כמויות",
+     "kind": "info"
+    }
+   ],
+   "description": "---",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 10,
+   "name": "מרכז מסחרי דרך העצמאות",
+   "location": "דרך העצמאות 48, חיפה",
+   "typeId": 4,
+   "typeName": "מסחר",
+   "author": "מתי קרייסברג",
+   "createdAt": "2026-02-05",
+   "status": "תומחר",
+   "statusPills": [
+    {
+     "label": "כתב כמויות",
+     "kind": "info"
+    },
+    {
+     "label": "תומחר",
+     "kind": "success"
+    }
+   ],
+   "description": "שיפוץ קומת מסחר וחזיתות",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 11,
+   "name": "וילה בשכונת דניה",
+   "location": "דרך אלנבי 3, חיפה",
+   "typeId": 1,
+   "typeName": "בית",
+   "author": "דני קרייסברג",
+   "createdAt": "2026-03-08",
+   "status": "חדש",
+   "statusPills": [],
+   "description": "בנייה פרטית חדשה",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  },
+  {
+   "id": 12,
+   "name": "מחסן לוגיסטי מודיעין",
+   "location": "שדרות המלאכה 7, מודיעין",
+   "typeId": 5,
+   "typeName": "אחר",
+   "author": "מתי קרייסברג",
+   "createdAt": "2026-04-11",
+   "status": "כתב כמויות",
+   "statusPills": [
+    {
+     "label": "כתב כמויות",
+     "kind": "info"
+    }
+   ],
+   "description": "הקמת מחסן ומשרדים",
+   "active": true,
+   "contactIds": [],
+   "specialFields": [],
+   "templateId": null
+  }
+ ],
+ "conditions": [
+  {
+   "id": 1,
+   "projectId": 1,
+   "text": "התנאי שרשמתי כתוב פה ואני יכולה למחוק עם הפח"
+  },
+  {
+   "id": 2,
+   "projectId": 1,
+   "text": "העבודות יבוצעו בימים א'-ה' בין השעות 07:00-17:00 בלבד"
+  },
+  {
+   "id": 3,
+   "projectId": 2,
+   "text": "הקבלן אחראי לפינוי פסולת בניין לאתר מורשה"
+  }
+ ],
+ "docFolders": [
+  {
+   "id": 1,
+   "projectId": 1,
+   "name": "תכניות אדריכליות"
+  },
+  {
+   "id": 2,
+   "projectId": 1,
+   "name": "קומת מרתף"
+  },
+  {
+   "id": 3,
+   "projectId": 1,
+   "name": "גג עליון"
+  },
+  {
+   "id": 4,
+   "projectId": 1,
+   "name": "חזיתות"
+  },
+  {
+   "id": 5,
+   "projectId": 1,
+   "name": "תכניות קונסטרוקציה"
+  },
+  {
+   "id": 6,
+   "projectId": 1,
+   "name": "תכניות חשמל"
+  },
+  {
+   "id": 7,
+   "projectId": 1,
+   "name": "תכניות תאורה"
+  },
+  {
+   "id": 8,
+   "projectId": 1,
+   "name": "תכניות מיזוג אויר"
+  },
+  {
+   "id": 9,
+   "projectId": 1,
+   "name": "הדמיות"
+  }
+ ],
+ "documents": [
+  {
+   "id": 1,
+   "projectId": 1,
+   "folderId": 1,
+   "name": "הסכם התקשרות קבלן ראשי",
+   "fileType": "PDF",
+   "subType": "חוזה",
+   "resourceTypeId": 2,
+   "resourceId": 1,
+   "createdAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 2,
+   "projectId": 1,
+   "folderId": 2,
+   "name": "בקשה להצעת מחיר - ריצוף",
+   "fileType": "PDF",
+   "subType": "בקשה להצעת מחיר",
+   "resourceTypeId": 1,
+   "resourceId": 2,
+   "createdAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 3,
+   "projectId": 1,
+   "folderId": 2,
+   "name": "תכנית קומת מרתף",
+   "fileType": "DWG",
+   "subType": "תוכנית",
+   "resourceTypeId": 2,
+   "resourceId": 1,
+   "createdAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 4,
+   "projectId": 1,
+   "folderId": 6,
+   "name": "תכנית חשמל קומה א'",
+   "fileType": "DWG",
+   "subType": "תוכנית",
+   "resourceTypeId": 4,
+   "resourceId": 4,
+   "createdAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 5,
+   "projectId": 1,
+   "folderId": 1,
+   "name": "כתב כמויות בנארית",
+   "fileType": "XLSX",
+   "subType": "כתב כמויות",
+   "resourceTypeId": 2,
+   "resourceId": 1,
+   "createdAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 6,
+   "projectId": 1,
+   "folderId": 9,
+   "name": "הדמיית חזית מזרחית",
+   "fileType": "JPG",
+   "subType": "הדמיה",
+   "resourceTypeId": 1,
+   "resourceId": 2,
+   "createdAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 7,
+   "projectId": 1,
+   "folderId": 1,
+   "name": "מפרט טכני חדרים רטובים",
+   "fileType": "PDF",
+   "subType": "מפרט",
+   "resourceTypeId": 3,
+   "resourceId": 3,
+   "createdAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  },
+  {
+   "id": 8,
+   "projectId": 1,
+   "folderId": 2,
+   "name": "בקשה להצעת מחיר - איטום",
+   "fileType": "PDF",
+   "subType": "בקשה להצעת מחיר",
+   "resourceTypeId": 1,
+   "resourceId": 2,
+   "createdAt": "2024-08-07",
+   "updatedAt": "2023-03-21T15:33:00"
+  }
+ ],
+ "mappingSystemFields": [
+  {
+   "key": "code",
+   "label": "מספר סעיף",
+   "required": true
+  },
+  {
+   "key": "unit",
+   "label": "יח' מידה",
+   "required": true
+  },
+  {
+   "key": "qty",
+   "label": "כמות",
+   "required": false
+  },
+  {
+   "key": "mandatory",
+   "label": "חובה",
+   "required": false
+  },
+  {
+   "key": "priority",
+   "label": "עדיפות",
+   "required": false
+  },
+  {
+   "key": "summary",
+   "label": "לסיכום",
+   "required": false
+  }
+ ],
+ "mappings": [
+  {
+   "id": 1,
+   "name": "בנארית",
+   "active": true,
+   "columns": {
+    "code": "מס' פריט",
+    "unit": "יח'",
+    "qty": "כמות חוזה",
+    "mandatory": "",
+    "priority": "",
+    "summary": ""
+   }
   }
  ],
  "boqHeaders": [
@@ -9265,7 +9973,7 @@
    "sla": {
     "late": 0,
     "near": 0,
-    "ok": 0
+    "ok": 3
    },
    "notes": "",
    "createdAt": "2026-03-18"
@@ -9280,14 +9988,20 @@
    "catalogId": 3,
    "classification": "spec",
    "status": "draft",
-   "stagePills": [],
+   "stagePills": [
+    {
+     "label": "מכרז",
+     "count": 2,
+     "kind": "info"
+    }
+   ],
    "resourceTypeId": 1,
    "resourceId": 2,
-   "exitDate": "",
+   "exitDate": "2023-06-01",
    "sla": {
-    "late": 0,
-    "near": 0,
-    "ok": 0
+    "late": 1,
+    "near": 1,
+    "ok": 4
    },
    "notes": "",
    "createdAt": "2026-03-26"
@@ -9362,6 +10076,60 @@
    "boqId": 1,
    "parentId": null,
    "name": "קומה 3",
+   "description": "",
+   "visible": true,
+   "inBudget": true
+  },
+  {
+   "id": 9,
+   "boqId": 5,
+   "parentId": null,
+   "name": "מבנה 1",
+   "description": "",
+   "visible": true,
+   "inBudget": true
+  },
+  {
+   "id": 10,
+   "boqId": 5,
+   "parentId": 9,
+   "name": "קומת קרקע",
+   "description": "",
+   "visible": true,
+   "inBudget": true
+  },
+  {
+   "id": 11,
+   "boqId": 5,
+   "parentId": 9,
+   "name": "קומה ראשונה",
+   "description": "",
+   "visible": true,
+   "inBudget": true
+  },
+  {
+   "id": 12,
+   "boqId": 5,
+   "parentId": null,
+   "name": "פיתוח שטח",
+   "description": "",
+   "visible": true,
+   "inBudget": true
+  },
+  {
+   "id": 13,
+   "boqId": 6,
+   "parentId": null,
+   "name": "קומת כניסה",
+   "description": "",
+   "visible": true,
+   "inBudget": true
+  },
+  {
+   "id": 14,
+   "boqId": 6,
+   "parentId": null,
+   "name": "חדרים רטובים",
    "description": "",
    "visible": true,
    "inBudget": true
@@ -9640,6 +10408,195 @@
    "elementId": 8,
    "itemId": 191,
    "qty": 80
+  },
+  {
+   "id": 40,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 2,
+   "qty": 34
+  },
+  {
+   "id": 41,
+   "boqId": 5,
+   "elementId": 11,
+   "itemId": 2,
+   "qty": 13
+  },
+  {
+   "id": 42,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 3,
+   "qty": 37
+  },
+  {
+   "id": 43,
+   "boqId": 5,
+   "elementId": 11,
+   "itemId": 3,
+   "qty": 14
+  },
+  {
+   "id": 44,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 359,
+   "qty": 40
+  },
+  {
+   "id": 45,
+   "boqId": 5,
+   "elementId": 11,
+   "itemId": 359,
+   "qty": 15
+  },
+  {
+   "id": 46,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 4,
+   "qty": 43
+  },
+  {
+   "id": 47,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 5,
+   "qty": 46
+  },
+  {
+   "id": 48,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 251,
+   "qty": 55
+  },
+  {
+   "id": 49,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 252,
+   "qty": 60
+  },
+  {
+   "id": 50,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 253,
+   "qty": 65
+  },
+  {
+   "id": 51,
+   "boqId": 5,
+   "elementId": 10,
+   "itemId": 255,
+   "qty": 70
+  },
+  {
+   "id": 52,
+   "boqId": 5,
+   "elementId": 12,
+   "itemId": 191,
+   "qty": 18
+  },
+  {
+   "id": 53,
+   "boqId": 5,
+   "elementId": 12,
+   "itemId": 192,
+   "qty": 22
+  },
+  {
+   "id": 54,
+   "boqId": 5,
+   "elementId": 12,
+   "itemId": 200,
+   "qty": 26
+  },
+  {
+   "id": 55,
+   "boqId": 5,
+   "elementId": 12,
+   "itemId": 201,
+   "qty": 30
+  },
+  {
+   "id": 56,
+   "boqId": 6,
+   "elementId": 14,
+   "itemId": 30,
+   "qty": 200
+  },
+  {
+   "id": 57,
+   "boqId": 6,
+   "elementId": 14,
+   "itemId": 31,
+   "qty": 50
+  },
+  {
+   "id": 58,
+   "boqId": 6,
+   "elementId": 14,
+   "itemId": 32,
+   "qty": 100
+  },
+  {
+   "id": 59,
+   "boqId": 6,
+   "elementId": 14,
+   "itemId": 33,
+   "qty": 60
+  },
+  {
+   "id": 60,
+   "boqId": 6,
+   "elementId": 14,
+   "itemId": 34,
+   "qty": 30
+  },
+  {
+   "id": 61,
+   "boqId": 6,
+   "elementId": 14,
+   "itemId": 61,
+   "qty": 5
+  },
+  {
+   "id": 62,
+   "boqId": 6,
+   "elementId": 14,
+   "itemId": 62,
+   "qty": 6
+  },
+  {
+   "id": 63,
+   "boqId": 6,
+   "elementId": 14,
+   "itemId": 63,
+   "qty": 7
+  },
+  {
+   "id": 64,
+   "boqId": 6,
+   "elementId": 13,
+   "itemId": 94,
+   "qty": 44
+  },
+  {
+   "id": 65,
+   "boqId": 6,
+   "elementId": 13,
+   "itemId": 95,
+   "qty": 34
+  },
+  {
+   "id": 66,
+   "boqId": 6,
+   "elementId": 13,
+   "itemId": 96,
+   "qty": 24
   }
  ],
  "boqItems": [
@@ -9647,9 +10604,9 @@
    "id": 1,
    "boqId": 1,
    "itemId": 191,
-   "priority": "mandatory",
-   "forSummary": true,
-   "amortization": 0,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 15,
    "resourceTypeId": 1,
    "resourceId": null,
    "description": "תשתית מרוצפת לפרקט עץ: אספקה והתקנת מרצפות טרצו/גרניט פורצלן, סוג ב' במידות 30/30 ס\"מ, המשמש כבסיס מישורי.  סימון: מסומן בחום בתוכניות ריצוף ויזואלי של \"חישובים בראש טוב\"",
@@ -9663,7 +10620,7 @@
    "priority": "optional",
    "forSummary": false,
    "amortization": 0,
-   "resourceTypeId": null,
+   "resourceTypeId": 1,
    "resourceId": null,
    "description": "שיפולים בחדרים בגמר פרקט עץ, קומת מרתף: התקנת שיפולים/פנלים פוליאוריטניים בגובה עד 4 ס\"מ באורכים שונים, בולטים מהקירות.  צביעה: צביעה במערכת צבע על בסיס מים בגוון לבחירת אדריכל, יישום בהתזה ב-3 שכבות לפחות עד לקבלת כיסוי מלא וגוון אחיד כדוגמאת מערכת צבע הקירות.  פנלים בהיקף קומת קרקע, קומה ראשונה וקומת עליית גג: אספקה והתקנת פרופילי אלומיניום לניתוק ריצופים לקירות, ראה סעיף 09.100.0100 \"פרט ניתוק ריצפתי טיח\"",
    "chosenAlternativeId": null,
@@ -9673,9 +10630,9 @@
    "id": 3,
    "boqId": 1,
    "itemId": 200,
-   "priority": "optional",
-   "forSummary": false,
-   "amortization": 0,
+   "priority": "recommended",
+   "forSummary": true,
+   "amortization": 15,
    "resourceTypeId": 1,
    "resourceId": null,
    "description": "ריצוף חדר מגורים+פינת אוכל+מטבח +שירותי אורחים, קומת קרקע התקנת אריחי גרניט פורצלן במידות 120/120 ס\"מ בעובי 2 ס\"מ  סימון: מסומן בירוק וורוד בתוכניות ריצוף ויזואלי של \"חישובים בראש טוב\"",
@@ -9686,9 +10643,9 @@
    "id": 4,
    "boqId": 1,
    "itemId": 201,
-   "priority": "recommended",
+   "priority": "mandatory",
    "forSummary": true,
-   "amortization": 0,
+   "amortization": 15,
    "resourceTypeId": 1,
    "resourceId": null,
    "description": "תשתית מרוצפת לאריחי אבן, קומת קרקע: אספקה והתקנת מרצפות טרצו/גרניט פורצלן, סוג ב' במידות 30/30 ס\"מ, המשמש כבסיס מישורי.",
@@ -9699,10 +10656,10 @@
    "id": 5,
    "boqId": 1,
    "itemId": 214,
-   "priority": "optional",
+   "priority": "recommended",
    "forSummary": false,
    "amortization": 0,
-   "resourceTypeId": 1,
+   "resourceTypeId": null,
    "resourceId": null,
    "description": "ריצוף חדר מקלחת, קומת מרתף: התקנת לוחות גרניט פורצלן מדוקקים גדולים במידות שונות (כדוגמת 100-150/300 ס\"מ, 120/280 ס\"מ, 160/320 ס\"מ וכו') לריצוף.  סימון: מסומן בכחול בתוכניות ריצוף ויזואלי של \"חישובים בראש טוב\"",
    "chosenAlternativeId": null,
@@ -9715,7 +10672,7 @@
    "priority": "recommended",
    "forSummary": true,
    "amortization": 0,
-   "resourceTypeId": 1,
+   "resourceTypeId": null,
    "resourceId": null,
    "description": "חיפוי קירות חדר מקלחת, קומת מרתף: התקנת לוחות גרניט פורצלן מדוקקים גדולים במידות שונות (כדוגמת 100-150/300 ס\"מ, 120/280 ס\"מ, 160/320 ס\"מ וכו') לחיפוי קירות.  סימון: מסומן בכחול בתוכניות בינוי וגמרים של \"חישובים בראש טוב\"",
    "chosenAlternativeId": null,
@@ -9738,7 +10695,7 @@
    "id": 8,
    "boqId": 1,
    "itemId": 219,
-   "priority": "optional",
+   "priority": "recommended",
    "forSummary": false,
    "amortization": 0,
    "resourceTypeId": 1,
@@ -9751,8 +10708,8 @@
    "id": 9,
    "boqId": 1,
    "itemId": 30,
-   "priority": "recommended",
-   "forSummary": true,
+   "priority": "optional",
+   "forSummary": false,
    "amortization": 0,
    "resourceTypeId": 2,
    "resourceId": null,
@@ -9777,10 +10734,10 @@
    "id": 11,
    "boqId": 1,
    "itemId": 32,
-   "priority": "recommended",
+   "priority": "mandatory",
    "forSummary": true,
    "amortization": 0,
-   "resourceTypeId": 1,
+   "resourceTypeId": 2,
    "resourceId": null,
    "description": "איטום חלונות וויטרינות: מערכת איטום היקפית לחלונות וויטרינות, הכוללת גם: * שכבה ראשונה של איטום צמנטי חד רכיבי תרמוקיר SE 980 (אלסטוסיל) בעובי כ-2 מ\"מ * סרט בוטילי עם גב לבד.  * שכבה שנייה של איטום צמנטי חד רכיבי תרמוקיר SE 980 (אלסטוסיל) בעובי כ-2 מ\"מ איטום סף תחתון בחלונות בלבד: * יריעת EPDM+מסטיק פוליאוריטני סיקה פלקס FC-11 או שו\"ע מאושר, ע\"פ פרטי יועץ איטום, הנחיות המפקח בשטח וחוברת חברת חלונות 100 פלוס.",
    "chosenAlternativeId": null,
@@ -9791,9 +10748,9 @@
    "boqId": 1,
    "itemId": 33,
    "priority": "recommended",
-   "forSummary": false,
+   "forSummary": true,
    "amortization": 0,
-   "resourceTypeId": 1,
+   "resourceTypeId": null,
    "resourceId": null,
    "description": "איטום גג מחסן/חדר ציור, קומת קרקע: איטום ב-2 יריעות מושבחות פולימריים APP בעובי 4 מ\"מ כל אחת הכולל: * שכבה ראשונה ללא אגרגט * שכבה שנייה בציפוי אגרגט אשר תולחם בהזזה של כ-50 ס\"מ מהשכבה הראשונה.  סימון: מסומן בירוק בתוכניות ריצוף ויזואלי של \"חישובים בראש טוב\"",
    "chosenAlternativeId": null,
@@ -9831,7 +10788,7 @@
    "itemId": 95,
    "priority": "optional",
    "forSummary": false,
-   "amortization": 0,
+   "amortization": 15,
    "resourceTypeId": 1,
    "resourceId": null,
    "description": "צינור מריכף בקוטר 25 מ\"מ: אספקה והתקנה צינור פלסטי בקוטר 25 מ\"מ מסוג \"מריכף\", כולל קופסאות מעבר והסתעפות מתאימות לרבות כל ההכנות הנדרשות להתקנת הצינור בקירות מטוייחים, מחיצות וציפויי גבס, קירות בטון . המחיר כולל גם: 1) את כל חומרי העזר והאביזרים הדרושים לביצוע העבודה, למעברים שונים וצינורות נוספים למקומות שאינם במסגרת הנקודות.",
@@ -9842,10 +10799,10 @@
    "id": 16,
    "boqId": 1,
    "itemId": 96,
-   "priority": "recommended",
-   "forSummary": true,
+   "priority": "optional",
+   "forSummary": false,
    "amortization": 0,
-   "resourceTypeId": 1,
+   "resourceTypeId": 2,
    "resourceId": null,
    "description": "צינור מריכף בקוטר 50 מ\"מ: אספקה והתקנה צינור פלסטי בקוטר 50 מ\"מ מסוג \"קוברה\", לרבות כל ההכנות הנדרשות להתקנת הצינור בקירות מטוייחים, מחיצות וציפויי גבס, קירות בטון. המחיר כולל גם: 1) את כל חומרי העזר והאביזרים הדרושים לביצוע העבודה, למעברים שונים וצינורות נוספים למקומות שאינם במסגרת הנקודות.",
    "chosenAlternativeId": null,
@@ -9868,10 +10825,10 @@
    "id": 18,
    "boqId": 1,
    "itemId": 99,
-   "priority": "mandatory",
+   "priority": "recommended",
    "forSummary": true,
-   "amortization": 0,
-   "resourceTypeId": 2,
+   "amortization": 15,
+   "resourceTypeId": 1,
    "resourceId": null,
    "description": "קו הזנת טעינת רכבים: קו הזנה מלוח ראשי לשקע לטעינת רכבים בכבל XLPE-5X6 בצינור קוטר 29 מ\"מ סיומת בשקע \"סייקון\" תלת פאזי 5X16A",
    "chosenAlternativeId": null,
@@ -9897,7 +10854,7 @@
    "priority": "optional",
    "forSummary": false,
    "amortization": 0,
-   "resourceTypeId": 1,
+   "resourceTypeId": 2,
    "resourceId": null,
    "description": "נקודה לאסלה תלויה:  נקודה לאסלה תלויה, לרבות צינור מים קרים צינור ניקוז לשפכים מפי.וי.סי, חיבור למערכת מים וביוב קיימת, הכל בשלמות, קומפלט.",
    "chosenAlternativeId": null,
@@ -9907,8 +10864,8 @@
    "id": 21,
    "boqId": 1,
    "itemId": 62,
-   "priority": "optional",
-   "forSummary": false,
+   "priority": "recommended",
+   "forSummary": true,
    "amortization": 0,
    "resourceTypeId": 1,
    "resourceId": null,
@@ -9920,10 +10877,10 @@
    "id": 22,
    "boqId": 1,
    "itemId": 63,
-   "priority": "recommended",
-   "forSummary": true,
-   "amortization": 0,
-   "resourceTypeId": null,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 15,
+   "resourceTypeId": 1,
    "resourceId": null,
    "description": "נקודה לכיור רחצה: נקודה לכיור, לרבות צינור מים קרים, צינור מים חמים מבודד וצינור דלוחין, הכל בשלמות קומפלט.",
    "chosenAlternativeId": null,
@@ -9933,10 +10890,10 @@
    "id": 23,
    "boqId": 1,
    "itemId": 64,
-   "priority": "recommended",
-   "forSummary": true,
+   "priority": "optional",
+   "forSummary": false,
    "amortization": 0,
-   "resourceTypeId": 2,
+   "resourceTypeId": 1,
    "resourceId": null,
    "description": "נקודה למקלחון. נקודה למקלחת לרבות צינור מים קרים, צינור מים חמים מבודד וצינור דלוחין, הכל בשלמות, קומפלט.",
    "chosenAlternativeId": null,
@@ -9952,6 +10909,318 @@
    "resourceTypeId": 1,
    "resourceId": null,
    "description": "יציקת עמודי בטון בשטחי חתך 20/40 — סעיף מורכב הכולל בטון, טפסנות וברזל.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 25,
+   "boqId": 5,
+   "itemId": 2,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "ריצפת חצרות אנגליות: ריצפת בטון בעובי כ-20 ס\"מ כולל שכבת בטון רזה בעובי 5 ס\"מ.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 26,
+   "boqId": 5,
+   "itemId": 3,
+   "priority": "recommended",
+   "forSummary": true,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "קירות חצרות אנגליות: קירות בטון בעובי 20 ס\"מ לאחר \"הנמכת\" ריצפת חצר אנגלית",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 27,
+   "boqId": 5,
+   "itemId": 359,
+   "priority": "mandatory",
+   "forSummary": true,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "יציקת בטון ב-30 לעמודים בשטחי חתך 0.05-0.20 מ\"ר\nפריסת כמויות ע\"פ קומות:\n* קומת מרתף בשטח כ-100 מ\"ר.\n* קומת קרקע בשטח כ-120 מ\"ר.\n* קומה ראשונה בשטח כ-80 מ\"ר.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 28,
+   "boqId": 5,
+   "itemId": 4,
+   "priority": "recommended",
+   "forSummary": true,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "ריצפת פיר מעלית: ריצפת בטון בעובי 20 ס\"מ כולל שכבת בטון רזה בעובי 5 ס\"מ, ע\"פ \"חתך טיפוסי לפיר מעלית\" של מהנדס הקונסטרוקציה.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 29,
+   "boqId": 5,
+   "itemId": 5,
+   "priority": "mandatory",
+   "forSummary": true,
+   "amortization": 15,
+   "resourceTypeId": 2,
+   "resourceId": null,
+   "description": "דפנות פיר מעלית: קירות בטון בעובי 20 ס\"מ, ע\"פ \"חתך טיפוסי לפיר מעלית\" של מהנדס הקונסטרוקציה",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 30,
+   "boqId": 5,
+   "itemId": 251,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "צביעת קירות חדרים ומבואות: מערכת צבע אקרילי מגוון על בסיס מים בגימור מהודר כדוגמאת \"סופרקריל\" לצביעת קירות.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 31,
+   "boqId": 5,
+   "itemId": 252,
+   "priority": "mandatory",
+   "forSummary": true,
+   "amortization": 15,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "צביעת תיקרות חדרים ומבואות: מערכת צבע אקרילי מגוון על בסיס מים בגימור מהודר כדוגמאת \"סופרקריל\" לצביעת תיקרות.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 32,
+   "boqId": 5,
+   "itemId": 253,
+   "priority": "mandatory",
+   "forSummary": true,
+   "amortization": 0,
+   "resourceTypeId": 2,
+   "resourceId": null,
+   "description": "צביעת סינרים מערכת צבע אקרילי מגוון על בסיס מים בגימור מהודר כדוגמאת \"סופרקריל\" לצביעת סינרים.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 33,
+   "boqId": 5,
+   "itemId": 255,
+   "priority": "mandatory",
+   "forSummary": true,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "צביעת קירות שירותי אורחים, קומת קרקע: מערכת צבע אקרילי מגוון על בסיס מים בגימור מט כדוגמאת \"סופרקריל אקרינול\" לצביעת קירות.  סימון: מסומן בורוד בתוכניות בינוי וגמרים של \"חישובים בראש טוב\"",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 34,
+   "boqId": 5,
+   "itemId": 191,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 15,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "תשתית מרוצפת לפרקט עץ: אספקה והתקנת מרצפות טרצו/גרניט פורצלן, סוג ב' במידות 30/30 ס\"מ, המשמש כבסיס מישורי.  סימון: מסומן בחום בתוכניות ריצוף ויזואלי של \"חישובים בראש טוב\"",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 35,
+   "boqId": 5,
+   "itemId": 192,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "שיפולים בחדרים בגמר פרקט עץ, קומת מרתף: התקנת שיפולים/פנלים פוליאוריטניים בגובה עד 4 ס\"מ באורכים שונים, בולטים מהקירות.  צביעה: צביעה במערכת צבע על בסיס מים בגוון לבחירת אדריכל, יישום בהתזה ב-3 שכבות לפחות עד לקבלת כיסוי מלא וגוון אחיד כדוגמאת מערכת צבע הקירות.  פנלים בהיקף קומת קרקע, קומה ראשונה וקומת עליית גג: אספקה והתקנת פרופילי אלומיניום לניתוק ריצופים לקירות, ראה סעיף 09.100.0100 \"פרט ניתוק ריצפתי טיח\"",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 36,
+   "boqId": 5,
+   "itemId": 200,
+   "priority": "recommended",
+   "forSummary": true,
+   "amortization": 15,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "ריצוף חדר מגורים+פינת אוכל+מטבח +שירותי אורחים, קומת קרקע התקנת אריחי גרניט פורצלן במידות 120/120 ס\"מ בעובי 2 ס\"מ  סימון: מסומן בירוק וורוד בתוכניות ריצוף ויזואלי של \"חישובים בראש טוב\"",
+   "chosenAlternativeId": null,
+   "parentId": 191
+  },
+  {
+   "id": 37,
+   "boqId": 5,
+   "itemId": 201,
+   "priority": "mandatory",
+   "forSummary": true,
+   "amortization": 15,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "תשתית מרוצפת לאריחי אבן, קומת קרקע: אספקה והתקנת מרצפות טרצו/גרניט פורצלן, סוג ב' במידות 30/30 ס\"מ, המשמש כבסיס מישורי.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 38,
+   "boqId": 6,
+   "itemId": 30,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 2,
+   "resourceId": null,
+   "description": "איטום ריצפת חדרים רטובים: איטום בטיח צמנטי הידראולי בשלוש שכבות בצבעים שונים כדוגמאת \"סיקה טופ סיל 107\" או \"ספריקוט 730 או שו\"ע מאושר.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 39,
+   "boqId": 6,
+   "itemId": 31,
+   "priority": "recommended",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "איטום קירות חדרים רטובים:  איטום בטיח צמנטי הידראולי בשלוש שכבות בצבעים שונים כדוגמאת \"סיקה טופ סיל 107\" או תרמוקיר SE 960 שו\"ע מאושר.",
+   "chosenAlternativeId": null,
+   "parentId": 30
+  },
+  {
+   "id": 40,
+   "boqId": 6,
+   "itemId": 32,
+   "priority": "mandatory",
+   "forSummary": true,
+   "amortization": 0,
+   "resourceTypeId": 2,
+   "resourceId": null,
+   "description": "איטום חלונות וויטרינות: מערכת איטום היקפית לחלונות וויטרינות, הכוללת גם: * שכבה ראשונה של איטום צמנטי חד רכיבי תרמוקיר SE 980 (אלסטוסיל) בעובי כ-2 מ\"מ * סרט בוטילי עם גב לבד.  * שכבה שנייה של איטום צמנטי חד רכיבי תרמוקיר SE 980 (אלסטוסיל) בעובי כ-2 מ\"מ איטום סף תחתון בחלונות בלבד: * יריעת EPDM+מסטיק פוליאוריטני סיקה פלקס FC-11 או שו\"ע מאושר, ע\"פ פרטי יועץ איטום, הנחיות המפקח בשטח וחוברת חברת חלונות 100 פלוס.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 41,
+   "boqId": 6,
+   "itemId": 33,
+   "priority": "recommended",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": null,
+   "resourceId": null,
+   "description": "איטום גג מחסן/חדר ציור, קומת קרקע: איטום ב-2 יריעות מושבחות פולימריים APP בעובי 4 מ\"מ כל אחת הכולל: * שכבה ראשונה ללא אגרגט * שכבה שנייה בציפוי אגרגט אשר תולחם בהזזה של כ-50 ס\"מ מהשכבה הראשונה.  סימון: מסומן בירוק בתוכניות ריצוף ויזואלי של \"חישובים בראש טוב\"",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 42,
+   "boqId": 6,
+   "itemId": 34,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "בטון קל בגג מחסן/חדר ציור, קומת קרקע: שיפועיי גגות מבטון מוקצף (\"בטון קל\") במשקל מרחבי 1200 ק\"ג/מ\"ק חוזק 20, שיפוע של %2 לפחות, באזור קולטני מים בעובי מינימלי של 3 ס\"מ.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 43,
+   "boqId": 6,
+   "itemId": 61,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 2,
+   "resourceId": null,
+   "description": "נקודה לאסלה תלויה:  נקודה לאסלה תלויה, לרבות צינור מים קרים צינור ניקוז לשפכים מפי.וי.סי, חיבור למערכת מים וביוב קיימת, הכל בשלמות, קומפלט.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 44,
+   "boqId": 6,
+   "itemId": 62,
+   "priority": "recommended",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "נקודה לאסלה תלויה חשמלית במקלחת מאסטר, קומה ראשונה:  נקודת אינסטלציה לאסלה, הכל קומפלט",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 45,
+   "boqId": 6,
+   "itemId": 63,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 15,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "נקודה לכיור רחצה: נקודה לכיור, לרבות צינור מים קרים, צינור מים חמים מבודד וצינור דלוחין, הכל בשלמות קומפלט.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 46,
+   "boqId": 6,
+   "itemId": 94,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "צינור מריכף בקוטר 20 מ\"מ: אספקה והתקנה צינור פלסטי בקוטר 20 מ\"מ מסוג \"מריכף\", כולל קופסאות מעבר והסתעפות מתאימות לרבות כל ההכנות הנדרשות להתקנת הצינור בקירות מטוייחים, מחיצות וציפויי גבס, קירות בטון . המחיר כולל גם: 1) את כל חומרי העזר והאביזרים הדרושים לביצוע העבודה, למעברים שונים וצינורות נוספים למקומות שאינם במסגרת הנקודות.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 47,
+   "boqId": 6,
+   "itemId": 95,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 15,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "צינור מריכף בקוטר 25 מ\"מ: אספקה והתקנה צינור פלסטי בקוטר 25 מ\"מ מסוג \"מריכף\", כולל קופסאות מעבר והסתעפות מתאימות לרבות כל ההכנות הנדרשות להתקנת הצינור בקירות מטוייחים, מחיצות וציפויי גבס, קירות בטון . המחיר כולל גם: 1) את כל חומרי העזר והאביזרים הדרושים לביצוע העבודה, למעברים שונים וצינורות נוספים למקומות שאינם במסגרת הנקודות.",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 48,
+   "boqId": 6,
+   "itemId": 96,
+   "priority": "optional",
+   "forSummary": false,
+   "amortization": 0,
+   "resourceTypeId": 2,
+   "resourceId": null,
+   "description": "צינור מריכף בקוטר 50 מ\"מ: אספקה והתקנה צינור פלסטי בקוטר 50 מ\"מ מסוג \"קוברה\", לרבות כל ההכנות הנדרשות להתקנת הצינור בקירות מטוייחים, מחיצות וציפויי גבס, קירות בטון. המחיר כולל גם: 1) את כל חומרי העזר והאביזרים הדרושים לביצוע העבודה, למעברים שונים וצינורות נוספים למקומות שאינם במסגרת הנקודות.",
    "chosenAlternativeId": null,
    "parentId": null
   }
@@ -9983,6 +11252,15 @@
    "author": "דני קרייסברג",
    "ts": "2026-08-05T12:00:00",
    "text": "כמות מעודכנת לאחר מדידה בשטח."
+  },
+  {
+   "id": 4,
+   "scope": "subChapter",
+   "refId": 69,
+   "boqId": 1,
+   "author": "דני קרייסברג",
+   "ts": "2026-08-06T08:20:00",
+   "text": "אריחים חתוכים לפי מידה יסופקו ע\"י המזמין."
   }
  ],
  "history": [
@@ -10023,6 +11301,22 @@
      "to": "true"
     }
    ]
+  }
+ ],
+ "tenders": [
+  {
+   "id": 1,
+   "boqId": 1,
+   "roleTypeId": 1,
+   "contractorIds": [
+    5,
+    6,
+    7,
+    9
+   ],
+   "dueDate": "2024-08-15",
+   "message": "",
+   "sentAt": "2026-02-12T10:00:00"
   }
  ]
 }

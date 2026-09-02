@@ -8,6 +8,7 @@ import ContextMenu from "@/components/shared/ContextMenu.vue";
 import StructureTreeRow from "./StructureTreeRow.vue";
 import StructureElementModal from "./StructureElementModal.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
+import { SIDEBAR_MODE } from "@/constants";
 
 const boq = useBoqStore();
 const ui = useUiStore();
@@ -81,7 +82,7 @@ function confirmDelete() {
 }
 
 /* ---------- פרקים: cascade checks ---------- */
-const usedTree = computed(() => boq.usedChaptersTree());
+const usedTree = computed(() => boq.usedChaptersTree);
 const allChecked = computed(() => {
   const allSubs = usedTree.value.flatMap((g) => g.subChapters.map((s) => s.id));
   return allSubs.length > 0 && allSubs.every((id) => boq.checkedSubChapterIds.includes(id));
@@ -128,22 +129,26 @@ function toggleChapterExpand(chId) {
     <div class="side-tabs">
       <button
         class="side-tab"
-        :class="{ active: boq.sidebarMode === 'chapters' }"
-        @click="boq.setMode('chapters')"
+        :class="{ active: boq.sidebarMode === SIDEBAR_MODE.CHAPTERS }"
+        @click="boq.setMode(SIDEBAR_MODE.CHAPTERS)"
       >
-        <span class="side-tab-inner" :class="{ active: boq.sidebarMode === 'chapters' }">פרקים</span>
+        <span class="side-tab-inner" :class="{ active: boq.sidebarMode === SIDEBAR_MODE.CHAPTERS }"
+          >פרקים</span
+        >
       </button>
       <button
         class="side-tab"
-        :class="{ active: boq.sidebarMode === 'assignment' }"
-        @click="boq.setMode('assignment')"
+        :class="{ active: boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT }"
+        @click="boq.setMode(SIDEBAR_MODE.ASSIGNMENT)"
       >
-        <span class="side-tab-inner" :class="{ active: boq.sidebarMode === 'assignment' }">שיוך</span>
+        <span class="side-tab-inner" :class="{ active: boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT }"
+          >שיוך</span
+        >
       </button>
     </div>
 
     <!-- ================= שיוך ================= -->
-    <template v-if="boq.sidebarMode === 'assignment'">
+    <template v-if="boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT">
       <div class="add-row">
         <button class="ghost-btn" @click="openAddMenu">
           <span>הוספה</span>
@@ -191,12 +196,25 @@ function toggleChapterExpand(chId) {
                 :size="16"
               />
             </span>
-            <BaseCheckbox size="small" :model-value="chapterChecked(g)" @update:model-value="(v) => setChapter(g, v)" />
+            <BaseCheckbox
+              size="small"
+              :model-value="chapterChecked(g)"
+              @update:model-value="(v) => setChapter(g, v)"
+            />
             <span class="chapter-label ellipsis">{{ g.chapter.num }}: {{ g.chapter.name }}</span>
           </div>
           <template v-if="boq.expandedChapterIds.includes(g.chapter.id)">
-            <div v-for="sc in g.subChapters" :key="sc.id" class="sub-row" :class="{ checked: subChecked(sc) }">
-              <BaseCheckbox size="small" :model-value="subChecked(sc)" @update:model-value="(v) => setSub(g, sc, v)" />
+            <div
+              v-for="sc in g.subChapters"
+              :key="sc.id"
+              class="sub-row"
+              :class="{ checked: subChecked(sc) }"
+            >
+              <BaseCheckbox
+                size="small"
+                :model-value="subChecked(sc)"
+                @update:model-value="(v) => setSub(g, sc, v)"
+              />
               <span class="sub-label ellipsis">{{ sc.num }}-{{ sc.name }}</span>
             </div>
           </template>

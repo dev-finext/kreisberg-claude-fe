@@ -56,13 +56,22 @@ function onEnter() {
         :value="open ? query : selectedLabel"
         :placeholder="selectedLabel || placeholder"
         :disabled="disabled"
-        @input="query = $event.target.value; open = true"
+        @input="
+          query = $event.target.value;
+          open = true;
+        "
         @keyup.enter="onEnter"
         @focus="open = true"
       />
     </div>
     <div v-if="open && !disabled" class="combo-menu scroll-slim" @mouseleave="open = false">
-      <button v-for="o in filtered" :key="o.value" class="combo-opt ellipsis" :class="{ active: o.value === modelValue }" @click="choose(o)">
+      <button
+        v-for="o in filtered"
+        :key="o.value"
+        class="combo-opt ellipsis"
+        :class="{ active: o.value === modelValue }"
+        @click="choose(o)"
+      >
         {{ o.label }}
       </button>
       <div v-if="!filtered.length" class="combo-none">לא נמצאו תוצאות</div>

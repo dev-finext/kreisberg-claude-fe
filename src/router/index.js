@@ -14,9 +14,21 @@ const routes = [
     children: [
       { path: "", redirect: (to) => `/projects/${to.params.id}/general` },
       { path: "general", name: "project-general", component: () => import("@/views/project/GeneralTab.vue") },
-      { path: "conditions", name: "project-conditions", component: () => import("@/views/project/ConditionsTab.vue") },
-      { path: "resources", name: "project-resources", component: () => import("@/views/project/ResourcesTab.vue") },
-      { path: "documents", name: "project-documents", component: () => import("@/views/project/DocumentsTab.vue") },
+      {
+        path: "conditions",
+        name: "project-conditions",
+        component: () => import("@/views/project/ConditionsTab.vue"),
+      },
+      {
+        path: "resources",
+        name: "project-resources",
+        component: () => import("@/views/project/ResourcesTab.vue"),
+      },
+      {
+        path: "documents",
+        name: "project-documents",
+        component: () => import("@/views/project/DocumentsTab.vue"),
+      },
       {
         path: "quantities/:boqId?",
         name: "project-quantities",

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import { PRIORITY_LABELS, PRIORITY_LEVELS } from "@/constants";
 
 const props = defineProps({
   modelValue: { type: String, default: "recommended" }, // mandatory | recommended | optional
@@ -11,9 +12,8 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue"]);
 
 const open = ref(false);
-const labels = { mandatory: "חובה", recommended: "מומלץ", optional: "לא חובה" };
-const label = computed(() => labels[props.modelValue] || "מומלץ");
-const level = computed(() => ({ mandatory: 3, recommended: 2, optional: 1 })[props.modelValue] || 2);
+const label = computed(() => PRIORITY_LABELS[props.modelValue] || "מומלץ");
+const level = computed(() => PRIORITY_LEVELS[props.modelValue] || 2);
 
 function choose(v) {
   open.value = false;
@@ -31,7 +31,13 @@ function choose(v) {
       <AppIcon name="chevron-down" :size="14" />
     </button>
     <div v-if="open" class="prio-menu" @mouseleave="open = false">
-      <button v-for="(l, v) in labels" :key="v" class="prio-opt" :class="{ active: v === modelValue }" @click.stop="choose(v)">
+      <button
+        v-for="(l, v) in PRIORITY_LABELS"
+        :key="v"
+        class="prio-opt"
+        :class="{ active: v === modelValue }"
+        @click.stop="choose(v)"
+      >
         {{ l }}
       </button>
     </div>

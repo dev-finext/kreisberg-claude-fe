@@ -4,6 +4,7 @@ import { useBoqStore } from "@/stores/boq";
 import { useUiStore } from "@/stores/ui";
 import BaseModal from "@/components/shared/BaseModal.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import { formatDateTime } from "@/utils/format";
 
 const props = defineProps({
   scope: { type: String, required: true }, // 'chapter' | 'subChapter'
@@ -24,7 +25,9 @@ const title = computed(() =>
     : `הערות לתת פרק ${props.target.num} - ${props.target.name}`
 );
 const notes = computed(() =>
-  boq.commentsFor(props.scope, props.target.id).filter((n) => !search.value.trim() || n.text.includes(search.value.trim()))
+  boq
+    .commentsFor(props.scope, props.target.id)
+    .filter((n) => !search.value.trim() || n.text.includes(search.value.trim()))
 );
 
 function saveDraft() {
@@ -37,15 +40,16 @@ function saveDraft() {
   adding.value = false;
   ui.toast("ההערה נוספה בהצלחה");
 }
-
-function fmtTs(ts) {
-  const d = new Date(ts);
-  return d.toLocaleDateString("he-IL") + " " + d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
-}
 </script>
 
 <template>
-  <BaseModal :title="title" width="640px" confirm-label="שמירה" @close="emit('close')" @confirm="emit('close')">
+  <BaseModal
+    :title="title"
+    width="640px"
+    confirm-label="שמירה"
+    @close="emit('close')"
+    @confirm="emit('close')"
+  >
     <div class="notes-head">
       <button class="btn-text add-btn" @click="adding = !adding">
         <AppIcon name="plus-circle" :size="18" />
@@ -64,7 +68,15 @@ function fmtTs(ts) {
       <textarea v-model="draft" class="input draft" rows="3" placeholder="כתוב הערה..." />
       <div class="edit-actions">
         <button class="round-btn confirm" @click="saveDraft"><AppIcon name="check" :size="16" /></button>
-        <button class="round-btn" @click="adding = false; draft = ''"><AppIcon name="cancel" :size="14" /></button>
+        <button
+          class="round-btn"
+          @click="
+            adding = false;
+            draft = '';
+          "
+        >
+          <AppIcon name="cancel" :size="14" />
+        </button>
       </div>
     </div>
 
@@ -72,7 +84,7 @@ function fmtTs(ts) {
       <div v-for="n in notes" :key="n.id" class="note-card">
         <div class="note-meta">
           <span class="author">{{ n.author }}</span>
-          <span class="num">{{ fmtTs(n.ts) }}</span>
+          <span class="num">{{ formatDateTime(n.ts) }}</span>
         </div>
         <p class="note-text">{{ n.text }}</p>
       </div>

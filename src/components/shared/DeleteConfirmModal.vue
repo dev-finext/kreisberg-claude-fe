@@ -11,7 +11,13 @@ const emit = defineEmits(["close", "confirm"]);
 </script>
 
 <template>
-  <BaseModal :title="title" width="420px" :confirm-label="confirmLabel" @close="emit('close')" @confirm="emit('confirm')">
+  <BaseModal
+    :title="title"
+    width="420px"
+    :confirm-label="confirmLabel"
+    @close="emit('close')"
+    @confirm="emit('confirm')"
+  >
     <p class="msg">{{ message }}</p>
     <p v-if="detail" class="detail">{{ detail }}</p>
   </BaseModal>

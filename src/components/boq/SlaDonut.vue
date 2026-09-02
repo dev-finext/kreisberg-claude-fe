@@ -29,9 +29,18 @@ const segments = computed(() => {
 <template>
   <div class="sla">
     <div class="legend">
-      <div class="legend-row"><span class="count num">{{ sla.late }}</span><span class="lbl">חורג</span><span class="dot" style="background: var(--danger)" /></div>
-      <div class="legend-row"><span class="count num">{{ sla.near }}</span><span class="lbl">קרוב לחריגה</span><span class="dot" style="background: var(--warning)" /></div>
-      <div class="legend-row"><span class="count num">{{ sla.ok }}</span><span class="lbl">עומד בזמנים</span><span class="dot" style="background: var(--success)" /></div>
+      <div class="legend-row">
+        <span class="count num">{{ sla.late }}</span
+        ><span class="lbl">חורג</span><span class="dot" style="background: var(--danger)" />
+      </div>
+      <div class="legend-row">
+        <span class="count num">{{ sla.near }}</span
+        ><span class="lbl">קרוב לחריגה</span><span class="dot" style="background: var(--warning)" />
+      </div>
+      <div class="legend-row">
+        <span class="count num">{{ sla.ok }}</span
+        ><span class="lbl">עומד בזמנים</span><span class="dot" style="background: var(--success)" />
+      </div>
     </div>
     <svg width="34" height="34" viewBox="0 0 34 34">
       <circle cx="17" cy="17" :r="R" fill="none" stroke="var(--divider)" stroke-width="4" />
@@ -48,7 +57,9 @@ const segments = computed(() => {
         :stroke-dashoffset="s.dashoffset"
         transform="rotate(-90 17 17)"
       />
-      <text x="17" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-primary)">{{ total }}</text>
+      <text x="17" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-primary)">
+        {{ total }}
+      </text>
     </svg>
   </div>
 </template>

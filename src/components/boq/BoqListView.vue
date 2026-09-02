@@ -8,9 +8,12 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import SearchPill from "@/components/shared/SearchPill.vue";
 import SlaDonut from "./SlaDonut.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
+import { formatDate } from "@/utils/format";
+import { BOQ_STATUS_LABELS } from "@/constants";
 
 const route = useRoute();
 const router = useRouter();
@@ -35,10 +38,6 @@ const headers = computed(() => {
 });
 const docName = computed(() => headers.value[0]?.docName || "בנארית");
 
-function fmtDate(d) {
-  if (!d) return "-";
-  return new Date(d).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
 function openBoq(h) {
   router.push(`/projects/${projectId.value}/quantities/${h.id}`);
 }
@@ -77,10 +76,7 @@ function toggleChecked(id, v) {
     <!-- sub header: doc name + pencil · selects · פעיל toggle · search left -->
     <div class="sub-header">
       <div class="sub-start">
-        <div class="search-pill">
-          <input v-model="search" placeholder="חיפוש לפי פרק/סעיף/תת סעיף" />
-          <AppIcon name="search" :size="20" />
-        </div>
+        <SearchPill v-model="search" placeholder="חיפוש לפי פרק/סעיף/תת סעיף" />
         <button class="btn-text create-btn" @click="showCreate = true">
           <AppIcon name="plus-circle" :size="20" />
           <span>כתב כמויות חדש</span>
@@ -118,11 +114,14 @@ function toggleChecked(id, v) {
           <tr v-for="h in headers" :key="h.id" class="boq-row" @click="openBoq(h)">
             <td class="td-check" @click.stop>
               <span class="row-expand"><AppIcon name="chevron-left" :size="14" /></span>
-              <BaseCheckbox :model-value="checked.includes(h.id)" @update:model-value="(v) => toggleChecked(h.id, v)" />
+              <BaseCheckbox
+                :model-value="checked.includes(h.id)"
+                @update:model-value="(v) => toggleChecked(h.id, v)"
+              />
             </td>
             <td class="td-name">{{ h.name }}</td>
             <td class="td-detail ellipsis">{{ h.detail || "-" }}</td>
-            <td class="num">{{ fmtDate(h.exitDate) }}</td>
+            <td class="num">{{ formatDate(h.exitDate) }}</td>
             <td><SlaDonut :sla="h.sla" /></td>
             <td>
               <div class="pills">
@@ -130,13 +129,15 @@ function toggleChecked(id, v) {
                   {{ p.label }}<span v-if="p.count" class="num"> ({{ p.count }})</span>
                 </span>
                 <span v-if="!h.stagePills.length" class="pill pill-neutral">{{
-                  h.status === "draft" ? "טיוטה" : h.status === "final" ? "סופי" : "נעול"
+                  BOQ_STATUS_LABELS[h.status]
                 }}</span>
               </div>
             </td>
             <td class="td-notes ellipsis">{{ h.notes || "-" }}</td>
             <td class="td-kebab" @click.stop>
-              <button class="icon-btn" @click="openMenu(h, $event)"><AppIcon name="kebab" :size="18" /></button>
+              <button class="icon-btn" @click="openMenu(h, $event)">
+                <AppIcon name="kebab" :size="18" />
+              </button>
             </td>
           </tr>
         </tbody>
@@ -150,7 +151,12 @@ function toggleChecked(id, v) {
           <ellipse cx="75" cy="118" rx="55" ry="8" fill="#EEF2FA" />
           <rect x="45" y="18" width="60" height="86" rx="6" stroke="#BBC5CF" stroke-width="2.5" fill="#fff" />
           <rect x="62" y="10" width="26" height="14" rx="4" stroke="#BBC5CF" stroke-width="2.5" fill="#fff" />
-          <path d="M56 40h28M56 54h38M56 68h32M56 82h20" stroke="#BBC5CF" stroke-width="2.5" stroke-linecap="round" />
+          <path
+            d="M56 40h28M56 54h38M56 68h32M56 82h20"
+            stroke="#BBC5CF"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
       <p class="empty-title">עדיין לא טענת כתבי כמויות</p>
@@ -161,13 +167,29 @@ function toggleChecked(id, v) {
       </div>
     </div>
 
-    <ContextMenu v-if="menu" :items="menuItems" :x="menu.x" :y="menu.y" @select="onMenuSelect" @close="menu = null" />
+    <ContextMenu
+      v-if="menu"
+      :items="menuItems"
+      :x="menu.x"
+      :y="menu.y"
+      @select="onMenuSelect"
+      @close="menu = null"
+    />
     <CreateBoqModal
       v-if="showCreate || editHeader"
       :project-id="projectId"
       :edit-header="editHeader"
-      @close="showCreate = false; editHeader = null"
-      @saved="(h) => { showCreate = false; editHeader = null; openBoq(h); }"
+      @close="
+        showCreate = false;
+        editHeader = null;
+      "
+      @saved="
+        (h) => {
+          showCreate = false;
+          editHeader = null;
+          openBoq(h);
+        }
+      "
     />
     <DeleteConfirmModal
       v-if="deleteTarget"
@@ -243,31 +265,6 @@ function toggleChecked(id, v) {
   flex-direction: row-reverse;
   font-weight: 600;
   font-size: 13px;
-}
-.search-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-direction: row-reverse;
-  background: var(--surface-muted);
-  border-radius: var(--radius-pill);
-  height: 40px;
-  padding: 0 16px;
-  width: 226px;
-  color: var(--text-disabled);
-}
-.search-pill input {
-  border: none;
-  background: none;
-  outline: none;
-  flex: 1;
-  text-align: right;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.search-pill input::placeholder {
-  color: var(--text-disabled);
 }
 /* table */
 .boq-table {

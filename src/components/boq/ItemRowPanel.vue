@@ -6,6 +6,8 @@ import { useUiStore } from "@/stores/ui";
 import { useDbStore } from "@/stores/db";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import PriorityControl from "./PriorityControl.vue";
+import { formatDateTime, formatQty } from "@/utils/format";
+import { HISTORY_FIELD_LABELS, HISTORY_VALUE_LABELS } from "@/constants";
 
 const props = defineProps({
   row: { type: Object, required: true },
@@ -70,42 +72,18 @@ function chooseAlt(altId) {
 
 /* ---------- history ---------- */
 const history = computed(() => boq.historyFor(item.value.id));
-const fieldNames = {
-  qty: "כמות",
-  priority: "עדיפות",
-  forSummary: "לסיכום",
-  description: "תיאור",
-  amortization: "פחת",
-  chosenAlternative: "סעיף חלופי",
-  replacedItem: "החלפת סעיף",
-  resourceTypeId: "סוג משאב",
-  resourceId: "זיהוי משאב",
-};
-const valueNames = {
-  mandatory: "חובה",
-  recommended: "מומלץ",
-  optional: "לא חובה",
-  true: "לסיכום",
-  false: "לא לסיכום",
-};
 function fmtVal(field, v) {
-  return valueNames[v] || v;
-}
-function fmtTs(ts) {
-  const d = new Date(ts);
-  return (
-    d.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" }) +
-    ", " +
-    d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })
-  );
+  return HISTORY_VALUE_LABELS[v] || v;
 }
 
 /* ---------- composite sub items ---------- */
 const subItems = computed(() =>
-  (item.value.subItems || []).map((si) => {
-    const sub = cat.item(si.itemId);
-    return sub ? { ...si, item: sub } : null;
-  }).filter(Boolean)
+  (item.value.subItems || [])
+    .map((si) => {
+      const sub = cat.item(si.itemId);
+      return sub ? { ...si, item: sub } : null;
+    })
+    .filter(Boolean)
 );
 function toggleSubOpen(id) {
   const i = openSubItems.value.indexOf(id);
@@ -168,14 +146,22 @@ function subRow(si) {
         <textarea v-model="noteDraft" class="input note-input" rows="2" placeholder="כתוב הערה..." />
         <div class="note-actions">
           <button class="btn btn-primary btn-sm" @click="saveNote">שמירה</button>
-          <button class="btn btn-secondary btn-sm" @click="addingNote = false; noteDraft = ''">ביטול</button>
+          <button
+            class="btn btn-secondary btn-sm"
+            @click="
+              addingNote = false;
+              noteDraft = '';
+            "
+          >
+            ביטול
+          </button>
         </div>
       </div>
       <div v-if="notes.length" class="notes-stack scroll-slim">
         <div v-for="n in notes" :key="n.id" class="note-card">
           <div class="note-meta">
             <span class="note-author">{{ n.author }}</span>
-            <span class="note-ts num">{{ fmtTs(n.ts) }}</span>
+            <span class="note-ts num">{{ formatDateTime(n.ts) }}</span>
           </div>
           <p class="note-text">{{ n.text }}</p>
         </div>
@@ -198,12 +184,20 @@ function subRow(si) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="rr in relatedRows" :key="rr.item.id" class="nested-row clickable" @click="emit('edit-item')">
-            <td><span class="item-code">{{ rr.item.code }}</span><span v-if="rr.isParent" class="parent-badge" title="סעיף אב" /></td>
+          <tr
+            v-for="rr in relatedRows"
+            :key="rr.item.id"
+            class="nested-row clickable"
+            @click="emit('edit-item')"
+          >
+            <td>
+              <span class="item-code">{{ rr.item.code }}</span
+              ><span v-if="rr.isParent" class="parent-badge" title="סעיף אב" />
+            </td>
             <td class="ellipsis">{{ rr.item.name }}</td>
             <td>{{ db.resourceTypes.find((t) => t.id === rr.item.resourceTypeId)?.name || "--" }}</td>
             <td>{{ rr.item.unit || "--" }}</td>
-            <td class="num">{{ boqQtyOf(rr.item.id).toFixed(2) }}</td>
+            <td class="num">{{ formatQty(boqQtyOf(rr.item.id)) }}</td>
             <td>{{ rr.isParent ? "כן" : "" }}</td>
             <td><PriorityControl variant="squares" :model-value="rr.item.priority || 'recommended'" /></td>
           </tr>
@@ -228,15 +222,19 @@ function subRow(si) {
         <tbody>
           <tr class="nested-row current">
             <td class="td-radio"><span class="radio checked" /></td>
-            <td><span class="item-code">{{ item.code }}</span></td>
+            <td>
+              <span class="item-code">{{ item.code }}</span>
+            </td>
             <td class="ellipsis">{{ item.name }} <span class="current-tag">(נוכחי)</span></td>
             <td>{{ item.unit || "--" }}</td>
-            <td class="num">{{ Number(row.qty).toFixed(2) }}</td>
+            <td class="num">{{ formatQty(row.qty) }}</td>
             <td><PriorityControl variant="squares" :model-value="row.priority" /></td>
           </tr>
           <tr v-for="alt in alternatives" :key="alt.id" class="nested-row">
             <td class="td-radio"><button class="radio" @click="chooseAlt(alt.id)" /></td>
-            <td><span class="item-code">{{ alt.code }}</span></td>
+            <td>
+              <span class="item-code">{{ alt.code }}</span>
+            </td>
             <td class="ellipsis">{{ alt.name }}</td>
             <td>{{ alt.unit || "--" }}</td>
             <td class="num">—</td>
@@ -253,12 +251,12 @@ function subRow(si) {
         <div v-for="h in history" :key="h.id" class="history-group">
           <div class="h-head">
             <AppIcon name="clock" :size="15" />
-            <span class="num">{{ fmtTs(h.ts) }}</span>
+            <span class="num">{{ formatDateTime(h.ts) }}</span>
             <span>, {{ h.user }}</span>
           </div>
           <div class="h-card">
             <span v-for="(c, i) in h.changes" :key="i" class="h-change">
-              <span class="h-field">{{ fieldNames[c.field] || c.field }}:</span>
+              <span class="h-field">{{ HISTORY_FIELD_LABELS[c.field] || c.field }}:</span>
               <span class="h-old">{{ fmtVal(c.field, c.from) }}</span>
               <span class="h-new">{{ fmtVal(c.field, c.to) }}</span>
             </span>
@@ -280,14 +278,21 @@ function subRow(si) {
             <tr class="nested-row">
               <td class="td-expand">
                 <span class="expand" @click="toggleSubOpen(si.itemId)">
-                  <AppIcon :name="openSubItems.includes(si.itemId) ? 'chevron-down' : 'chevron-left'" :size="14" />
+                  <AppIcon
+                    :name="openSubItems.includes(si.itemId) ? 'chevron-down' : 'chevron-left'"
+                    :size="14"
+                  />
                 </span>
               </td>
-              <td><span class="item-code">{{ si.item.code }}</span></td>
+              <td>
+                <span class="item-code">{{ si.item.code }}</span>
+              </td>
               <td class="ellipsis">{{ si.item.name }}</td>
-              <td>{{ db.resourceTypes.find((t) => t.id === si.item.resourceTypeId)?.name || "קבלן ראשי" }}</td>
+              <td>
+                {{ db.resourceTypes.find((t) => t.id === si.item.resourceTypeId)?.name || "קבלן ראשי" }}
+              </td>
               <td>{{ si.item.unit }}</td>
-              <td class="num">{{ Number(si.qty).toFixed(0) }}</td>
+              <td class="num">{{ formatQty(si.qty, 0) }}</td>
               <td><PriorityControl variant="squares" :model-value="si.item.priority || 'recommended'" /></td>
             </tr>
             <tr v-if="openSubItems.includes(si.itemId)" class="sub-panel-row">
@@ -482,7 +487,9 @@ function subRow(si) {
 }
 .radio.checked {
   border-color: var(--brand-primary);
-  box-shadow: inset 0 0 0 3.5px var(--surface), inset 0 0 0 10px var(--brand-primary);
+  box-shadow:
+    inset 0 0 0 3.5px var(--surface),
+    inset 0 0 0 10px var(--brand-primary);
 }
 .current-tag {
   color: var(--text-muted);

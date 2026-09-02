@@ -4,7 +4,9 @@ import { useRouter } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import SearchPill from "@/components/shared/SearchPill.vue";
 import SlaDonut from "@/components/boq/SlaDonut.vue";
+import { formatDate } from "@/utils/format";
 
 const router = useRouter();
 const db = useDbStore();
@@ -25,7 +27,11 @@ const typeColors = {
 const typeCounts = computed(() => {
   const m = new Map();
   for (const p of db.projects) m.set(p.typeName, (m.get(p.typeName) || 0) + 1);
-  return [...m.entries()].map(([name, count]) => ({ name, count, color: typeColors[name] || "var(--status-gray)" }));
+  return [...m.entries()].map(([name, count]) => ({
+    name,
+    count,
+    color: typeColors[name] || "var(--status-gray)",
+  }));
 });
 const totalProjects = computed(() => db.projects.length);
 const slaAgg = computed(() => {
@@ -38,10 +44,22 @@ const slaAgg = computed(() => {
   return agg;
 });
 const statusSteps = computed(() => [
-  { label: "חדש", count: db.boqHeaders.filter((h) => h.status === "draft" && !h.stagePills.length).length, cls: "st-new" },
+  {
+    label: "חדש",
+    count: db.boqHeaders.filter((h) => h.status === "draft" && !h.stagePills.length).length,
+    cls: "st-new",
+  },
   { label: "כתב כמויות", count: db.boqHeaders.length, cls: "st-boq" },
-  { label: "מכרז", count: db.boqHeaders.filter((h) => h.stagePills.some((p) => p.label === "מכרז")).length, cls: "st-tender" },
-  { label: "תומחר", count: db.boqHeaders.filter((h) => h.stagePills.some((p) => p.label === "תומחר")).length, cls: "st-priced" },
+  {
+    label: "מכרז",
+    count: db.boqHeaders.filter((h) => h.stagePills.some((p) => p.label === "מכרז")).length,
+    cls: "st-tender",
+  },
+  {
+    label: "תומחר",
+    count: db.boqHeaders.filter((h) => h.stagePills.some((p) => p.label === "תומחר")).length,
+    cls: "st-priced",
+  },
   { label: "חוזה", count: 0, cls: "st-contract" },
 ]);
 
@@ -59,10 +77,6 @@ const typeSegments = computed(() => {
   });
 });
 
-function fmtDate(d) {
-  if (!d) return "---";
-  return new Date(d).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
 function projectStatus(p) {
   return p.statusPills.length ? p.statusPills[p.statusPills.length - 1].label : "חדש";
 }
@@ -102,7 +116,14 @@ function projectStatus(p) {
                   :stroke-dashoffset="s.dashoffset"
                   transform="rotate(-90 48 48)"
                 />
-                <text x="48" y="57" text-anchor="middle" font-size="26" font-weight="700" fill="var(--text-primary)">
+                <text
+                  x="48"
+                  y="57"
+                  text-anchor="middle"
+                  font-size="26"
+                  font-weight="700"
+                  fill="var(--text-primary)"
+                >
                   {{ totalProjects }}
                 </text>
               </svg>
@@ -129,9 +150,20 @@ function projectStatus(p) {
           <div class="tile-body updates">
             <svg width="90" height="64" viewBox="0 0 90 64" fill="none">
               <ellipse cx="45" cy="54" rx="34" ry="6" fill="#EEF2FA" />
-              <path d="M14 34L74 12l-18 34-12-10-8 14-4-16z" stroke="#BBC5CF" stroke-width="2" fill="#fff" stroke-linejoin="round" />
+              <path
+                d="M14 34L74 12l-18 34-12-10-8 14-4-16z"
+                stroke="#BBC5CF"
+                stroke-width="2"
+                fill="#fff"
+                stroke-linejoin="round"
+              />
               <path d="M74 12L44 36" stroke="#BBC5CF" stroke-width="2" />
-              <path d="M8 16c3-2 6 1 4 4M80 40c-3 2-6-1-4-4" stroke="#DCE3EF" stroke-width="1.6" stroke-linecap="round" />
+              <path
+                d="M8 16c3-2 6 1 4 4M80 40c-3 2-6-1-4-4"
+                stroke="#DCE3EF"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
             </svg>
             <p class="updates-empty">אין עדכונים חדשים</p>
           </div>
@@ -157,10 +189,7 @@ function projectStatus(p) {
       <!-- table header row -->
       <div class="list-toolbar">
         <span class="active-count">{{ totalProjects }} פרויקטים פעילים</span>
-        <div class="search-pill">
-          <input v-model="search" placeholder="חיפוש" />
-          <AppIcon name="search" :size="20" />
-        </div>
+        <SearchPill v-model="search" placeholder="חיפוש" />
       </div>
 
       <table class="projects-table">
@@ -190,8 +219,10 @@ function projectStatus(p) {
               <AppIcon name="menu-reports" :size="18" />
             </td>
             <td class="td-desc ellipsis">{{ p.description || "---" }}</td>
-            <td class="num">{{ fmtDate(p.createdAt) }}</td>
-            <td><span class="pill pill-info">{{ projectStatus(p) }}</span></td>
+            <td class="num">{{ formatDate(p.createdAt) }}</td>
+            <td>
+              <span class="pill pill-info">{{ projectStatus(p) }}</span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -361,31 +392,6 @@ function projectStatus(p) {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
-}
-.search-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-direction: row-reverse;
-  background: var(--surface-muted);
-  border-radius: var(--radius-pill);
-  height: 40px;
-  padding: 0 16px;
-  width: 226px;
-  color: var(--text-disabled);
-}
-.search-pill input {
-  border: none;
-  background: none;
-  outline: none;
-  flex: 1;
-  text-align: right;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.search-pill input::placeholder {
-  color: var(--text-disabled);
 }
 .projects-table {
   width: 100%;

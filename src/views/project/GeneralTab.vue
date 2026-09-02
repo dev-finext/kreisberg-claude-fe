@@ -157,8 +157,12 @@ function removeAsset(a) {
                 <td class="num">{{ a.parcel || "—" }}</td>
                 <td class="num">{{ a.subParcel || "—" }}</td>
                 <td class="td-act">
-                  <button class="icon-btn" @click="editingAsset = a.id"><AppIcon name="pencil" :size="15" /></button>
-                  <button class="icon-btn danger" @click="removeAsset(a)"><AppIcon name="trash" :size="15" /></button>
+                  <button class="icon-btn" @click="editingAsset = a.id">
+                    <AppIcon name="pencil" :size="15" />
+                  </button>
+                  <button class="icon-btn danger" @click="removeAsset(a)">
+                    <AppIcon name="trash" :size="15" />
+                  </button>
                 </td>
               </template>
             </tr>
@@ -167,9 +171,32 @@ function removeAsset(a) {
         <div v-if="!assets.length" class="assets-empty">
           <svg width="110" height="96" viewBox="0 0 110 96" fill="none">
             <ellipse cx="55" cy="86" rx="40" ry="6" fill="#EEF2FA" />
-            <rect x="30" y="14" width="34" height="70" rx="3" stroke="#BBC5CF" stroke-width="2.2" fill="#fff" />
-            <rect x="64" y="38" width="20" height="46" rx="3" stroke="#BBC5CF" stroke-width="2.2" fill="#fff" />
-            <path d="M36 24h6M46 24h6M36 34h6M46 34h6M36 44h6M46 44h6M36 54h6M46 54h6M69 46h4M77 46h4M69 56h4M77 56h4M69 66h4M77 66h4" stroke="#BBC5CF" stroke-width="2" stroke-linecap="round" />
+            <rect
+              x="30"
+              y="14"
+              width="34"
+              height="70"
+              rx="3"
+              stroke="#BBC5CF"
+              stroke-width="2.2"
+              fill="#fff"
+            />
+            <rect
+              x="64"
+              y="38"
+              width="20"
+              height="46"
+              rx="3"
+              stroke="#BBC5CF"
+              stroke-width="2.2"
+              fill="#fff"
+            />
+            <path
+              d="M36 24h6M46 24h6M36 34h6M46 34h6M36 44h6M46 44h6M36 54h6M46 54h6M69 46h4M77 46h4M69 56h4M77 56h4M69 66h4M77 66h4"
+              stroke="#BBC5CF"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
           </svg>
           <p>הנכסים שתוסיף יופיעו כאן</p>
         </div>

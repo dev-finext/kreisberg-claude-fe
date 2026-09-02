@@ -3,6 +3,7 @@ import { ref, computed, watch } from "vue";
 import { useCatalogStore } from "@/stores/catalog";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
+import SearchPill from "@/components/shared/SearchPill.vue";
 import PickerCombo from "./PickerCombo.vue";
 
 const props = defineProps({
@@ -31,10 +32,14 @@ const chapterOptions = computed(() =>
   cat.chaptersSorted().map((c) => ({ value: c.id, label: `${c.num}- ${c.name}` }))
 );
 const subChapterOptions = computed(() =>
-  chapterId.value ? cat.subChaptersOf(chapterId.value).map((s) => ({ value: s.id, label: `${s.num} - ${s.name}` })) : []
+  chapterId.value
+    ? cat.subChaptersOf(chapterId.value).map((s) => ({ value: s.id, label: `${s.num} - ${s.name}` }))
+    : []
 );
 const tagOptions = computed(() =>
-  cat.tagsInScope({ chapterId: chapterId.value, subChapterId: subChapterId.value }).map((t) => ({ value: t.id, label: t.name }))
+  cat
+    .tagsInScope({ chapterId: chapterId.value, subChapterId: subChapterId.value })
+    .map((t) => ({ value: t.id, label: t.name }))
 );
 
 /* cascade: chapter change resets sub-chapter; tag resets silently when irrelevant */
@@ -77,7 +82,11 @@ const visibleGroups = computed(() => {
         .map((sg) => ({
           ...sg,
           items: sg.items.filter(
-            (i) => !t || i.code.toLowerCase().includes(t) || (i.name || "").toLowerCase().includes(t) || (i.unit || "").toLowerCase().includes(t)
+            (i) =>
+              !t ||
+              i.code.toLowerCase().includes(t) ||
+              (i.name || "").toLowerCase().includes(t) ||
+              (i.unit || "").toLowerCase().includes(t)
           ),
         }))
         .filter((sg) => sg.items.length),
@@ -85,7 +94,9 @@ const visibleGroups = computed(() => {
     .filter((g) => g.subGroups.length);
 });
 const visibleItems = computed(() => visibleGroups.value.flatMap((g) => g.subGroups.flatMap((s) => s.items)));
-const showTree = computed(() => visibleGroups.value.length > 1 || visibleGroups.value.some((g) => g.subGroups.length > 1));
+const showTree = computed(
+  () => visibleGroups.value.length > 1 || visibleGroups.value.some((g) => g.subGroups.length > 1)
+);
 
 function highlight(name) {
   const t = term.value.trim();
@@ -172,21 +183,34 @@ function confirm() {
           </div>
           <div class="search-row">
             <div class="sr-start">
-              <button class="btn btn-primary search-btn" :disabled="!canSearch" @click="runSearch">חיפוש</button>
-              <button class="btn-text" :class="{ 'text-disabled': !canSearch && !searched }" @click="clearAll">ניקוי</button>
+              <button class="btn btn-primary search-btn" :disabled="!canSearch" @click="runSearch">
+                חיפוש
+              </button>
+              <button
+                class="btn-text"
+                :class="{ 'text-disabled': !canSearch && !searched }"
+                @click="clearAll"
+              >
+                ניקוי
+              </button>
             </div>
-            <div class="search-pill wide">
-              <input v-model="term" placeholder="חיפוש סעיפים" @keyup.enter="runSearch" />
-              <AppIcon name="search" :size="20" />
-            </div>
+            <SearchPill
+              v-model="term"
+              class="pill-wide"
+              placeholder="חיפוש סעיפים"
+              width="568px"
+              @submit="runSearch"
+            />
           </div>
         </div>
 
         <!-- results header -->
         <div v-if="searched" class="results-meta">
-          <span>נמצאו <span class="num">{{ visibleItems.length }}</span> סעיפים</span>
+          <span
+            >נמצאו <span class="num">{{ visibleItems.length }}</span> סעיפים</span
+          >
           <div class="rm-actions">
-            <button class="btn-text" @click="selectAll" v-if="mode === 'multi'">בחר הכל</button>
+            <button v-if="mode === 'multi'" class="btn-text" @click="selectAll">בחר הכל</button>
             <button class="btn-text" @click="clearSelection">נקה</button>
           </div>
         </div>
@@ -207,7 +231,11 @@ function confirm() {
                 <thead>
                   <tr>
                     <th class="th-check">
-                      <BaseCheckbox v-if="mode === 'multi'" :model-value="false" @update:model-value="selectAll" />
+                      <BaseCheckbox
+                        v-if="mode === 'multi'"
+                        :model-value="false"
+                        @update:model-value="selectAll"
+                      />
                     </th>
                     <th>מספר סעיף</th>
                     <th>שם סעיף</th>
@@ -231,10 +259,21 @@ function confirm() {
                         @click="toggleItem(item)"
                       >
                         <td class="td-check">
-                          <span v-if="mode === 'single'" class="radio" :class="{ checked: isChecked(item) }" />
-                          <BaseCheckbox v-else :model-value="isChecked(item)" :disabled="isDisabled(item)" @update:model-value="() => toggleItem(item)" />
+                          <span
+                            v-if="mode === 'single'"
+                            class="radio"
+                            :class="{ checked: isChecked(item) }"
+                          />
+                          <BaseCheckbox
+                            v-else
+                            :model-value="isChecked(item)"
+                            :disabled="isDisabled(item)"
+                            @update:model-value="() => toggleItem(item)"
+                          />
                         </td>
-                        <td><span class="item-code">{{ item.code }}</span></td>
+                        <td>
+                          <span class="item-code">{{ item.code }}</span>
+                        </td>
                         <td class="r-name">
                           <span v-html="highlight(item.name)" />
                           <span v-if="isDisabled(item)" class="already">כבר נבחר</span>
@@ -249,8 +288,14 @@ function confirm() {
             <!-- chapter tree with counts -->
             <div v-if="showTree" class="tree-pane scroll-slim">
               <div v-for="g in visibleGroups" :key="g.chapter.id">
-                <button class="tp-row" :class="{ active: activeGroupId === 'c' + g.chapter.id }" @click="scrollToGroup('c' + g.chapter.id)">
-                  <span class="tp-count num">({{ g.subGroups.reduce((n, s) => n + s.items.length, 0) }})</span>
+                <button
+                  class="tp-row"
+                  :class="{ active: activeGroupId === 'c' + g.chapter.id }"
+                  @click="scrollToGroup('c' + g.chapter.id)"
+                >
+                  <span class="tp-count num"
+                    >({{ g.subGroups.reduce((n, s) => n + s.items.length, 0) }})</span
+                  >
                   <span class="ellipsis">{{ g.chapter.num }}: {{ g.chapter.name }}</span>
                   <AppIcon name="chevron-down" :size="14" />
                 </button>
@@ -275,7 +320,9 @@ function confirm() {
             <button class="btn btn-primary" :disabled="!selection.size" @click="confirm">בחירה</button>
             <button class="btn btn-secondary" @click="emit('close')">ביטול</button>
           </div>
-          <span class="pf-count">נבחרו: <span class="num">{{ selection.size }}</span> סעיפים</span>
+          <span class="pf-count"
+            >נבחרו: <span class="num">{{ selection.size }}</span> סעיפים</span
+          >
         </div>
       </div>
     </div>
@@ -367,33 +414,8 @@ function confirm() {
 .text-disabled {
   color: var(--text-disabled);
 }
-.search-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-direction: row-reverse;
-  background: var(--surface-muted);
-  border-radius: var(--radius-pill);
-  height: 40px;
-  padding: 0 16px;
-  color: var(--text-muted);
-}
-.search-pill.wide {
-  width: 568px;
+.pill-wide {
   max-width: 60%;
-}
-.search-pill input {
-  border: none;
-  background: none;
-  outline: none;
-  flex: 1;
-  text-align: right;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.search-pill input::placeholder {
-  color: var(--text-muted);
 }
 .results-meta {
   display: flex;
@@ -548,7 +570,9 @@ function confirm() {
 }
 .radio.checked {
   border-color: var(--brand-primary);
-  box-shadow: inset 0 0 0 3.5px var(--surface), inset 0 0 0 10px var(--brand-primary);
+  box-shadow:
+    inset 0 0 0 3.5px var(--surface),
+    inset 0 0 0 10px var(--brand-primary);
 }
 /* footer */
 .picker-footer {

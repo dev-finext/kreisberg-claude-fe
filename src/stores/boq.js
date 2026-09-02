@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { useDbStore } from "./db";
 import { useCatalogStore } from "./catalog";
 import { useUiStore } from "./ui";
+import { PRIORITY, SIDEBAR_MODE } from "@/constants";
 
 /**
  * BOQ domain logic. Encodes the business rules from Matty's spec (v5),
@@ -18,7 +19,7 @@ export const useBoqStore = defineStore("boq", {
   state: () => ({
     /* editor ui state (per open BOQ) */
     activeBoqId: null,
-    sidebarMode: "assignment", // 'assignment' (שיוך) | 'chapters' (פרקים)
+    sidebarMode: SIDEBAR_MODE.ASSIGNMENT, // 'assignment' (שיוך) | 'chapters' (פרקים)
     selectedElementId: null,
     checkedLeafElementIds: [], // tree leaf checkboxes (batch scope)
     checkedSubChapterIds: [], // פרקים mode multi-select
@@ -63,104 +64,8 @@ export const useBoqStore = defineStore("boq", {
     selectedElement(state) {
       return this.elementById.get(state.selectedElementId) || null;
     },
-  },
 
-  actions: {
-    /* =============== helpers =============== */
-    isLeaf(elementId) {
-      if (!elementId) return false; // 0 = the synthetic "הכל" root
-      return !this.elementsOfBoq.some((e) => e.parentId === elementId);
-    },
-    descendantIds(elementId) {
-      const out = [];
-      const walk = (id) => {
-        for (const c of this.elementsOfBoq.filter((e) => e.parentId === id)) {
-          out.push(c.id);
-          walk(c.id);
-        }
-      };
-      walk(elementId);
-      return out;
-    },
-    leafIdsUnder(elementId) {
-      const ids = [elementId, ...this.descendantIds(elementId)];
-      return ids.filter((id) => this.isLeaf(id));
-    },
-    allLeafIds() {
-      return this.elementsOfBoq.filter((e) => this.isLeaf(e.id)).map((e) => e.id);
-    },
-    elementPath(elementId) {
-      if (elementId === 0) return ["הכל"];
-      const parts = [];
-      let cur = this.elementById.get(elementId);
-      while (cur) {
-        parts.unshift(cur.name);
-        cur = cur.parentId ? this.elementById.get(cur.parentId) : null;
-      }
-      return parts;
-    },
-    boqItemOf(itemId) {
-      return this.db.boqItems.find((b) => b.boqId === this.activeBoqId && b.itemId === itemId) || null;
-    },
-    ensureBoqItem(itemId) {
-      let bi = this.boqItemOf(itemId);
-      if (!bi) {
-        const item = this.catalog.item(itemId);
-        bi = {
-          id: this.db.nextId("boqItems"),
-          boqId: this.activeBoqId,
-          itemId,
-          priority: item?.priority || "recommended",
-          forSummary: item?.priority === "mandatory" ? true : item?.priority !== "optional",
-          amortization: item?.amortization || 0,
-          resourceTypeId: item?.resourceTypeId || null,
-          resourceId: null,
-          description: item?.description || "",
-          chosenAlternativeId: null,
-          parentId: item?.parentId || null,
-        };
-        this.db.db.boqItems.push(bi);
-        this.db.persist();
-      }
-      return bi;
-    },
-    recordHistory(itemId, changes) {
-      if (!changes.length) return;
-      this.db.db.history.push({
-        id: this.db.nextId("history"),
-        boqId: this.activeBoqId,
-        itemId,
-        user: this.db.currentUser.name,
-        ts: new Date().toISOString(),
-        changes,
-      });
-      this.db.persist();
-    },
-
-    /* =============== editor session =============== */
-    openBoq(boqId) {
-      if (this.activeBoqId !== boqId) {
-        this.$reset();
-        this.activeBoqId = boqId;
-        // default expansion: all branches expanded
-        this.expandedElementIds = this.elementsOfBoq.filter((e) => !this.isLeaf(e.id)).map((e) => e.id);
-      }
-    },
-    setMode(mode) {
-      this.sidebarMode = mode;
-      this.checkedSeiIds = [];
-      this.expandedRowKeys = [];
-      this.searchTerm = "";
-      this.filters = {};
-    },
-    selectElement(elementId) {
-      // clicking the selected element again deselects it (legacy rule)
-      this.selectedElementId = this.selectedElementId === elementId ? null : elementId;
-      this.checkedSeiIds = [];
-      this.expandedRowKeys = [];
-    },
-
-    /* =============== table rows =============== */
+    /* ---------- table rows ---------- */
     /**
      * שיוך mode rows for the selected element:
      *  - leaf: its own structure_element_items (editable qty)
@@ -188,36 +93,6 @@ export const useBoqStore = defineStore("boq", {
       return {
         editable: false,
         rows: [...byItem.values()].map((agg) => this.rowFromAggregate(agg)),
-      };
-    },
-    rowFromSei(sei) {
-      const item = this.catalog.item(sei.itemId);
-      const bi = this.boqItemOf(sei.itemId);
-      return this.decorateRow({ key: `sei-${sei.id}`, sei, seiIds: [sei.id], qty: sei.qty, item, bi, editable: true });
-    },
-    rowFromAggregate(agg) {
-      const item = this.catalog.item(agg.itemId);
-      const bi = this.boqItemOf(agg.itemId);
-      return this.decorateRow({ key: `agg-${agg.itemId}`, sei: null, seiIds: agg.seiIds, qty: agg.qty, item, bi, editable: false });
-    },
-    decorateRow({ key, sei, seiIds, qty, item, bi, editable }) {
-      return {
-        key,
-        sei,
-        seiIds,
-        item,
-        bi,
-        qty,
-        editable,
-        code: item?.code || "",
-        name: item?.name || "",
-        description: bi?.description ?? item?.description ?? "",
-        unit: item?.unit || "",
-        unit2: item?.unit2 || "",
-        isComposite: item?.type === "composite",
-        priority: bi?.priority ?? item?.priority ?? "recommended",
-        forSummary: bi ? bi.forSummary : true,
-        resourceTypeId: bi?.resourceTypeId ?? item?.resourceTypeId ?? null,
       };
     },
     /**
@@ -275,7 +150,156 @@ export const useBoqStore = defineStore("boq", {
       }
       return tree;
     },
+    /** items already present anywhere in this BOQ (picker "כבר נבחר") */
+    itemIdsInBoq() {
+      return new Set(
+        this.db.structureElementItems.filter((s) => s.boqId === this.activeBoqId).map((s) => s.itemId)
+      );
+    },
+  },
 
+  actions: {
+    /* =============== helpers =============== */
+    isLeaf(elementId) {
+      if (!elementId) return false; // 0 = the synthetic "הכל" root
+      return !this.elementsOfBoq.some((e) => e.parentId === elementId);
+    },
+    descendantIds(elementId) {
+      const out = [];
+      const walk = (id) => {
+        for (const c of this.elementsOfBoq.filter((e) => e.parentId === id)) {
+          out.push(c.id);
+          walk(c.id);
+        }
+      };
+      walk(elementId);
+      return out;
+    },
+    leafIdsUnder(elementId) {
+      const ids = [elementId, ...this.descendantIds(elementId)];
+      return ids.filter((id) => this.isLeaf(id));
+    },
+    allLeafIds() {
+      return this.elementsOfBoq.filter((e) => this.isLeaf(e.id)).map((e) => e.id);
+    },
+    elementPath(elementId) {
+      if (elementId === 0) return ["הכל"];
+      const parts = [];
+      let cur = this.elementById.get(elementId);
+      while (cur) {
+        parts.unshift(cur.name);
+        cur = cur.parentId ? this.elementById.get(cur.parentId) : null;
+      }
+      return parts;
+    },
+    boqItemOf(itemId) {
+      return this.db.boqItems.find((b) => b.boqId === this.activeBoqId && b.itemId === itemId) || null;
+    },
+    ensureBoqItem(itemId) {
+      let bi = this.boqItemOf(itemId);
+      if (!bi) {
+        const item = this.catalog.item(itemId);
+        bi = {
+          id: this.db.nextId("boqItems"),
+          boqId: this.activeBoqId,
+          itemId,
+          priority: item?.priority || PRIORITY.RECOMMENDED,
+          forSummary: item?.priority === PRIORITY.MANDATORY ? true : item?.priority !== PRIORITY.OPTIONAL,
+          amortization: item?.amortization || 0,
+          resourceTypeId: item?.resourceTypeId || null,
+          resourceId: null,
+          description: item?.description || "",
+          chosenAlternativeId: null,
+          parentId: item?.parentId || null,
+        };
+        this.db.db.boqItems.push(bi);
+        this.db.persist();
+      }
+      return bi;
+    },
+    recordHistory(itemId, changes) {
+      if (!changes.length) return;
+      this.db.db.history.push({
+        id: this.db.nextId("history"),
+        boqId: this.activeBoqId,
+        itemId,
+        user: this.db.currentUser.name,
+        ts: new Date().toISOString(),
+        changes,
+      });
+      this.db.persist();
+    },
+
+    /* =============== editor session =============== */
+    openBoq(boqId) {
+      if (this.activeBoqId !== boqId) {
+        this.$reset();
+        this.activeBoqId = boqId;
+        // default expansion: all branches expanded
+        this.expandedElementIds = this.elementsOfBoq.filter((e) => !this.isLeaf(e.id)).map((e) => e.id);
+      }
+    },
+    setMode(mode) {
+      this.sidebarMode = mode;
+      this.checkedSeiIds = [];
+      this.expandedRowKeys = [];
+      this.searchTerm = "";
+      this.filters = {};
+    },
+    selectElement(elementId) {
+      // clicking the selected element again deselects it (legacy rule)
+      this.selectedElementId = this.selectedElementId === elementId ? null : elementId;
+      this.checkedSeiIds = [];
+      this.expandedRowKeys = [];
+    },
+
+    /* =============== table rows =============== */
+    rowFromSei(sei) {
+      const item = this.catalog.item(sei.itemId);
+      const bi = this.boqItemOf(sei.itemId);
+      return this.decorateRow({
+        key: `sei-${sei.id}`,
+        sei,
+        seiIds: [sei.id],
+        qty: sei.qty,
+        item,
+        bi,
+        editable: true,
+      });
+    },
+    rowFromAggregate(agg) {
+      const item = this.catalog.item(agg.itemId);
+      const bi = this.boqItemOf(agg.itemId);
+      return this.decorateRow({
+        key: `agg-${agg.itemId}`,
+        sei: null,
+        seiIds: agg.seiIds,
+        qty: agg.qty,
+        item,
+        bi,
+        editable: false,
+      });
+    },
+    decorateRow({ key, sei, seiIds, qty, item, bi, editable }) {
+      return {
+        key,
+        sei,
+        seiIds,
+        item,
+        bi,
+        qty,
+        editable,
+        code: item?.code || "",
+        name: item?.name || "",
+        description: bi?.description ?? item?.description ?? "",
+        unit: item?.unit || "",
+        unit2: item?.unit2 || "",
+        isComposite: item?.type === "composite",
+        priority: bi?.priority ?? item?.priority ?? PRIORITY.RECOMMENDED,
+        forSummary: bi ? bi.forSummary : true,
+        resourceTypeId: bi?.resourceTypeId ?? item?.resourceTypeId ?? null,
+      };
+    },
     /* =============== quantities + linked propagation =============== */
     /**
      * Returns {needsConfirm, children} when the item has same-unit children in
@@ -313,19 +337,14 @@ export const useBoqStore = defineStore("boq", {
     },
 
     /* =============== add items =============== */
-    /** items already present anywhere in this BOQ (picker "כבר נבחר") */
-    itemIdsInBoq() {
-      return new Set(
-        this.db.structureElementItems.filter((s) => s.boqId === this.activeBoqId).map((s) => s.itemId)
-      );
-    },
     /** related (parent/children) catalog items of a selection, not yet in the BOQ */
     relatedItemsOf(itemIds) {
-      const present = this.itemIdsInBoq();
+      const present = this.itemIdsInBoq;
       const rel = new Set();
       for (const id of itemIds) {
         const item = this.catalog.item(id);
-        if (item?.parentId && !present.has(item.parentId) && !itemIds.includes(item.parentId)) rel.add(item.parentId);
+        if (item?.parentId && !present.has(item.parentId) && !itemIds.includes(item.parentId))
+          rel.add(item.parentId);
         for (const c of this.catalog.childrenOf(id)) {
           if (!present.has(c.id) && !itemIds.includes(c.id)) rel.add(c.id);
         }
@@ -394,7 +413,9 @@ export const useBoqStore = defineStore("boq", {
       this.checkedSeiIds = [];
     },
     deleteSeis(seiIds) {
-      this.db.db.structureElementItems = this.db.db.structureElementItems.filter((s) => !seiIds.includes(s.id));
+      this.db.db.structureElementItems = this.db.db.structureElementItems.filter(
+        (s) => !seiIds.includes(s.id)
+      );
       this.checkedSeiIds = this.checkedSeiIds.filter((id) => !seiIds.includes(id));
       this.db.persist();
     },
@@ -477,7 +498,8 @@ export const useBoqStore = defineStore("boq", {
       if (id === newParentId) return false;
       if (newParentId && this.descendantIds(id).includes(newParentId)) return false; // no cycles
       this.updateElement(id, { parentId: newParentId });
-      if (newParentId && !this.expandedElementIds.includes(newParentId)) this.expandedElementIds.push(newParentId);
+      if (newParentId && !this.expandedElementIds.includes(newParentId))
+        this.expandedElementIds.push(newParentId);
       return true;
     },
     toggleElementVisibility(id) {
@@ -493,11 +515,11 @@ export const useBoqStore = defineStore("boq", {
       const bi = this.ensureBoqItem(itemId);
       const changes = [{ field: "priority", from: bi.priority, to: priority }];
       bi.priority = priority;
-      if (priority === "mandatory" && !bi.forSummary) {
+      if (priority === PRIORITY.MANDATORY && !bi.forSummary) {
         changes.push({ field: "forSummary", from: "false", to: "true" });
         bi.forSummary = true;
       }
-      if (priority === "optional" && bi.forSummary) {
+      if (priority === PRIORITY.OPTIONAL && bi.forSummary) {
         changes.push({ field: "forSummary", from: "true", to: "false" });
         bi.forSummary = false;
       }
@@ -506,7 +528,7 @@ export const useBoqStore = defineStore("boq", {
     },
     setForSummary(itemId, value) {
       const bi = this.ensureBoqItem(itemId);
-      if (bi.priority === "mandatory" || bi.priority === "optional") return false; // locked
+      if (bi.priority === PRIORITY.MANDATORY || bi.priority === PRIORITY.OPTIONAL) return false; // locked
       if (bi.forSummary !== value) {
         this.recordHistory(itemId, [{ field: "forSummary", from: String(bi.forSummary), to: String(value) }]);
         bi.forSummary = value;
@@ -543,7 +565,11 @@ export const useBoqStore = defineStore("boq", {
       newBi.forSummary = true;
       oldBi.forSummary = false;
       this.recordHistory(chosenItemId, [
-        { field: "chosenAlternative", from: this.catalog.item(currentItemId)?.name || "", to: this.catalog.item(chosenItemId)?.name || "" },
+        {
+          field: "chosenAlternative",
+          from: this.catalog.item(currentItemId)?.name || "",
+          to: this.catalog.item(chosenItemId)?.name || "",
+        },
       ]);
       this.db.persist();
     },
@@ -568,7 +594,11 @@ export const useBoqStore = defineStore("boq", {
         newBi.forSummary = oldBi.forSummary;
       }
       this.recordHistory(newItemId, [
-        { field: "replacedItem", from: this.catalog.item(oldItemId)?.code || "", to: this.catalog.item(newItemId)?.code || "" },
+        {
+          field: "replacedItem",
+          from: this.catalog.item(oldItemId)?.code || "",
+          to: this.catalog.item(newItemId)?.code || "",
+        },
       ]);
       this.db.persist();
       return seis.length;
@@ -577,7 +607,9 @@ export const useBoqStore = defineStore("boq", {
     /* =============== comments & history =============== */
     commentsFor(scope, refId) {
       return this.db.comments
-        .filter((c) => c.scope === scope && c.refId === refId && (c.boqId == null || c.boqId === this.activeBoqId))
+        .filter(
+          (c) => c.scope === scope && c.refId === refId && (c.boqId == null || c.boqId === this.activeBoqId)
+        )
         .sort((a, b) => b.ts.localeCompare(a.ts));
     },
     addComment(scope, refId, text) {

@@ -20,8 +20,19 @@ const initials = db.currentUser.name.slice(0, 1);
       </button>
       <div class="rail-logo" title="KREISBERG">
         <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
-          <path d="M4 2v20M4 12L16 2M4 12l12 10" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M20 5.5c4 0 7 2.9 7 6.5s-3 6.5-7 6.5c-1.6 0-3-.45-4.2-1.25" stroke="#fff" stroke-width="2.2" stroke-linecap="round" />
+          <path
+            d="M4 2v20M4 12L16 2M4 12l12 10"
+            stroke="#fff"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M20 5.5c4 0 7 2.9 7 6.5s-3 6.5-7 6.5c-1.6 0-3-.45-4.2-1.25"
+            stroke="#fff"
+            stroke-width="2.2"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
       <div class="rail-icons">
@@ -40,7 +51,11 @@ const initials = db.currentUser.name.slice(0, 1);
       </div>
     </div>
     <div class="rail-bottom">
-      <button class="rail-avatar" :title="db.currentUser.name + ' — איפוס נתוני הדמו בלחיצה כפולה'" @dblclick="db.resetDemo()">
+      <button
+        class="rail-avatar"
+        :title="db.currentUser.name + ' — איפוס נתוני הדמו בלחיצה כפולה'"
+        @dblclick="db.resetDemo()"
+      >
         {{ initials }}
       </button>
     </div>

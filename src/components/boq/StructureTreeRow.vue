@@ -91,7 +91,12 @@ function onDrop(e) {
 <template>
   <div
     class="tree-row"
-    :class="{ selected, 'drop-inside': dropPos === 'inside', 'drop-before': dropPos === 'before', 'hidden-el': !node.visible }"
+    :class="{
+      selected,
+      'drop-inside': dropPos === 'inside',
+      'drop-before': dropPos === 'before',
+      'hidden-el': !node.visible,
+    }"
     :style="{ paddingRight: 4 + depth * 16 + 'px' }"
     :title="pathTitle"
     draggable="true"
@@ -122,7 +127,12 @@ function onDrop(e) {
     <template v-else>
       <span class="label ellipsis">{{ node.name }}</span>
     </template>
-    <BaseCheckbox v-if="isLeaf && !isRenaming" size="small" :model-value="checked" @update:model-value="toggleChecked" />
+    <BaseCheckbox
+      v-if="isLeaf && !isRenaming"
+      size="small"
+      :model-value="checked"
+      @update:model-value="toggleChecked"
+    />
     <span class="spacer" />
     <span class="eye" :class="{ off: !node.visible }" @click.stop="boq.toggleElementVisibility(node.id)">
       <AppIcon :name="node.visible ? 'eye' : 'eye-closed'" :size="18" />

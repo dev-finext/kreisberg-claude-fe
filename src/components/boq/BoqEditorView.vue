@@ -6,6 +6,7 @@ import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
+import SearchPill from "@/components/shared/SearchPill.vue";
 import BoqSidebar from "./BoqSidebar.vue";
 import BoqFilterRow from "./BoqFilterRow.vue";
 import BoqItemsTable from "./BoqItemsTable.vue";
@@ -14,6 +15,7 @@ import ItemEditModal from "./ItemEditModal.vue";
 import ChapterNotesModal from "./ChapterNotesModal.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
+import { BOQ_STATUS_LABELS, CLASSIFICATION_LABELS, SIDEBAR_MODE } from "@/constants";
 
 const props = defineProps({
   boqId: { type: [Number, String], required: true },
@@ -30,13 +32,11 @@ watch(
 );
 
 const header = computed(() => boq.activeBoq);
-const statusLabel = computed(
-  () => ({ draft: "טיוטה", final: "סופי", locked: "נעול" })[header.value?.status] || "טיוטה"
-);
+const statusLabel = computed(() => BOQ_STATUS_LABELS[header.value?.status] || "טיוטה");
 const chips = computed(() => {
   const h = header.value;
   if (!h) return [];
-  const out = [h.classification === "spec" ? "מפרט" : "תמחור"];
+  const out = [CLASSIFICATION_LABELS[h.classification]];
   const rt = db.resourceTypes.find((t) => t.id === h.resourceTypeId);
   if (rt) out.push(rt.name);
   const r = db.constructors.find((c) => c.id === h.resourceId);
@@ -62,7 +62,7 @@ const selectedIsLeaf = computed(
   () => boq.selectedElementId !== null && boq.selectedElementId !== 0 && boq.isLeaf(boq.selectedElementId)
 );
 const addItemEnabled = computed(() =>
-  boq.sidebarMode === "assignment" ? selectedIsLeaf.value : false
+  boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT ? selectedIsLeaf.value : false
 );
 const hasChecked = computed(() => boq.checkedSeiIds.length > 0);
 const pasteEnabled = computed(
@@ -162,8 +162,13 @@ function deleteChecked() {
       </div>
       <div class="doc-start">
         <!-- toolbar actions (שיוך) — rightmost of the left cluster -->
-        <div v-if="boq.sidebarMode === 'assignment'" class="actions">
-          <button class="tb-btn" :disabled="!addItemEnabled" :title="addItemEnabled ? '' : 'ניתן להוסיף סעיפים רק לאלמנט קצה'" @click="openPicker">
+        <div v-if="boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT" class="actions">
+          <button
+            class="tb-btn"
+            :disabled="!addItemEnabled"
+            :title="addItemEnabled ? '' : 'ניתן להוסיף סעיפים רק לאלמנט קצה'"
+            @click="openPicker"
+          >
             <AppIcon name="plus-circle" :size="20" />
             <span>סעיף</span>
           </button>
@@ -184,16 +189,13 @@ function deleteChecked() {
             <span>העתק</span>
           </button>
         </div>
-        <span v-if="boq.sidebarMode === 'assignment'" class="v-divider" />
+        <span v-if="boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT" class="v-divider" />
         <div class="open-rows-toggle">
           <BaseToggle v-model="boq.openAllRows" />
           <span class="ort-label">תצוגת סעיפים פתוחים</span>
         </div>
         <span class="v-divider" />
-        <div class="search-pill">
-          <input v-model="boq.searchTerm" placeholder="חיפוש לפי פרק/סעיף/תת סעיף" />
-          <AppIcon name="search" :size="20" />
-        </div>
+        <SearchPill v-model="boq.searchTerm" placeholder="חיפוש לפי פרק/סעיף/תת סעיף" />
       </div>
     </div>
 
@@ -215,12 +217,20 @@ function deleteChecked() {
       v-if="showPicker"
       :mode="pickerMode"
       :catalog-name="db.catalog.name"
-      :already-selected="[...boq.itemIdsInBoq()]"
-      @close="showPicker = false; replaceContext = null"
+      :already-selected="[...boq.itemIdsInBoq]"
+      @close="
+        showPicker = false;
+        replaceContext = null;
+      "
       @picked="onPicked"
     />
     <ItemEditModal v-if="editRow" :row="editRow" @close="editRow = null" />
-    <ChapterNotesModal v-if="notesCtx" :scope="notesCtx.scope" :target="notesCtx.ref" @close="notesCtx = null" />
+    <ChapterNotesModal
+      v-if="notesCtx"
+      :scope="notesCtx.scope"
+      :target="notesCtx.ref"
+      @close="notesCtx = null"
+    />
     <CreateBoqModal
       v-if="showHeaderEdit"
       :project-id="header?.projectId"
@@ -241,7 +251,9 @@ function deleteChecked() {
       <div v-if="relatedOffer" class="mini-overlay">
         <div class="mini-modal">
           <h3 class="m-title">סעיפים קשורים</h3>
-          <p class="m-msg">לסעיפים שנבחרו קיימים {{ relatedOffer.related.length }} סעיפים קשורים בקטלוג. להוסיף גם אותם?</p>
+          <p class="m-msg">
+            לסעיפים שנבחרו קיימים {{ relatedOffer.related.length }} סעיפים קשורים בקטלוג. להוסיף גם אותם?
+          </p>
           <ul class="m-list scroll-slim">
             <li v-for="r in relatedOffer.related" :key="r.id">
               <span class="item-code">{{ r.code }}</span> · {{ r.name }}
@@ -259,7 +271,7 @@ function deleteChecked() {
           <h3 class="m-title">הוספת סעיפים</h3>
           <p class="m-msg">להוסיף את הסעיפים לכל המבנים?</p>
           <label class="m-dontask">
-            <BaseCheckbox size="small" v-model="dontAskScope" />
+            <BaseCheckbox v-model="dontAskScope" size="small" />
             <span>אל תציג הודעה זו שוב</span>
           </label>
           <div class="m-actions">
@@ -275,7 +287,11 @@ function deleteChecked() {
           <p class="m-msg">היכן להחליף את הסעיף? הכמות, העדיפות והלסיכום יישמרו.</p>
           <div class="m-actions column">
             <button class="btn btn-primary" @click="resolveReplaceScope('this')">במבנה זה</button>
-            <button class="btn btn-secondary" :disabled="!boq.checkedLeafElementIds.length" @click="resolveReplaceScope('checked')">
+            <button
+              class="btn btn-secondary"
+              :disabled="!boq.checkedLeafElementIds.length"
+              @click="resolveReplaceScope('checked')"
+            >
               במבנים נבחרים
             </button>
             <button class="btn btn-secondary" @click="resolveReplaceScope('all')">בכל המבנים</button>
@@ -349,31 +365,6 @@ function deleteChecked() {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-.search-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-direction: row-reverse;
-  background: var(--surface-muted);
-  border-radius: var(--radius-pill);
-  height: 40px;
-  padding: 0 16px;
-  width: 226px;
-  color: var(--text-disabled);
-}
-.search-pill input {
-  border: none;
-  background: none;
-  outline: none;
-  flex: 1;
-  text-align: right;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.search-pill input::placeholder {
-  color: var(--text-disabled);
 }
 .v-divider {
   width: 1px;

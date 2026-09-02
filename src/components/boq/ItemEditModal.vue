@@ -6,6 +6,7 @@ import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import PriorityControl from "./PriorityControl.vue";
+import { formatDate } from "@/utils/format";
 
 const props = defineProps({
   row: { type: Object, required: true },
@@ -85,9 +86,7 @@ function deleteFromBoq() {
         <!-- sticky header: chapter > sub-chapter only (item name removed per design ruling) -->
         <div class="iem-header">
           <button class="icon-btn" @click="emit('close')"><AppIcon name="cancel" :size="20" /></button>
-          <h2 class="iem-title">
-            עריכת סעיף : פרק: {{ chapter?.name }} &gt; תת-פרק: {{ subChapter?.name }}
-          </h2>
+          <h2 class="iem-title">עריכת סעיף : פרק: {{ chapter?.name }} &gt; תת-פרק: {{ subChapter?.name }}</h2>
         </div>
         <div class="iem-tabs">
           <button
@@ -130,7 +129,12 @@ function deleteFromBoq() {
               </div>
               <div class="field">
                 <label class="field-label">זיהוי משאב</label>
-                <select v-model="form.resourceId" class="select" :disabled="!form.resourceTypeId" title="נעול בשלב יצירת כתב הכמויות, פעיל בשלב תמחור">
+                <select
+                  v-model="form.resourceId"
+                  class="select"
+                  :disabled="!form.resourceTypeId"
+                  title="נעול בשלב יצירת כתב הכמויות, פעיל בשלב תמחור"
+                >
                   <option :value="null">בחר זיהוי משאב</option>
                   <option v-for="r in resources" :key="r.id" :value="r.id">{{ r.name }}</option>
                 </select>
@@ -145,19 +149,36 @@ function deleteFromBoq() {
               </div>
               <div class="field">
                 <label class="field-label">פחת</label>
-                <input v-model="form.amortization" type="number" step="0.01" min="0" class="input num" placeholder="0.00" />
+                <input
+                  v-model="form.amortization"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  class="input num"
+                  placeholder="0.00"
+                />
               </div>
               <div class="field span-2">
                 <label class="field-label">תגית</label>
-                <input class="input" :value="form.tags.join(', ') || '—'" disabled title="ניהול תגיות אינו זמין בדמו" />
+                <input
+                  class="input"
+                  :value="form.tags.join(', ') || '—'"
+                  disabled
+                  title="ניהול תגיות אינו זמין בדמו"
+                />
               </div>
             </div>
             <h3 class="desc-heading">תיאור סעיף</h3>
             <div class="desc-box">
               <div class="desc-toolbar" title="עורך טקסט עשיר — לא זמין בדמו">
-                <span class="dt-btn">B</span><span class="dt-btn">I</span><span class="dt-btn">U</span><span class="dt-btn">S</span>
+                <span class="dt-btn">B</span><span class="dt-btn">I</span><span class="dt-btn">U</span
+                ><span class="dt-btn">S</span>
               </div>
-              <textarea v-model="form.description" class="desc-input scroll-slim" placeholder="כתוב תיאור סעיף" />
+              <textarea
+                v-model="form.description"
+                class="desc-input scroll-slim"
+                placeholder="כתוב תיאור סעיף"
+              />
             </div>
           </template>
 
@@ -171,7 +192,7 @@ function deleteFromBoq() {
               <div v-for="n in notes" :key="n.id" class="note-card">
                 <div class="note-meta">
                   <span class="note-author">{{ n.author }}</span>
-                  <span class="num">{{ new Date(n.ts).toLocaleDateString("he-IL") }}</span>
+                  <span class="num">{{ formatDate(n.ts) }}</span>
                 </div>
                 <p>{{ n.text }}</p>
               </div>
@@ -184,7 +205,12 @@ function deleteFromBoq() {
             <div class="field">
               <label class="field-label">סעיף אב</label>
               <div class="parent-field">
-                <input class="input" :value="parentItem ? `${parentItem.code} · ${parentItem.name}` : ''" placeholder="לא הוגדר סעיף אב" disabled />
+                <input
+                  class="input"
+                  :value="parentItem ? `${parentItem.code} · ${parentItem.name}` : ''"
+                  placeholder="לא הוגדר סעיף אב"
+                  disabled
+                />
                 <button class="btn-text" disabled title="בחירת סעיף אב תתאפשר בגרסה הבאה">בחירה</button>
               </div>
             </div>

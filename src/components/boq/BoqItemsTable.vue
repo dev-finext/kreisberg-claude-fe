@@ -10,6 +10,8 @@ import BaseToggle from "@/components/shared/BaseToggle.vue";
 import PriorityControl from "./PriorityControl.vue";
 import ItemRowPanel from "./ItemRowPanel.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { formatQty } from "@/utils/format";
+import { PRIORITY, SIDEBAR_MODE } from "@/constants";
 
 const props = defineProps({
   mode: { type: String, required: true }, // 'assignment' | 'chapters'
@@ -38,22 +40,25 @@ function applyFilters(rows) {
     if (f.resourceType?.length && !f.resourceType.includes(String(r.resourceTypeId))) return false;
     if (f.priority?.length && !f.priority.includes(r.priority)) return false;
     if (f.summary?.length && !f.summary.includes(String(r.forSummary))) return false;
-    if (term && !(r.code.includes(term) || r.name.includes(term) || r.description.includes(term))) return false;
+    if (term && !(r.code.includes(term) || r.name.includes(term) || r.description.includes(term)))
+      return false;
     // hidden alternatives: a non-chosen alternative whose group owner is present stays hidden
     return true;
   });
 }
 
 const assignment = computed(() => {
-  const { editable, rows } = boq.assignmentRows();
+  const { editable, rows } = boq.assignmentRows;
   return { editable, rows: applyFilters(rows) };
 });
 const chapterGroups = computed(() => {
-  const groups = boq.chaptersRows();
+  const groups = boq.chaptersRows;
   return groups
     .map((g) => ({
       ...g,
-      subGroups: g.subGroups.map((sg) => ({ ...sg, rows: applyFilters(sg.rows) })).filter((sg) => sg.rows.length),
+      subGroups: g.subGroups
+        .map((sg) => ({ ...sg, rows: applyFilters(sg.rows) }))
+        .filter((sg) => sg.rows.length),
     }))
     .filter((g) => g.subGroups.length);
 });
@@ -63,7 +68,9 @@ const selectedPath = computed(() =>
 );
 
 const visibleRows = computed(() =>
-  props.mode === "assignment" ? assignment.value.rows : chapterGroups.value.flatMap((g) => g.subGroups.flatMap((s) => s.rows))
+  props.mode === SIDEBAR_MODE.ASSIGNMENT
+    ? assignment.value.rows
+    : chapterGroups.value.flatMap((g) => g.subGroups.flatMap((s) => s.rows))
 );
 const allChecked = computed(() => {
   const rows = visibleRows.value.filter((r) => r.sei);
@@ -95,7 +102,7 @@ function toggleOpen(r) {
 
 /* ---------------- quantity editing ---------------- */
 function startEditQty(r) {
-  if (!r.editable || props.mode === "chapters") return;
+  if (!r.editable || props.mode === SIDEBAR_MODE.CHAPTERS) return;
   editingQtyKey.value = r.key;
   qtyDraft.value = String(r.qty);
 }
@@ -135,10 +142,14 @@ function onPriority(r, v) {
 }
 function onSummary(r, v) {
   const ok = boq.setForSummary(r.item.id, v);
-  if (!ok) ui.toast(r.priority === "mandatory" ? "סעיף חובה נכלל תמיד בסיכום" : "סעיף לא חובה אינו נכלל בסיכום", "warning");
+  if (!ok)
+    ui.toast(
+      r.priority === PRIORITY.MANDATORY ? "סעיף חובה נכלל תמיד בסיכום" : "סעיף לא חובה אינו נכלל בסיכום",
+      "warning"
+    );
 }
 function summaryLocked(r) {
-  return r.priority === "mandatory" || r.priority === "optional";
+  return r.priority === PRIORITY.MANDATORY || r.priority === PRIORITY.OPTIONAL;
 }
 
 /* ---------------- row actions ---------------- */
@@ -169,16 +180,15 @@ function subChapterNoteCount(scId) {
   return boq.commentsFor("subChapter", scId).length;
 }
 
-function fmtQty(q) {
-  return Number(q).toFixed(2);
-}
-const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
+const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8));
 </script>
 
 <template>
   <div class="items-table-wrap scroll-slim">
     <!-- selected structure path (שיוך) -->
-    <div v-if="mode === 'assignment' && selectedPath" class="selected-path">{{ selectedPath }}</div>
+    <div v-if="mode === SIDEBAR_MODE.ASSIGNMENT && selectedPath" class="selected-path">
+      {{ selectedPath }}
+    </div>
 
     <table class="items-table">
       <thead>
@@ -186,10 +196,10 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
           <th class="th-check">
             <BaseCheckbox :model-value="allChecked" @update:model-value="setAllChecked" />
           </th>
-          <th>{{ mode === "assignment" ? "מס' סעיף" : "מספר סעיף" }}</th>
-          <th v-if="mode === 'assignment'">שם סעיף</th>
+          <th>{{ mode === SIDEBAR_MODE.ASSIGNMENT ? "מס' סעיף" : "מספר סעיף" }}</th>
+          <th v-if="mode === SIDEBAR_MODE.ASSIGNMENT">שם סעיף</th>
           <th v-else>תיאור הסעיף</th>
-          <th v-if="mode === 'assignment'">סוג משאב</th>
+          <th v-if="mode === SIDEBAR_MODE.ASSIGNMENT">סוג משאב</th>
           <th>יח' מידה</th>
           <th>כמות</th>
           <th>עדיפות</th>
@@ -199,16 +209,22 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
       </thead>
 
       <!-- ================= שיוך ================= -->
-      <tbody v-if="mode === 'assignment'">
+      <tbody v-if="mode === SIDEBAR_MODE.ASSIGNMENT">
         <template v-for="r in assignment.rows" :key="r.key">
           <tr class="item-row" :class="{ open: isOpen(r), checked: rowChecked(r) }">
             <td class="td-check">
               <span class="expand" @click="toggleOpen(r)">
                 <AppIcon :name="isOpen(r) ? 'chevron-down' : 'chevron-left'" :size="16" />
               </span>
-              <BaseCheckbox :model-value="rowChecked(r)" :disabled="!r.sei" @update:model-value="(v) => setRowChecked(r, v)" />
+              <BaseCheckbox
+                :model-value="rowChecked(r)"
+                :disabled="!r.sei"
+                @update:model-value="(v) => setRowChecked(r, v)"
+              />
             </td>
-            <td class="td-code"><span class="item-code">{{ r.code }}</span></td>
+            <td class="td-code">
+              <span class="item-code">{{ r.code }}</span>
+            </td>
             <td class="td-name ellipsis">{{ r.name }}</td>
             <td class="td-rt">{{ db.resourceTypes.find((t) => t.id === r.resourceTypeId)?.name || "--" }}</td>
             <td class="td-unit">{{ r.unit || "--" }}</td>
@@ -224,15 +240,19 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
                 @blur="commitQty(r)"
               />
               <button v-else-if="assignment.editable" class="qty-input num" @click="startEditQty(r)">
-                {{ fmtQty(r.qty) }}
+                {{ formatQty(r.qty) }}
               </button>
-              <span v-else class="qty-text num">{{ fmtQty(r.qty) }}</span>
+              <span v-else class="qty-text num">{{ formatQty(r.qty) }}</span>
             </td>
             <td class="td-prio">
               <PriorityControl :model-value="r.priority" @update:model-value="(v) => onPriority(r, v)" />
             </td>
             <td class="td-summary">
-              <BaseToggle :model-value="r.forSummary" :disabled="summaryLocked(r)" @update:model-value="(v) => onSummary(r, v)" />
+              <BaseToggle
+                :model-value="r.forSummary"
+                :disabled="summaryLocked(r)"
+                @update:model-value="(v) => onSummary(r, v)"
+              />
             </td>
             <td class="td-actions">
               <button v-if="r.sei" class="row-trash" title="הסרת סעיף" @click="deleteRow(r)">
@@ -254,7 +274,11 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
             <div class="table-empty">
               <p class="empty-title">עדיין אין כאן סעיפים</p>
               <p class="empty-sub">
-                {{ boq.selectedElementId === null ? "בחר מבנה מהרשימה כדי להציג סעיפים" : "הם יופיעו כאן ברגע שיתווספו" }}
+                {{
+                  boq.selectedElementId === null
+                    ? "בחר מבנה מהרשימה כדי להציג סעיפים"
+                    : "הם יופיעו כאן ברגע שיתווספו"
+                }}
               </p>
             </div>
           </td>
@@ -269,11 +293,21 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
               <div class="group-inner">
                 <span class="group-label strong">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</span>
                 <span class="group-note">
-                  <button v-if="chapterNoteCount(g.chapter.id)" class="note-glyph" @click="emit('chapter-notes', { scope: 'chapter', ref: g.chapter })">
+                  <button
+                    v-if="chapterNoteCount(g.chapter.id)"
+                    class="note-glyph"
+                    @click="emit('chapter-notes', { scope: 'chapter', ref: g.chapter })"
+                  >
                     <AppIcon name="note" :size="17" />
                     <span class="note-count num">{{ chapterNoteCount(g.chapter.id) }}</span>
                   </button>
-                  <button v-else class="btn-text" @click="emit('chapter-notes', { scope: 'chapter', ref: g.chapter })">הוספת הערה</button>
+                  <button
+                    v-else
+                    class="btn-text"
+                    @click="emit('chapter-notes', { scope: 'chapter', ref: g.chapter })"
+                  >
+                    הוספת הערה
+                  </button>
                 </span>
               </div>
             </td>
@@ -284,11 +318,21 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
                 <div class="group-inner">
                   <span class="group-label">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</span>
                   <span class="group-note">
-                    <button v-if="subChapterNoteCount(sg.subChapter.id)" class="note-glyph" @click="emit('chapter-notes', { scope: 'subChapter', ref: sg.subChapter })">
+                    <button
+                      v-if="subChapterNoteCount(sg.subChapter.id)"
+                      class="note-glyph"
+                      @click="emit('chapter-notes', { scope: 'subChapter', ref: sg.subChapter })"
+                    >
                       <AppIcon name="note" :size="17" />
                       <span class="note-count num">{{ subChapterNoteCount(sg.subChapter.id) }}</span>
                     </button>
-                    <button v-else class="btn-text" @click="emit('chapter-notes', { scope: 'subChapter', ref: sg.subChapter })">הוספת הערה</button>
+                    <button
+                      v-else
+                      class="btn-text"
+                      @click="emit('chapter-notes', { scope: 'subChapter', ref: sg.subChapter })"
+                    >
+                      הוספת הערה
+                    </button>
                   </span>
                 </div>
               </td>
@@ -299,20 +343,32 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
                   <span class="expand" @click="toggleOpen(r)">
                     <AppIcon :name="isOpen(r) ? 'chevron-down' : 'chevron-left'" :size="16" />
                   </span>
-                  <BaseCheckbox :model-value="rowChecked(r)" :disabled="!r.sei" @update:model-value="(v) => setRowChecked(r, v)" />
+                  <BaseCheckbox
+                    :model-value="rowChecked(r)"
+                    :disabled="!r.sei"
+                    @update:model-value="(v) => setRowChecked(r, v)"
+                  />
                 </td>
-                <td class="td-code"><span class="item-code">{{ r.code }}</span></td>
+                <td class="td-code">
+                  <span class="item-code">{{ r.code }}</span>
+                </td>
                 <td class="td-desc">
                   <div class="d-name ellipsis">{{ r.name }}</div>
                   <div class="d-text ellipsis">{{ r.description }}</div>
                 </td>
                 <td class="td-unit">{{ r.unit || "--" }}</td>
-                <td class="td-qty"><span class="qty-text num">{{ fmtQty(r.qty) }}</span></td>
+                <td class="td-qty">
+                  <span class="qty-text num">{{ formatQty(r.qty) }}</span>
+                </td>
                 <td class="td-prio">
                   <PriorityControl :model-value="r.priority" @update:model-value="(v) => onPriority(r, v)" />
                 </td>
                 <td class="td-summary">
-                  <BaseToggle :model-value="r.forSummary" :disabled="summaryLocked(r)" @update:model-value="(v) => onSummary(r, v)" />
+                  <BaseToggle
+                    :model-value="r.forSummary"
+                    :disabled="summaryLocked(r)"
+                    @update:model-value="(v) => onSummary(r, v)"
+                  />
                 </td>
                 <td class="td-actions">
                   <button class="row-kebab" @click="openRowMenu(r, $event)">
@@ -345,11 +401,11 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
         <div class="cascade-modal">
           <h3 class="c-title">עדכון סעיפים מקושרים</h3>
           <p class="c-msg">
-            לסעיף זה קיימים {{ pendingCascade.childSeis.length }} סעיפים מקושרים עם אותה יחידת מידה.
-            לעדכן גם את הכמות שלהם?
+            לסעיף זה קיימים {{ pendingCascade.childSeis.length }} סעיפים מקושרים עם אותה יחידת מידה. לעדכן גם
+            את הכמות שלהם?
           </p>
           <label class="c-dontask">
-            <BaseCheckbox size="small" v-model="dontAskAgain" />
+            <BaseCheckbox v-model="dontAskAgain" size="small" />
             <span>אל תציג הודעה זו שוב</span>
           </label>
           <div class="c-actions">
@@ -360,7 +416,14 @@ const colCount = computed(() => (props.mode === "assignment" ? 9 : 8));
       </div>
     </Teleport>
 
-    <ContextMenu v-if="rowMenu" :items="rowMenuItems" :x="rowMenu.x" :y="rowMenu.y" @select="onRowMenu" @close="rowMenu = null" />
+    <ContextMenu
+      v-if="rowMenu"
+      :items="rowMenuItems"
+      :x="rowMenu.x"
+      :y="rowMenu.y"
+      @select="onRowMenu"
+      @close="rowMenu = null"
+    />
   </div>
 </template>
 

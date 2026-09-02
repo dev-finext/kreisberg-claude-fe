@@ -14,9 +14,13 @@ const openKey = ref(null);
 
 /** filter definitions per mode; each option list is computed from current BOQ content */
 const defs = computed(() => {
-  const inBoqItems = [...boq.itemIdsInBoq()].map((id) => cat.item(id)).filter(Boolean);
-  const chapters = [...new Set(inBoqItems.map((i) => i.chapterId))].map((id) => cat.chapter(id)).filter(Boolean);
-  const subs = [...new Set(inBoqItems.map((i) => i.subChapterId))].map((id) => cat.subChapter(id)).filter(Boolean);
+  const inBoqItems = [...boq.itemIdsInBoq].map((id) => cat.item(id)).filter(Boolean);
+  const chapters = [...new Set(inBoqItems.map((i) => i.chapterId))]
+    .map((id) => cat.chapter(id))
+    .filter(Boolean);
+  const subs = [...new Set(inBoqItems.map((i) => i.subChapterId))]
+    .map((id) => cat.subChapter(id))
+    .filter(Boolean);
   const priorities = [
     { value: "mandatory", label: "חובה" },
     { value: "recommended", label: "מומלץ" },
@@ -32,8 +36,16 @@ const defs = computed(() => {
 
   if (boq.sidebarMode === "assignment") {
     return [
-      { key: "chapter", label: "פרק", options: chapters.map((c) => ({ value: String(c.id), label: `${c.num}: ${c.name}` })) },
-      { key: "subChapter", label: "תת פרק", options: subs.map((s) => ({ value: String(s.id), label: `${s.num}-${s.name}` })) },
+      {
+        key: "chapter",
+        label: "פרק",
+        options: chapters.map((c) => ({ value: String(c.id), label: `${c.num}: ${c.name}` })),
+      },
+      {
+        key: "subChapter",
+        label: "תת פרק",
+        options: subs.map((s) => ({ value: String(s.id), label: `${s.num}-${s.name}` })),
+      },
       { key: "itemName", label: "שם סעיף", options: names },
       { key: "resourceType", label: "סוג משאב", options: rts },
       { key: "priority", label: "עדיפות", options: priorities },
@@ -85,7 +97,11 @@ function clearAll() {
         </button>
         <div v-if="openKey === def.key" class="filter-menu scroll-slim" @mouseleave="openKey = null">
           <label class="f-opt">
-            <BaseCheckbox size="small" :model-value="!selectionOf(def.key).length" @update:model-value="(v) => setAll(def, v)" />
+            <BaseCheckbox
+              size="small"
+              :model-value="!selectionOf(def.key).length"
+              @update:model-value="(v) => setAll(def, v)"
+            />
             <span>הכל</span>
           </label>
           <div class="f-divider" />
