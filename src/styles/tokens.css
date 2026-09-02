@@ -1,0 +1,74 @@
+/* ============================================================
+   Design tokens — sampled from the Figma design (design-pack).
+   TO VERIFY: audit every value against the new Figma file once
+   its link is provided (session note, 2026-09-02).
+   ============================================================ */
+:root {
+  /* Brand */
+  --brand-primary: #5a86e7; /* primary buttons, links, active tab, toggles-on, filter chip */
+  --brand-primary-hover: #4a77de;
+  --brand-primary-soft: #eef2fa; /* light blue fill: selected row, soft hover */
+
+  /* App rail */
+  --rail-navy: #1a2b52;
+  --rail-icon-idle: #8a97b4;
+  --rail-icon-active: #ffffff;
+
+  /* Surfaces */
+  --page-bg: #e5eaf3; /* blue-grey page canvas behind the white card */
+  --surface: #ffffff;
+  --surface-subtle: #f8fafd; /* zebra / group header rows */
+  --surface-muted: #f6f6f6; /* disabled fields, nested-table background */
+
+  /* Borders */
+  --border: #e3e8f1;
+  --border-strong: #cbd1dc;
+  --divider: #eef2f7;
+
+  /* Text */
+  --text-primary: #2d354b;
+  --text-secondary: #6b7590;
+  --text-muted: #9aa3b8;
+  --text-disabled: #bfc6d4;
+
+  /* Semantic */
+  --success: #3e7e2e; /* תומחר pill; toast tick #357826 */
+  --success-soft: #e9f3e6;
+  --info: #4a70c8; /* מכרז pill */
+  --info-soft: #e9eef9;
+  --warning: #f4bd30; /* SLA "קרוב לחריגה" */
+  --danger: #ec5e5b; /* מחיקה, SLA "חורג" */
+  --danger-soft: #fdecec;
+  --highlight: #fff3a0; /* yellow search-match background */
+
+  /* Rows & panels (addendum) */
+  --row-open-bg: #f5f8fc; /* an expanded item row */
+  --row-closed-bg: #ffffff;
+  --panel-bg: #ffffff; /* the expansion panel body */
+  --history-card-bg: #f6f8fb;
+  --structure-selected: #f6f6f6; /* selected row in the שיוך tree */
+  --checkbox-checked: #304a75; /* filled navy checkbox in the tree */
+
+  /* Shape */
+  --radius-card: 16px;
+  --radius-modal: 16px;
+  --radius-input: 8px;
+  --radius-nested: 10px;
+  --radius-pill: 999px;
+  --radius-chip: 6px;
+
+  /* Elevation */
+  --shadow-card: 0 1px 3px rgba(22, 40, 82, 0.06), 0 8px 24px rgba(22, 40, 82, 0.05);
+  --shadow-modal: 0 12px 48px rgba(22, 40, 82, 0.18);
+  --shadow-menu: 0 4px 16px rgba(22, 40, 82, 0.14);
+
+  /* Metrics */
+  --row-h-table: 44px;
+  --row-h-nested: 40px;
+  --row-h-tree: 30px;
+  --input-h: 40px;
+  --tree-indent: 16px;
+
+  /* Type */
+  --font-ui: "Heebo", "Assistant", "Rubik", sans-serif;
+}

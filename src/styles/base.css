@@ -1,0 +1,225 @@
+/* Base styles + shared primitives (per design-pack brief §3) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--page-bg);
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Numbers & codes: LTR inside RTL lines, tabular figures */
+.num {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+
+.item-code {
+  font-size: 13px;
+  font-weight: 500;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  min-width: 100px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--brand-primary);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border: 1.5px solid var(--brand-primary);
+  color: var(--brand-primary);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--brand-primary-soft);
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--brand-primary);
+  font-size: 13px;
+  min-width: 0;
+  height: auto;
+  padding: 4px 6px;
+}
+
+.btn-danger-text {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 13px;
+  min-width: 0;
+  height: auto;
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Disabled: grey by colour, not by opacity */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  background: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  opacity: 1;
+}
+.btn-text:disabled,
+.btn-danger-text:disabled {
+  background: none;
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* ---------- Inputs ---------- */
+.field-label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  text-align: right;
+}
+
+.input,
+.select {
+  width: 100%;
+  height: var(--input-h);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--surface);
+  outline: none;
+}
+.input::placeholder {
+  color: var(--text-muted);
+}
+.input:focus,
+.select:focus {
+  border-color: var(--brand-primary);
+}
+.input:disabled,
+.select:disabled {
+  background: var(--surface-muted);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* ---------- Scrollbars ---------- */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- Pills ---------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  background: var(--surface);
+  white-space: nowrap;
+}
+.pill-success {
+  border-color: var(--success);
+  color: var(--success);
+}
+.pill-info {
+  border-color: var(--info);
+  color: var(--info);
+}
+.pill-neutral {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+/* ---------- Utility ---------- */
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-muted {
+  color: var(--text-muted);
+}
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
