@@ -1,74 +1,102 @@
 /* ============================================================
-   Design tokens — sampled from the Figma design (design-pack).
-   TO VERIFY: audit every value against the new Figma file once
-   its link is provided (session note, 2026-09-02).
+   Design tokens.
+   VERIFIED  = extracted from the Figma file ffGCv6ckeepxO4iPWnbTAx
+               (Colors / Fonts sheets, 2026-09-02).
+   PENDING   = from the design-pack brief; to be confirmed against
+               specific Figma screens during the per-screen build.
    ============================================================ */
 :root {
-  /* Brand */
-  --brand-primary: #5a86e7; /* primary buttons, links, active tab, toggles-on, filter chip */
-  --brand-primary-hover: #4a77de;
-  --brand-primary-soft: #eef2fa; /* light blue fill: selected row, soft hover */
+  /* Brand — VERIFIED (Figma "Colors" sheet) */
+  --brand-primary: #5b93ef; /* primary button */
+  --brand-primary-hover: #477dd8; /* button hover */
+  --brand-primary-selected: #4a7dff; /* button selected */
+  --brand-primary-active: #1047a3; /* "Blue active" */
+  --brand-primary-soft: #f6f9fd; /* VERIFIED "blue row selected" */
 
-  /* App rail */
-  --rail-navy: #1a2b52;
-  --rail-icon-idle: #8a97b4;
+  /* App rail / menu panel — VERIFIED */
+  --rail-navy: #16325f; /* gradient top (52%) */
+  --rail-navy-2: #044f9a; /* gradient bottom */
+  --rail-active-bg: rgba(0, 170, 255, 0.12); /* "blue nav bar selected" #00AAFF @12% */
+  --rail-icon-idle: #ffffff;
   --rail-icon-active: #ffffff;
 
   /* Surfaces */
-  --page-bg: #e5eaf3; /* blue-grey page canvas behind the white card */
+  --page-bg: #e8edf5; /* VERIFIED "background" / "bright blue" */
   --surface: #ffffff;
-  --surface-subtle: #f8fafd; /* zebra / group header rows */
-  --surface-muted: #f6f6f6; /* disabled fields, nested-table background */
+  --surface-subtle: #f6f9fd; /* VERIFIED "blue row selected" — group/hover rows */
+  --surface-muted: #f4f4f4; /* VERIFIED "gray light" — disabled fields, search bg */
 
-  /* Borders */
-  --border: #e3e8f1;
-  --border-strong: #cbd1dc;
-  --divider: #eef2f7;
+  /* Borders — VERIFIED (sampled from picker/fields) */
+  --border: #e8edf5; /* card/segmented borders */
+  --border-strong: #bbc5cf; /* input borders */
+  --divider: #f4f4f4; /* 2px dividers under tabs / panels */
 
-  /* Text */
-  --text-primary: #2d354b;
-  --text-secondary: #6b7590;
-  --text-muted: #9aa3b8;
-  --text-disabled: #bfc6d4;
+  /* Text — VERIFIED */
+  --text-primary: #323d56; /* "black" */
+  --text-general-2: #404041;
+  --text-secondary: #70869e; /* "gray mid" */
+  --text-muted: #848b9a; /* VERIFIED "gray dark" — placeholders */
+  --text-disabled: #bbc5cf; /* "gray" */
+  --text-extra-dark: #61778f; /* VERIFIED "Gray extra dark" — טיוטה pill */
 
-  /* Semantic */
-  --success: #3e7e2e; /* תומחר pill; toast tick #357826 */
-  --success-soft: #e9f3e6;
-  --info: #4a70c8; /* מכרז pill */
-  --info-soft: #e9eef9;
-  --warning: #f4bd30; /* SLA "קרוב לחריגה" */
-  --danger: #ec5e5b; /* מחיקה, SLA "חורג" */
-  --danger-soft: #fdecec;
-  --highlight: #fff3a0; /* yellow search-match background */
+  /* Semantic — VERIFIED (Figma "Severity") */
+  --success: #72b852; /* good */
+  --success-soft: #e9f3e6; /* PENDING */
+  --warning: #f9c200; /* medium */
+  --danger: #f26363; /* bad */
+  --danger-soft: #fdecec; /* PENDING */
+  --info: #4a70c8; /* PENDING: מכרז pill */
+  --info-soft: #e9eef9; /* PENDING */
+  --highlight: #fff3a0; /* PENDING: yellow search-match background */
 
-  /* Rows & panels (addendum) */
-  --row-open-bg: #f5f8fc; /* an expanded item row */
+  /* Status colors — VERIFIED (Figma "Statuses") */
+  --status-pink: #cf5cac;
+  --status-purple: #9d7dfa;
+  --status-blue: #5b93ef;
+  --status-green: #72b852;
+  --status-gray: #70869e;
+
+  /* Graph colors — VERIFIED (Figma "Graphs") */
+  --graph-blue-light: #6cc7f8;
+  --graph-blue-dark: #315583;
+  --graph-brown: #cea0a0;
+
+  /* Rows & panels — PENDING (design-pack addendum) */
+  --row-open-bg: #f5f8fc;
   --row-closed-bg: #ffffff;
-  --panel-bg: #ffffff; /* the expansion panel body */
+  --panel-bg: #ffffff;
   --history-card-bg: #f6f8fb;
-  --structure-selected: #f6f6f6; /* selected row in the שיוך tree */
-  --checkbox-checked: #304a75; /* filled navy checkbox in the tree */
+  --structure-selected: #f6f6f6;
+  --checkbox-checked: #304a75;
 
-  /* Shape */
-  --radius-card: 16px;
-  --radius-modal: 16px;
+  /* Shape — VERIFIED (picker/card extraction) */
+  --radius-card: 6px;
+  --radius-modal: 6px;
   --radius-input: 8px;
-  --radius-nested: 10px;
-  --radius-pill: 999px;
+  --radius-nested: 8px;
+  --radius-pill: 100px;
   --radius-chip: 6px;
 
-  /* Elevation */
-  --shadow-card: 0 1px 3px rgba(22, 40, 82, 0.06), 0 8px 24px rgba(22, 40, 82, 0.05);
-  --shadow-modal: 0 12px 48px rgba(22, 40, 82, 0.18);
-  --shadow-menu: 0 4px 16px rgba(22, 40, 82, 0.14);
+  /* Elevation — VERIFIED ("Shadow Big") + PENDING menu/modal */
+  --shadow-card: 0 4px 10px rgba(16, 24, 40, 0.06);
+  --shadow-btn: 0 0 15px rgba(64, 64, 65, 0.06);
+  --shadow-modal: 0 12px 48px rgba(22, 40, 82, 0.18); /* PENDING */
+  --shadow-menu: 0 4px 16px rgba(22, 40, 82, 0.14); /* PENDING */
 
-  /* Metrics */
-  --row-h-table: 44px;
-  --row-h-nested: 40px;
-  --row-h-tree: 30px;
-  --input-h: 40px;
+  /* Metrics — VERIFIED where noted */
+  --row-h-table: 44px; /* PENDING */
+  --row-h-nested: 40px; /* PENDING */
+  --row-h-tree: 32px; /* VERIFIED (BoQ side menu association rows) */
+  --input-h: 40px; /* VERIFIED */
   --tree-indent: 16px;
+  --rail-w: 64px; /* VERIFIED */
 
-  /* Type */
-  --font-ui: "Heebo", "Assistant", "Rubik", sans-serif;
+  /* Type — VERIFIED (Figma "Fonts" sheet: Noto Sans Hebrew) */
+  --font-ui: "Noto Sans Hebrew", sans-serif;
+  --fs-h1: 32px; /* Bold */
+  --fs-h2: 24px; /* Bold */
+  --fs-h3: 16px; /* Medium */
+  --fs-h4: 16px; /* Bold */
+  --fs-body: 14px; /* Regular / Bold; Link = Medium 14 */
+  --fs-label: 12px; /* Regular / Medium / SemiBold */
 }
