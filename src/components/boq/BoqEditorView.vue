@@ -161,17 +161,7 @@ function deleteChecked() {
         </button>
       </div>
       <div class="doc-start">
-        <div class="search-pill">
-          <input v-model="boq.searchTerm" placeholder="חיפוש לפי פרק/סעיף/תת סעיף" />
-          <AppIcon name="search" :size="20" />
-        </div>
-        <span class="v-divider" />
-        <div class="open-rows-toggle">
-          <BaseToggle v-model="boq.openAllRows" />
-          <span class="ort-label">תצוגת סעיפים פתוחים</span>
-        </div>
-        <span class="v-divider" />
-        <!-- toolbar actions (שיוך) -->
+        <!-- toolbar actions (שיוך) — rightmost of the left cluster -->
         <div v-if="boq.sidebarMode === 'assignment'" class="actions">
           <button class="tb-btn" :disabled="!addItemEnabled" :title="addItemEnabled ? '' : 'ניתן להוסיף סעיפים רק לאלמנט קצה'" @click="openPicker">
             <AppIcon name="plus-circle" :size="20" />
@@ -193,6 +183,16 @@ function deleteChecked() {
             <AppIcon name="copy" :size="18" />
             <span>העתק</span>
           </button>
+        </div>
+        <span v-if="boq.sidebarMode === 'assignment'" class="v-divider" />
+        <div class="open-rows-toggle">
+          <BaseToggle v-model="boq.openAllRows" />
+          <span class="ort-label">תצוגת סעיפים פתוחים</span>
+        </div>
+        <span class="v-divider" />
+        <div class="search-pill">
+          <input v-model="boq.searchTerm" placeholder="חיפוש לפי פרק/סעיף/תת סעיף" />
+          <AppIcon name="search" :size="20" />
         </div>
       </div>
     </div>

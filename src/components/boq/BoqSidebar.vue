@@ -295,6 +295,7 @@ function toggleChapterExpand(chId) {
   height: 32px;
   display: flex;
   align-items: center;
+  justify-content: flex-end; /* left edge in RTL, per the Figma frames */
   flex-shrink: 0;
 }
 .ghost-btn {

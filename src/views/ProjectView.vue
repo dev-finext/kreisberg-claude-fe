@@ -46,7 +46,7 @@ function save() {
   <div>
     <PageHeader :title="title">
       <template #actions>
-        <button class="btn btn-primary" @click="save">שמירה</button>
+        <button class="btn btn-primary" @click="save">{{ activeTab === "general" ? "שמור" : "שמירה" }}</button>
         <button class="btn btn-secondary" @click="router.push('/projects')">ביטול</button>
       </template>
     </PageHeader>
