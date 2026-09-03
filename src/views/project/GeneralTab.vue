@@ -1,43 +1,50 @@
 <script setup>
-import { reactive, ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import { useUiStore } from "@/stores/ui";
+import { useProjectFormStore } from "@/stores/projectForm";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 
 const route = useRoute();
 const db = useDbStore();
 const ui = useUiStore();
+const form = useProjectFormStore();
 
-const project = computed(() => db.projects.find((p) => p.id === Number(route.params.id)) || null);
-
-const form = reactive({
-  name: project.value?.name || "",
-  location: project.value?.location || "",
-  typeName: project.value?.typeName || "",
-  template: "",
-  description: project.value?.description || "",
-  specialName: "",
-  specialValue: "",
-});
-
-const assets = ref(
-  project.value ? [{ id: 1, name: "נכס ראשי", block: "6638", parcel: "112", subParcel: "4" }] : []
+const project = computed(() =>
+  route.params.id === "new" ? null : db.projects.find((p) => p.id === Number(route.params.id)) || null
 );
-let assetSeq = 2;
+
+watch(project, (p) => form.loadProject(p), { immediate: true });
+
+const draft = computed(() => form.draft);
+
+/* ---------- assets (פרטי הנכס) ---------- */
+let assetSeq = -1;
 const editingAsset = ref(null);
+const deleteAsset = ref(null);
 
 function addAsset() {
-  const a = { id: assetSeq++, name: "", block: "", parcel: "", subParcel: "" };
-  assets.value.push(a);
+  const a = { id: assetSeq--, name: "", block: "", parcel: "", subParcel: "" };
+  draft.value.assets.push(a);
   editingAsset.value = a.id;
 }
-function saveAsset() {
+function saveAsset(a) {
+  if (!a.name.trim()) {
+    ui.toast("נא להזין שם נכס", "warning");
+    return;
+  }
   editingAsset.value = null;
-  ui.toast("הנכס נשמר");
 }
-function removeAsset(a) {
-  assets.value = assets.value.filter((x) => x.id !== a.id);
+function confirmDeleteAsset() {
+  draft.value.assets = draft.value.assets.filter((x) => x.id !== deleteAsset.value.id);
+  deleteAsset.value = null;
+}
+
+/* ---------- special fields ---------- */
+function addSpecialField() {
+  draft.value.specialFields.push({ name: "", value: "" });
 }
 </script>
 
@@ -49,55 +56,54 @@ function removeAsset(a) {
       <div class="grid-2">
         <div class="field">
           <label class="field-label">שם הפרויקט</label>
-          <input v-model="form.name" class="input" />
+          <input v-model="draft.name" class="input" />
         </div>
         <div class="field">
           <label class="field-label">כתובת פרויקט</label>
-          <input v-model="form.location" class="input" />
+          <input v-model="draft.location" class="input" />
         </div>
         <div class="field">
           <label class="field-label">סוג פרויקט</label>
-          <select v-model="form.typeName" class="select">
-            <option value="">בחר סוג</option>
-            <option>שיפוץ דירה</option>
-            <option>בנייה פרטית</option>
-            <option>תמ"א 38</option>
-            <option>בניין</option>
-            <option>מסחר</option>
+          <select v-model="draft.typeId" class="select">
+            <option :value="null">בחר סוג</option>
+            <option v-for="t in db.projectTypes" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
         </div>
         <div class="field">
           <label class="field-label">תבניות פרויקט</label>
-          <select v-model="form.template" class="select" disabled title="לא זמין בדמו">
-            <option value="">בחר תבנית</option>
+          <select v-model="draft.templateId" class="select">
+            <option :value="null">בחר תבנית</option>
+            <option v-for="t in db.projectTemplates" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
         </div>
       </div>
       <div class="field">
         <label class="field-label">תיאור חופשי</label>
-        <textarea v-model="form.description" class="input textarea" rows="3" />
+        <textarea v-model="draft.description" class="input textarea" rows="3" />
       </div>
 
       <h3 class="section-title mt">מדיה</h3>
       <div class="grid-2">
         <div class="field">
           <label class="field-label">הוספת תמונת רקע</label>
-          <div class="upload" title="העלאת קבצים אינה זמינה בדמו">
+          <label class="upload">
+            <input type="file" accept="image/*" hidden @change="ui.toast('התמונה נשמרה לפרויקט')" />
             <AppIcon name="plus" :size="14" />
             <span>טען או גרור תמונה / קובץ מדיה</span>
-          </div>
+          </label>
         </div>
         <div class="field">
           <label class="field-label">הוספת לוגו</label>
-          <div class="upload" title="העלאת קבצים אינה זמינה בדמו">
+          <label class="upload">
+            <input type="file" accept="image/*" hidden @change="ui.toast('הלוגו נשמר לפרויקט')" />
             <AppIcon name="plus" :size="14" />
             <span>טען או גרור תמונה / קובץ מדיה</span>
-          </div>
+          </label>
         </div>
       </div>
 
       <div class="special-head">
-        <button class="ghost-btn">
+        <button class="ghost-btn" @click="addSpecialField">
           <span>הוספת שדה מיוחד</span>
           <AppIcon name="plus-circle" :size="18" />
         </button>
@@ -106,14 +112,14 @@ function removeAsset(a) {
           <AppIcon name="info" :size="15" />
         </h3>
       </div>
-      <div class="grid-2">
+      <div v-for="(sf, i) in draft.specialFields" :key="i" class="grid-2">
         <div class="field">
           <label class="field-label">שם שדה מיוחד</label>
-          <input v-model="form.specialName" class="input" placeholder="נתוני שדה מיוחד" />
+          <input v-model="sf.name" class="input" placeholder="נתוני שדה מיוחד" />
         </div>
         <div class="field">
-          <label class="field-label">שם שדה מיוחד</label>
-          <input v-model="form.specialValue" class="input" placeholder="נתוני שדה מיוחד" />
+          <label class="field-label">ערך</label>
+          <input v-model="sf.value" class="input" placeholder="נתוני שדה מיוחד" />
         </div>
       </div>
     </section>
@@ -140,15 +146,15 @@ function removeAsset(a) {
               <th></th>
             </tr>
           </thead>
-          <tbody v-if="assets.length">
-            <tr v-for="a in assets" :key="a.id">
+          <tbody v-if="draft.assets.length">
+            <tr v-for="a in draft.assets" :key="a.id">
               <template v-if="editingAsset === a.id">
                 <td><input v-model="a.name" class="input asset-input" placeholder="שם הנכס" /></td>
                 <td><input v-model="a.block" class="input asset-input num" /></td>
                 <td><input v-model="a.parcel" class="input asset-input num" /></td>
                 <td><input v-model="a.subParcel" class="input asset-input num" /></td>
                 <td class="td-act">
-                  <button class="btn-text" @click="saveAsset">שמירה</button>
+                  <button class="btn-text" @click="saveAsset(a)">שמירה</button>
                 </td>
               </template>
               <template v-else>
@@ -160,7 +166,7 @@ function removeAsset(a) {
                   <button class="icon-btn" @click="editingAsset = a.id">
                     <AppIcon name="pencil" :size="15" />
                   </button>
-                  <button class="icon-btn danger" @click="removeAsset(a)">
+                  <button class="icon-btn danger" @click="deleteAsset = a">
                     <AppIcon name="trash" :size="15" />
                   </button>
                 </td>
@@ -168,7 +174,7 @@ function removeAsset(a) {
             </tr>
           </tbody>
         </table>
-        <div v-if="!assets.length" class="assets-empty">
+        <div v-if="!draft.assets.length" class="assets-empty">
           <svg width="110" height="96" viewBox="0 0 110 96" fill="none">
             <ellipse cx="55" cy="86" rx="40" ry="6" fill="#EEF2FA" />
             <rect
@@ -202,6 +208,15 @@ function removeAsset(a) {
         </div>
       </div>
     </section>
+
+    <DeleteConfirmModal
+      v-if="deleteAsset"
+      title="הסרת נכס"
+      :message="`האם אתה בטוח שברצונך להסיר את &quot;${deleteAsset.name || 'הנכס'}&quot;?`"
+      confirm-label="הסרה"
+      @close="deleteAsset = null"
+      @confirm="confirmDeleteAsset"
+    />
   </div>
 </template>
 
@@ -247,14 +262,6 @@ function removeAsset(a) {
 .field {
   margin-bottom: 12px;
 }
-.field-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: 4px;
-  text-align: right;
-}
 .textarea {
   height: auto;
   padding: 10px 12px;
@@ -271,7 +278,7 @@ function removeAsset(a) {
   flex-direction: row-reverse;
   color: var(--brand-primary);
   font-size: 13px;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 .special-head {
   display: flex;

@@ -3,12 +3,14 @@ import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import { useUiStore } from "@/stores/ui";
+import { useProjectFormStore } from "@/stores/projectForm";
 import PageHeader from "@/components/layout/PageHeader.vue";
 
 const route = useRoute();
 const router = useRouter();
 const db = useDbStore();
 const ui = useUiStore();
+const form = useProjectFormStore();
 
 const isNew = computed(() => route.params.id === "new");
 const project = computed(() => db.projects.find((p) => p.id === Number(route.params.id)) || null);
@@ -16,9 +18,9 @@ const title = computed(() => (isNew.value ? "פרויקט חדש" : project.valu
 
 const tabs = [
   { id: "general", label: "כללי", enabled: true },
-  { id: "conditions", label: "תנאים מיוחדים", enabled: false },
-  { id: "resources", label: "משאבים", enabled: false },
-  { id: "documents", label: "מסמכים", enabled: false },
+  { id: "conditions", label: "תנאים מיוחדים", enabled: true },
+  { id: "resources", label: "משאבים", enabled: true },
+  { id: "documents", label: "מסמכים", enabled: true },
   { id: "quantities", label: "כתבי כמויות", enabled: true },
   { id: "quotes", label: "הצעות מחיר", enabled: false },
 ];
@@ -38,7 +40,17 @@ function goTab(tab) {
 }
 
 function save() {
-  ui.toast(isNew.value ? "הפרויקט נוצר בהצלחה!" : "הפרויקט עודכן בהצלחה!");
+  if (activeTab.value === "general" || isNew.value) {
+    const res = form.save();
+    if (res.error) {
+      ui.toast(res.error, "warning");
+      return;
+    }
+    ui.toast(res.created ? "הפרויקט נוצר בהצלחה!" : "הפרויקט עודכן בהצלחה!");
+    if (res.created) router.replace(`/projects/${res.id}/general`);
+  } else {
+    ui.toast("השינויים נשמרו");
+  }
 }
 </script>
 
