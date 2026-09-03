@@ -9,6 +9,7 @@ import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import PriorityControl from "./PriorityControl.vue";
 import ItemRowPanel from "./ItemRowPanel.vue";
+import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
 import { formatQty } from "@/utils/format";
 import { PRIORITY, SIDEBAR_MODE } from "@/constants";
@@ -16,7 +17,7 @@ import { PRIORITY, SIDEBAR_MODE } from "@/constants";
 const props = defineProps({
   mode: { type: String, required: true }, // 'assignment' | 'chapters'
 });
-const emit = defineEmits(["edit-item", "replace-item", "chapter-notes"]);
+const emit = defineEmits(["edit-item", "replace-item", "chapter-notes", "add-items"]);
 
 const boq = useBoqStore();
 const cat = useCatalogStore();
@@ -272,6 +273,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
         <tr v-if="!assignment.rows.length">
           <td :colspan="colCount">
             <div class="table-empty">
+              <EmptyClipboard />
               <p class="empty-title">עדיין אין כאן סעיפים</p>
               <p class="empty-sub">
                 {{
@@ -280,6 +282,17 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                     : "הם יופיעו כאן ברגע שיתווספו"
                 }}
               </p>
+              <button
+                v-if="
+                  boq.selectedElementId !== null &&
+                  boq.selectedElementId !== 0 &&
+                  boq.isLeaf(boq.selectedElementId)
+                "
+                class="btn btn-primary empty-cta"
+                @click="emit('add-items')"
+              >
+                הוספת סעיפים
+              </button>
             </div>
           </td>
         </tr>
@@ -387,6 +400,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
         <tr v-if="!chapterGroups.length">
           <td :colspan="colCount">
             <div class="table-empty">
+              <EmptyClipboard />
               <p class="empty-title">עדיין אין כאן סעיפים</p>
               <p class="empty-sub">הם יופיעו כאן ברגע שיתווספו או יבחרו מהתפריט</p>
             </div>
@@ -607,6 +621,9 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
 .empty-sub {
   font-size: 14px;
   color: var(--text-muted);
+}
+.empty-cta {
+  margin-top: 14px;
 }
 /* cascade confirm */
 .cascade-overlay {
