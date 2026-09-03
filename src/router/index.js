@@ -47,6 +47,26 @@ const routes = [
   },
   { path: "/system/tags", name: "tags", component: () => import("@/views/system/TagManagementView.vue") },
   { path: "/system/mapping", name: "mapping", component: () => import("@/views/system/BoqMappingView.vue") },
+  {
+    path: "/system/resource-types",
+    name: "resource-types",
+    component: () => import("@/views/system/ResourceTypesView.vue"),
+  },
+  {
+    path: "/system/resource-library",
+    name: "resource-library",
+    component: () => import("@/views/system/ResourceLibraryView.vue"),
+  },
+  {
+    path: "/system/project-categories",
+    name: "project-categories",
+    component: () => import("@/views/system/ProjectTypesView.vue"),
+  },
+  {
+    path: "/system/project-templates",
+    name: "project-templates",
+    component: () => import("@/views/system/ProjectTemplatesView.vue"),
+  },
 ];
 
 export default createRouter({

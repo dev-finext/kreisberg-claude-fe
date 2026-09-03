@@ -24,14 +24,14 @@ const isSystem = computed(() => route.path.startsWith("/system"));
 const SYSTEM_ITEMS = [
   { key: "general", label: "כללי", to: null },
   { key: "languages", label: "שפות", to: null },
-  { key: "resource-types", label: "סוגי משאבים", to: null },
-  { key: "resource-library", label: "ספריית משאבים", to: null },
+  { key: "resource-types", label: "סוגי משאבים", to: "/system/resource-types" },
+  { key: "resource-library", label: "ספריית משאבים", to: "/system/resource-library" },
   { key: "indexes", label: "אינדקסים ומטבעות", to: null },
   { key: "catalogs", label: "קטלוגים", to: "/system/catalogs" },
   { key: "tags", label: "ניהול תגיות", to: "/system/tags" },
   { key: "mapping", label: "מיפוי כתב כמויות", to: "/system/mapping" },
-  { key: "project-categories", label: "קטגוריות פרויקט", to: null },
-  { key: "project-templates", label: "תבניות פרויקטים", to: null },
+  { key: "project-categories", label: "קטגוריות פרויקט", to: "/system/project-categories" },
+  { key: "project-templates", label: "תבניות פרויקטים", to: "/system/project-templates" },
   { key: "security", label: "אבטחת מידע", to: null },
   { key: "clients", label: "ניהול לקוחות", to: null },
 ];
