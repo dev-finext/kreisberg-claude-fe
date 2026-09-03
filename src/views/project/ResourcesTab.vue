@@ -139,6 +139,9 @@ const removeMessage = computed(() =>
 <style scoped>
 .resources-tab {
   padding: 24px 24px 24px 40px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 .head {
   display: flex;

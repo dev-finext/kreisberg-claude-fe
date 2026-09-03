@@ -432,6 +432,7 @@ function confirmDelete() {
   flex: 1;
   min-width: 0;
   padding: 10px 24px 24px;
+  overflow-y: auto;
 }
 .toolbar {
   display: flex;

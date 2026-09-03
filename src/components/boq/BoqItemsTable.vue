@@ -429,9 +429,12 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
 
 <style scoped>
 .items-table-wrap {
-  overflow-y: auto;
+  overflow: auto;
   flex: 1;
   min-height: 0;
+}
+.items-table {
+  min-width: 720px;
 }
 .selected-path {
   font-size: 14px;

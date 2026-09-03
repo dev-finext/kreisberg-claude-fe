@@ -55,7 +55,6 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-direction: row-reverse;
   min-height: 40px;
 }
 .page-title {
@@ -64,8 +63,10 @@ defineProps({
   color: var(--text-primary);
   text-align: right;
 }
+/* primary (שמירה) sits at the far-left edge, ביטול to its right — matches Figma */
 .actions {
   display: flex;
+  flex-direction: row-reverse;
   gap: 12px;
   align-items: center;
 }

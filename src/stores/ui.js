@@ -15,7 +15,7 @@ let toastSeq = 1;
 export const useUiStore = defineStore("ui", {
   state: () => ({
     toasts: [],
-    railExpanded: false,
+    railExpanded: true, // Figma shows the navy rail open with its labels by default
     // user preferences ("אל תציג הודעה זו שוב")
     prefs: {
       skipAddToAllStructuresPrompt: false,
