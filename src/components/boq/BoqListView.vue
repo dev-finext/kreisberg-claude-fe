@@ -12,6 +12,7 @@ import SearchPill from "@/components/shared/SearchPill.vue";
 import SlaDonut from "./SlaDonut.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
 import TenderModal from "./TenderModal.vue";
+import BoqExportModal from "./BoqExportModal.vue";
 import ImportBoqDialog from "./ImportBoqDialog.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { formatDate } from "@/utils/format";
@@ -32,6 +33,7 @@ const editHeader = ref(null);
 const deleteTarget = ref(null);
 const checked = ref([]);
 const tenderHeader = ref(null);
+const exportHeader = ref(null);
 const showImport = ref(false);
 const expandedIds = ref([]);
 const renamingDoc = ref(false);
@@ -75,6 +77,7 @@ const menuItems = [
   { key: "edit", label: "עריכה", icon: "pencil" },
   { key: "duplicate", label: "שכפול", icon: "copy" },
   { key: "tender", label: "יציאה למכרז", icon: "megaphone" },
+  { key: "print", label: "הדפסה / ייצוא", icon: "file" },
   { key: "delete", label: "מחיקה", icon: "trash", danger: true },
 ];
 function onMenuSelect(key) {
@@ -82,6 +85,7 @@ function onMenuSelect(key) {
   menu.value = null;
   if (key === "edit") editHeader.value = h;
   else if (key === "tender") tenderHeader.value = h;
+  else if (key === "print") exportHeader.value = h;
   else if (key === "duplicate") {
     const copy = boqStore.duplicateBoqHeader(h.id);
     if (copy) ui.toast(`התצורה שוכפלה: ${copy.name}`);
@@ -270,6 +274,7 @@ function toggleChecked(id, v) {
       @close="menu = null"
     />
     <TenderModal v-if="tenderHeader" :boq-id="tenderHeader.id" @close="tenderHeader = null" />
+    <BoqExportModal v-if="exportHeader" :boq-id="exportHeader.id" @close="exportHeader = null" />
     <ImportBoqDialog v-if="showImport" :project-id="projectId" @close="showImport = false" />
     <CreateBoqModal
       v-if="showCreate || editHeader"

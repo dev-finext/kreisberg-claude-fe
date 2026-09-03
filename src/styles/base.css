@@ -211,6 +211,29 @@ textarea {
   color: var(--text-primary);
 }
 
+/* ---------- Print (BOQ export document) ---------- */
+@media print {
+  .app-layout {
+    display: none !important;
+  }
+  .export-overlay {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  .export-overlay .no-print {
+    display: none !important;
+  }
+  .export-overlay .export-doc {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
 /* ---------- Utility ---------- */
 .text-secondary {
   color: var(--text-secondary);
