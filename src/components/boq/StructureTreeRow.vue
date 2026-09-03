@@ -125,7 +125,7 @@ function onDrop(e) {
       />
     </template>
     <template v-else>
-      <span class="label ellipsis">{{ node.name }}</span>
+      <span class="label">{{ node.name }}</span>
     </template>
     <BaseCheckbox
       v-if="isLeaf && !isRenaming"
@@ -210,7 +210,10 @@ function onDrop(e) {
   font-size: 14px;
   line-height: 18px;
   text-align: right;
-  max-width: 150px;
+  /* full name on one line; never squish — a name that can't fit widens the
+     row so the tree scrolls on X instead of truncating to "קומ…" */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .rename-input {
   border: 1px solid #6952ef;
