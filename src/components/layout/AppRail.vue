@@ -23,7 +23,6 @@ const isSystem = computed(() => route.path.startsWith("/system"));
 
 const SYSTEM_ITEMS = [
   { key: "general", label: "כללי", to: null },
-  { key: "languages", label: "שפות", to: null },
   { key: "resource-types", label: "סוגי משאבים", to: "/system/resource-types" },
   { key: "resource-library", label: "ספריית משאבים", to: "/system/resource-library" },
   { key: "indexes", label: "אינדקסים ומטבעות", to: null },
