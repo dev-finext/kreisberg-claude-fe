@@ -174,7 +174,6 @@ function deleteChecked() {
         </button>
         <button class="tender-btn" title="יציאה למכרז" @click="showTender = true">
           <AppIcon name="megaphone" :size="16" />
-          <span>יציאה למכרז</span>
         </button>
       </div>
       <div class="doc-start">
@@ -216,7 +215,12 @@ function deleteChecked() {
           <span class="ort-label">תצוגת סעיפים פתוחים</span>
         </div>
         <span class="v-divider" />
-        <SearchPill v-model="boq.searchTerm" placeholder="חיפוש לפי פרק/סעיף/תת סעיף" />
+        <SearchPill
+          v-model="boq.searchTerm"
+          placeholder="חיפוש לפי פרק/סעיף/תת סעיף"
+          width="226px"
+          class="doc-search"
+        />
       </div>
     </div>
 
@@ -339,25 +343,33 @@ function deleteChecked() {
   align-items: center;
   justify-content: space-between;
   min-height: 44px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   gap: 12px;
-  flex-wrap: wrap;
 }
 .doc-end {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-direction: row;
+  flex-shrink: 0;
+}
+.doc-start {
+  min-width: 0;
+}
+.doc-search {
+  flex-shrink: 1;
+  min-width: 150px;
 }
 .doc-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-secondary);
-  order: 10;
+  color: var(--text-primary);
+  white-space: nowrap;
 }
 .chip {
   font-size: 12px;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 .chip-dot {
   width: 4px;
@@ -387,17 +399,15 @@ function deleteChecked() {
 .tender-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  flex-direction: row-reverse;
+  justify-content: center;
   background: var(--surface);
   border: 1.5px solid var(--brand-primary);
   color: var(--brand-primary);
-  border-radius: var(--radius-pill);
+  border-radius: 50%;
+  width: 30px;
   height: 30px;
-  padding: 0 12px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-right: 6px;
+  padding: 0;
+  margin-right: 4px;
 }
 .tender-btn:hover {
   background: var(--brand-primary-soft);
@@ -421,11 +431,12 @@ function deleteChecked() {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 .actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   flex-direction: row-reverse;
 }
 .tb-btn {
