@@ -226,6 +226,10 @@ function addSpecialField() {
   flex-direction: row;
   gap: 24px;
   padding: 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 .col {
   flex: 1;

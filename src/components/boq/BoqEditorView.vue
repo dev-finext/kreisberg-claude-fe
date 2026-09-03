@@ -455,16 +455,18 @@ function deleteChecked() {
   color: var(--text-disabled);
   cursor: not-allowed;
 }
-/* body */
+/* body — fills the bounded card so the sidebar stays put while the table scrolls */
 .editor-body {
   display: flex;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
   border-top: 2px solid var(--divider);
 }
 .main-area {
   flex: 1;
   min-width: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   padding: 12px 0 8px 8px;

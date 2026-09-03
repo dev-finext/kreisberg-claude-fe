@@ -303,6 +303,12 @@ function toggleChecked(id, v) {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
+}
+.table-wrap {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 .sub-header {
   display: flex;

@@ -149,6 +149,9 @@ function confirmDelete() {
 
 <style scoped>
 .conditions-tab {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 30px 40px 40px;
 }
 .cond-head {

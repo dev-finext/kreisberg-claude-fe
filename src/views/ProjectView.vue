@@ -90,7 +90,8 @@ function save() {
 .card {
   background: var(--surface);
   border-radius: var(--radius-card);
-  min-height: calc(100vh - 128px);
+  /* bounded to the viewport so tab content (BOQ editor sidebar) scrolls internally */
+  height: calc(100vh - 108px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -128,5 +129,6 @@ function save() {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 </style>
