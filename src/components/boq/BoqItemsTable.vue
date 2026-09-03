@@ -458,12 +458,12 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
   z-index: 5;
 }
 .items-table td {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-primary);
   text-align: right;
   padding: 6px 10px;
   border-bottom: 1px solid var(--divider);
-  height: var(--row-h-table);
+  height: 48px;
 }
 .item-row:hover {
   background: var(--surface-subtle);
