@@ -247,8 +247,8 @@ export const useBoqStore = defineStore("boq", {
       this.filters = {};
     },
     selectElement(elementId) {
-      // clicking the selected element again deselects it (legacy rule)
-      this.selectedElementId = this.selectedElementId === elementId ? null : elementId;
+      if (this.selectedElementId === elementId) return; // re-clicking keeps the selection (QA #2)
+      this.selectedElementId = elementId;
       this.checkedSeiIds = [];
       this.expandedRowKeys = [];
     },

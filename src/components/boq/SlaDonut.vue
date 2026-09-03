@@ -3,6 +3,8 @@ import { computed } from "vue";
 
 const props = defineProps({
   sla: { type: Object, required: true }, // {late, near, ok}
+  /** 'row' = table cell (donut right, legend left); 'tile' = dashboard tile (donut left, legend right) */
+  layout: { type: String, default: "row" },
 });
 
 const total = computed(() => props.sla.late + props.sla.near + props.sla.ok);
@@ -27,7 +29,7 @@ const segments = computed(() => {
 </script>
 
 <template>
-  <div class="sla">
+  <div class="sla" :class="{ tile: layout === 'tile' }">
     <div class="legend">
       <div class="legend-row">
         <span class="count num">{{ sla.late }}</span
@@ -71,6 +73,16 @@ const segments = computed(() => {
   gap: 10px;
   flex-direction: row-reverse;
   justify-content: flex-end;
+}
+.sla.tile {
+  flex-direction: row;
+  gap: 22px;
+}
+.sla.tile .legend {
+  gap: 6px;
+}
+.sla.tile .legend-row {
+  font-size: 13px;
 }
 .legend {
   display: flex;

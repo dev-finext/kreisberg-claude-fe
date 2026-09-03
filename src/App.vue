@@ -5,7 +5,7 @@ import ToastHost from "@/components/shared/ToastHost.vue";
 import { useUiStore } from "@/stores/ui";
 
 const ui = useUiStore();
-const mainStyle = computed(() => ({ marginRight: ui.railExpanded ? "230px" : "var(--rail-w)" }));
+const mainStyle = computed(() => ({ marginRight: ui.railExpanded ? "240px" : "var(--rail-w)" }));
 </script>
 
 <template>
