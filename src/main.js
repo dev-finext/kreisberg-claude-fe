@@ -5,14 +5,13 @@ import router from "./router";
 import "./styles/tokens.css";
 import "./styles/base.css";
 
-// Restore a deep link captured by public/404.html (GitHub Pages SPA fallback)
+// Restore a deep link captured by public/404.html (GitHub Pages SPA fallback).
+// Rewriting the URL before the router's initial navigation avoids racing it.
 try {
   const redirect = sessionStorage.getItem("spa-redirect");
   if (redirect) {
     sessionStorage.removeItem("spa-redirect");
-    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-    const target = redirect.startsWith(base) ? redirect.slice(base.length) || "/" : redirect;
-    router.replace(target);
+    window.history.replaceState(null, "", redirect);
   }
 } catch {
   /* storage unavailable — normal boot */

@@ -3,6 +3,7 @@ import { ref, computed, watch } from "vue";
 import { useDbStore } from "@/stores/db";
 import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import { useEscape } from "@/composables/useEscape";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 
@@ -10,6 +11,7 @@ const props = defineProps({
   boqId: { type: Number, required: true },
 });
 const emit = defineEmits(["close", "sent"]);
+useEscape(() => emit("close"));
 
 const db = useDbStore();
 const ui = useUiStore();
