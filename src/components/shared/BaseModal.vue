@@ -1,5 +1,6 @@
 <script setup>
 import AppIcon from "@/components/shared/AppIcon.vue";
+import { useEscape } from "@/composables/useEscape";
 
 defineProps({
   title: { type: String, required: true },
@@ -10,6 +11,7 @@ defineProps({
   hideFooter: { type: Boolean, default: false },
 });
 const emit = defineEmits(["close", "confirm"]);
+useEscape(() => emit("close"));
 </script>
 
 <template>

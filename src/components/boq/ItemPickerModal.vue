@@ -2,6 +2,7 @@
 import { ref, computed, watch } from "vue";
 import { useCatalogStore } from "@/stores/catalog";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import { useEscape } from "@/composables/useEscape";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import PickerCombo from "./PickerCombo.vue";
@@ -12,6 +13,7 @@ const props = defineProps({
   alreadySelected: { type: Array, default: () => [] },
 });
 const emit = defineEmits(["close", "picked"]);
+useEscape(() => emit("close"));
 
 const cat = useCatalogStore();
 

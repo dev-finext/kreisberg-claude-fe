@@ -5,6 +5,7 @@ import { useBoqStore } from "@/stores/boq";
 import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import { useEscape } from "@/composables/useEscape";
 import PriorityControl from "./PriorityControl.vue";
 import ItemPickerModal from "./ItemPickerModal.vue";
 import { formatDate } from "@/utils/format";
@@ -13,6 +14,7 @@ const props = defineProps({
   row: { type: Object, required: true },
 });
 const emit = defineEmits(["close"]);
+useEscape(() => emit("close"));
 
 const db = useDbStore();
 const boq = useBoqStore();

@@ -5,6 +5,7 @@ import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
 import { PRIORITY, PRIORITY_LABELS } from "@/constants";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import { useEscape } from "@/composables/useEscape";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ItemPickerModal from "@/components/boq/ItemPickerModal.vue";
 
@@ -17,6 +18,7 @@ const props = defineProps({
   catalogName: { type: String, default: "" },
 });
 const emit = defineEmits(["close", "saved", "deleted"]);
+useEscape(() => emit("close"));
 
 const db = useDbStore();
 const cat = useCatalogStore();
