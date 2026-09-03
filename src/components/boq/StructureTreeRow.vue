@@ -21,6 +21,7 @@ const isLeaf = computed(() => !hasChildren.value);
 const expanded = computed(() => boq.expandedElementIds.includes(props.node.id));
 const selected = computed(() => boq.selectedElementId === props.node.id);
 const checked = computed(() => boq.checkedLeafElementIds.includes(props.node.id));
+const isNew = computed(() => boq.flashElementIds.includes(props.node.id));
 const isRenaming = computed(() => props.renamingId === props.node.id);
 const pathTitle = computed(() => boq.elementPath(props.node.id).join(" › "));
 
@@ -93,6 +94,7 @@ function onDrop(e) {
     class="tree-row"
     :class="{
       selected,
+      'flash-new': isNew,
       'drop-inside': dropPos === 'inside',
       'drop-before': dropPos === 'before',
       'hidden-el': !node.visible,
@@ -172,6 +174,24 @@ function onDrop(e) {
 }
 .tree-row.selected {
   background: var(--brand-primary-soft);
+}
+/* fresh בן/אח: soft wash + a gently-fading ring, held 5s (overrides the base wash) */
+@keyframes flashNewRing {
+  0% {
+    background-color: rgba(91, 147, 239, 0.26);
+    box-shadow: inset 0 0 0 1.5px rgba(91, 147, 239, 0.6);
+  }
+  14% {
+    background-color: rgba(91, 147, 239, 0.26);
+    box-shadow: inset 0 0 0 1.5px rgba(91, 147, 239, 0.55);
+  }
+  100% {
+    background-color: rgba(91, 147, 239, 0);
+    box-shadow: inset 0 0 0 1.5px rgba(91, 147, 239, 0);
+  }
+}
+.tree-row.flash-new {
+  animation: flashNewRing 5s ease-out forwards;
 }
 .tree-row.drop-inside {
   background: var(--page-bg);
