@@ -14,6 +14,8 @@ import ItemPickerModal from "./ItemPickerModal.vue";
 import ItemEditModal from "./ItemEditModal.vue";
 import ChapterNotesModal from "./ChapterNotesModal.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
+import TenderModal from "./TenderModal.vue";
+import AddTagModal from "./AddTagModal.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { BOQ_STATUS_LABELS, CLASSIFICATION_LABELS, SIDEBAR_MODE } from "@/constants";
 
@@ -56,6 +58,17 @@ const relatedOffer = ref(null); // {selectedIds, related}
 const scopeAsk = ref(null); // {itemIds}
 const replaceScopeAsk = ref(null); // {oldItemId, newItemId}
 const dontAskScope = ref(false);
+const showTender = ref(false);
+const showAddTag = ref(false);
+/** catalog item ids of the checked table rows (targets for a new tag) */
+const checkedItemIds = computed(() => {
+  const ids = new Set();
+  for (const seiId of boq.checkedSeiIds) {
+    const sei = db.structureElementItems.find((s) => s.id === seiId);
+    if (sei) ids.add(sei.itemId);
+  }
+  return [...ids];
+});
 
 /* toolbar enablement */
 const selectedIsLeaf = computed(
@@ -159,6 +172,10 @@ function deleteChecked() {
         <button class="icon-btn" title="עריכת הגדרות" @click="showHeaderEdit = true">
           <AppIcon name="pencil" :size="18" />
         </button>
+        <button class="tender-btn" title="יציאה למכרז" @click="showTender = true">
+          <AppIcon name="megaphone" :size="16" />
+          <span>יציאה למכרז</span>
+        </button>
       </div>
       <div class="doc-start">
         <!-- toolbar actions (שיוך) — rightmost of the left cluster -->
@@ -172,7 +189,11 @@ function deleteChecked() {
             <AppIcon name="plus-circle" :size="20" />
             <span>סעיף</span>
           </button>
-          <button class="tb-btn" disabled title="בקרוב">
+          <button
+            class="tb-btn"
+            :title="hasChecked ? 'שיוך תגית לסעיפים המסומנים' : 'יצירת תגית חדשה'"
+            @click="showAddTag = true"
+          >
             <AppIcon name="plus-circle" :size="20" />
             <span>תגית</span>
           </button>
@@ -237,6 +258,8 @@ function deleteChecked() {
       :edit-header="header"
       @close="showHeaderEdit = false"
     />
+    <TenderModal v-if="showTender && header" :boq-id="header.id" @close="showTender = false" />
+    <AddTagModal v-if="showAddTag" :item-ids="checkedItemIds" @close="showAddTag = false" />
     <DeleteConfirmModal
       v-if="deleteRowsConfirm"
       title="הסרת סעיפים"
@@ -360,6 +383,24 @@ function deleteChecked() {
   color: var(--text-secondary);
   display: inline-flex;
   padding: 3px;
+}
+.tender-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-direction: row-reverse;
+  background: var(--surface);
+  border: 1.5px solid var(--brand-primary);
+  color: var(--brand-primary);
+  border-radius: var(--radius-pill);
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 6px;
+}
+.tender-btn:hover {
+  background: var(--brand-primary-soft);
 }
 .doc-start {
   display: flex;

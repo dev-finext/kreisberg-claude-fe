@@ -11,6 +11,8 @@ import ContextMenu from "@/components/shared/ContextMenu.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import SlaDonut from "./SlaDonut.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
+import TenderModal from "./TenderModal.vue";
+import ImportBoqDialog from "./ImportBoqDialog.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { formatDate } from "@/utils/format";
 import { BOQ_STATUS_LABELS } from "@/constants";
@@ -29,6 +31,30 @@ const showCreate = ref(false);
 const editHeader = ref(null);
 const deleteTarget = ref(null);
 const checked = ref([]);
+const tenderHeader = ref(null);
+const showImport = ref(false);
+const expandedIds = ref([]);
+const renamingDoc = ref(false);
+const docNameDraft = ref("");
+
+function toggleExpanded(id) {
+  const i = expandedIds.value.indexOf(id);
+  if (i >= 0) expandedIds.value.splice(i, 1);
+  else expandedIds.value.push(id);
+}
+function startRenameDoc() {
+  docNameDraft.value = docName.value;
+  renamingDoc.value = true;
+}
+function commitRenameDoc() {
+  const n = docNameDraft.value.trim();
+  if (n) {
+    for (const h of db.db.boqHeaders) if (h.projectId === projectId.value) h.docName = n;
+    db.persist();
+    ui.toast("שם המסמך עודכן");
+  }
+  renamingDoc.value = false;
+}
 
 const headers = computed(() => {
   const t = search.value.trim();
@@ -48,13 +74,14 @@ function openMenu(h, e) {
 const menuItems = [
   { key: "edit", label: "עריכה", icon: "pencil" },
   { key: "duplicate", label: "שכפול", icon: "copy" },
-  { key: "tender", label: "יציאה למכרז", icon: "megaphone", disabled: true },
+  { key: "tender", label: "יציאה למכרז", icon: "megaphone" },
   { key: "delete", label: "מחיקה", icon: "trash", danger: true },
 ];
 function onMenuSelect(key) {
   const h = menu.value.header;
   menu.value = null;
   if (key === "edit") editHeader.value = h;
+  else if (key === "tender") tenderHeader.value = h;
   else if (key === "duplicate") {
     const copy = boqStore.duplicateBoqHeader(h.id);
     if (copy) ui.toast(`התצורה שוכפלה: ${copy.name}`);
@@ -81,12 +108,28 @@ function toggleChecked(id, v) {
           <AppIcon name="plus-circle" :size="20" />
           <span>כתב כמויות חדש</span>
         </button>
+        <button class="btn-text create-btn" @click="showImport = true">
+          <AppIcon name="upload" :size="18" />
+          <span>ייבוא כתב כמויות</span>
+        </button>
       </div>
       <div class="sub-end">
-        <h3 class="doc-name">{{ docName }}</h3>
-        <button class="icon-btn" title="עריכת שם המסמך"><AppIcon name="pencil" :size="18" /></button>
-        <select class="select lang-select" disabled title="לא זמין בדמו">
+        <input
+          v-if="renamingDoc"
+          v-model="docNameDraft"
+          class="doc-rename"
+          autofocus
+          @keyup.enter="commitRenameDoc"
+          @keyup.esc="renamingDoc = false"
+          @blur="commitRenameDoc"
+        />
+        <h3 v-else class="doc-name" @dblclick="startRenameDoc">{{ docName }}</h3>
+        <button class="icon-btn" title="עריכת שם המסמך" @click="startRenameDoc">
+          <AppIcon name="pencil" :size="18" />
+        </button>
+        <select class="select lang-select">
           <option>עברית</option>
+          <option>English</option>
         </select>
         <div class="active-toggle">
           <span class="active-lbl">פעיל</span>
@@ -111,35 +154,86 @@ function toggleChecked(id, v) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="h in headers" :key="h.id" class="boq-row" @click="openBoq(h)">
-            <td class="td-check" @click.stop>
-              <span class="row-expand"><AppIcon name="chevron-left" :size="14" /></span>
-              <BaseCheckbox
-                :model-value="checked.includes(h.id)"
-                @update:model-value="(v) => toggleChecked(h.id, v)"
-              />
-            </td>
-            <td class="td-name">{{ h.name }}</td>
-            <td class="td-detail ellipsis">{{ h.detail || "-" }}</td>
-            <td class="num">{{ formatDate(h.exitDate) }}</td>
-            <td><SlaDonut :sla="h.sla" /></td>
-            <td>
-              <div class="pills">
-                <span v-for="p in h.stagePills" :key="p.label" class="pill" :class="'pill-' + p.kind">
-                  {{ p.label }}<span v-if="p.count" class="num"> ({{ p.count }})</span>
+          <template v-for="h in headers" :key="h.id">
+            <tr class="boq-row" :class="{ open: expandedIds.includes(h.id) }" @click="openBoq(h)">
+              <td class="td-check" @click.stop>
+                <span class="row-expand" @click="toggleExpanded(h.id)">
+                  <AppIcon :name="expandedIds.includes(h.id) ? 'chevron-down' : 'chevron-left'" :size="14" />
                 </span>
-                <span v-if="!h.stagePills.length" class="pill pill-neutral">{{
-                  BOQ_STATUS_LABELS[h.status]
-                }}</span>
-              </div>
-            </td>
-            <td class="td-notes ellipsis">{{ h.notes || "-" }}</td>
-            <td class="td-kebab" @click.stop>
-              <button class="icon-btn" @click="openMenu(h, $event)">
-                <AppIcon name="kebab" :size="18" />
-              </button>
-            </td>
-          </tr>
+                <BaseCheckbox
+                  :model-value="checked.includes(h.id)"
+                  @update:model-value="(v) => toggleChecked(h.id, v)"
+                />
+              </td>
+              <td class="td-name">{{ h.name }}</td>
+              <td class="td-detail ellipsis">{{ h.detail || "-" }}</td>
+              <td class="num">{{ formatDate(h.exitDate) }}</td>
+              <td><SlaDonut :sla="h.sla" /></td>
+              <td>
+                <div class="pills">
+                  <span v-for="p in h.stagePills" :key="p.label" class="pill" :class="'pill-' + p.kind">
+                    {{ p.label }}<span v-if="p.count" class="num"> ({{ p.count }})</span>
+                  </span>
+                  <span v-if="!h.stagePills.length" class="pill pill-neutral">{{
+                    BOQ_STATUS_LABELS[h.status]
+                  }}</span>
+                </div>
+              </td>
+              <td class="td-notes ellipsis">{{ h.notes || "-" }}</td>
+              <td class="td-kebab" @click.stop>
+                <button class="icon-btn" @click="openMenu(h, $event)">
+                  <AppIcon name="kebab" :size="18" />
+                </button>
+              </td>
+            </tr>
+            <tr v-if="expandedIds.includes(h.id)" class="expand-row">
+              <td colspan="8">
+                <div class="expand-panel">
+                  <div class="ep-col">
+                    <span class="ep-label">פירוט</span>
+                    <span class="ep-value">{{ h.detail || "—" }}</span>
+                  </div>
+                  <div class="ep-col">
+                    <span class="ep-label">קטלוג</span>
+                    <span class="ep-value">{{
+                      db.catalogs.find((c) => c.id === h.catalogId)?.name || "—"
+                    }}</span>
+                  </div>
+                  <div class="ep-col">
+                    <span class="ep-label">סיווג</span>
+                    <span class="ep-value">{{ h.classification === "spec" ? "מפרט" : "תמחור" }}</span>
+                  </div>
+                  <div class="ep-col">
+                    <span class="ep-label">סוג משאב</span>
+                    <span class="ep-value">{{
+                      db.resourceTypes.find((t) => t.id === h.resourceTypeId)?.name || "—"
+                    }}</span>
+                  </div>
+                  <div class="ep-col">
+                    <span class="ep-label">זיהוי משאב</span>
+                    <span class="ep-value">{{
+                      db.constructors.find((c) => c.id === h.resourceId)?.name || "—"
+                    }}</span>
+                  </div>
+                  <div class="ep-col">
+                    <span class="ep-label">נוצר</span>
+                    <span class="ep-value num">{{ formatDate(h.createdAt) }}</span>
+                  </div>
+                  <div class="ep-col">
+                    <span class="ep-label">מבנים / סעיפים</span>
+                    <span class="ep-value num">
+                      {{ db.structureElements.filter((e) => e.boqId === h.id).length }} /
+                      {{ db.structureElementItems.filter((s) => s.boqId === h.id).length }}
+                    </span>
+                  </div>
+                  <div class="ep-col">
+                    <span class="ep-label">הערות</span>
+                    <span class="ep-value">{{ h.notes || "—" }}</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
@@ -163,7 +257,7 @@ function toggleChecked(id, v) {
       <p class="empty-sub">הם יופיעו כאן ברגע שיתווספו</p>
       <div class="empty-actions">
         <button class="btn btn-primary" @click="showCreate = true">כתב כמויות חדש</button>
-        <button class="btn btn-secondary" disabled title="לא זמין בדמו">ייבוא כתב כמויות</button>
+        <button class="btn btn-secondary" @click="showImport = true">ייבוא כתב כמויות</button>
       </div>
     </div>
 
@@ -175,6 +269,8 @@ function toggleChecked(id, v) {
       @select="onMenuSelect"
       @close="menu = null"
     />
+    <TenderModal v-if="tenderHeader" :boq-id="tenderHeader.id" @close="tenderHeader = null" />
+    <ImportBoqDialog v-if="showImport" :project-id="projectId" @close="showImport = false" />
     <CreateBoqModal
       v-if="showCreate || editHeader"
       :project-id="projectId"
@@ -225,6 +321,47 @@ function toggleChecked(id, v) {
   font-weight: 700;
   color: var(--text-primary);
   order: 4;
+}
+.doc-rename {
+  order: 4;
+  border: 1px solid #6952ef;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  outline: none;
+  width: 160px;
+}
+.boq-row.open {
+  background: var(--row-open-bg);
+}
+.expand-row td {
+  background: var(--row-open-bg);
+  padding: 4px 24px 14px 60px;
+}
+.expand-panel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 18px;
+}
+.ep-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+.ep-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.ep-value {
+  font-size: 13px;
+  color: var(--text-primary);
 }
 .icon-btn {
   background: none;

@@ -5,6 +5,8 @@ defineProps({
   title: { type: String, required: true },
   /** breadcrumb items, rightmost first; last one (current) rendered bold */
   crumbs: { type: Array, default: () => ["שם-לקוח", "מחלקה", "תת מחלקה", "פרויקטים"] },
+  /** overrides the bold current crumb when it differs from the page title */
+  crumbCurrent: { type: String, default: "" },
 });
 </script>
 
@@ -15,7 +17,7 @@ defineProps({
         <span class="crumb">{{ c }}</span>
         <span class="crumb-sep"><AppIcon name="chevron-left" :size="14" /></span>
       </template>
-      <span class="crumb crumb-current">{{ title }}</span>
+      <span class="crumb crumb-current">{{ crumbCurrent || title }}</span>
     </div>
     <div class="title-row">
       <h1 class="page-title">{{ title }}</h1>

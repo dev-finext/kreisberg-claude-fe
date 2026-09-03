@@ -38,6 +38,15 @@ const routes = [
       { path: "quotes", name: "project-quotes", component: () => import("@/views/project/QuotesTab.vue") },
     ],
   },
+  { path: "/system", redirect: "/system/catalogs" },
+  { path: "/system/catalogs", name: "catalogs", component: () => import("@/views/system/CatalogsView.vue") },
+  {
+    path: "/system/catalogs/:id",
+    name: "catalog-detail",
+    component: () => import("@/views/system/CatalogDetailView.vue"),
+  },
+  { path: "/system/tags", name: "tags", component: () => import("@/views/system/TagManagementView.vue") },
+  { path: "/system/mapping", name: "mapping", component: () => import("@/views/system/BoqMappingView.vue") },
 ];
 
 export default createRouter({
