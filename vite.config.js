@@ -15,4 +15,8 @@ export default defineConfig(({ command }) => ({
   server: {
     port: 5188,
   },
+  build: {
+    // single eager bundle (see router) — the size warning is expected and fine for a demo
+    chunkSizeWarningLimit: 1200,
+  },
 }));
