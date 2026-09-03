@@ -246,3 +246,27 @@ textarea {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---------- new-item highlight ----------
+   A just-created בן / פרק / סעיף gets a soft brand-blue wash that holds for a
+   beat and then gently fades over 5s, so it's easy to spot among existing rows. */
+@keyframes flashNew {
+  0% {
+    background-color: rgba(91, 147, 239, 0.26);
+  }
+  14% {
+    background-color: rgba(91, 147, 239, 0.26);
+  }
+  100% {
+    background-color: rgba(91, 147, 239, 0);
+  }
+}
+.flash-new {
+  animation: flashNew 5s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flash-new {
+    animation-duration: 5s;
+    animation-timing-function: linear;
+  }
+}

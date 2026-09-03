@@ -84,6 +84,9 @@ function setAllChecked(v) {
 function rowChecked(r) {
   return r.sei ? boq.checkedSeiIds.includes(r.sei.id) : false;
 }
+function isNewRow(r) {
+  return boq.flashItemIds.includes(r.item?.id);
+}
 function setRowChecked(r, v) {
   if (!r.sei) return;
   const i = boq.checkedSeiIds.indexOf(r.sei.id);
@@ -212,7 +215,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
       <!-- ================= שיוך ================= -->
       <tbody v-if="mode === SIDEBAR_MODE.ASSIGNMENT">
         <template v-for="r in assignment.rows" :key="r.key">
-          <tr class="item-row" :class="{ open: isOpen(r), checked: rowChecked(r) }">
+          <tr class="item-row" :class="{ open: isOpen(r), checked: rowChecked(r), 'flash-new': isNewRow(r) }">
             <td class="td-check">
               <span class="expand" @click="toggleOpen(r)">
                 <AppIcon :name="isOpen(r) ? 'chevron-down' : 'chevron-left'" :size="16" />
@@ -351,7 +354,10 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
               </td>
             </tr>
             <template v-for="r in sg.rows" :key="r.key">
-              <tr class="item-row" :class="{ open: isOpen(r), checked: rowChecked(r) }">
+              <tr
+                class="item-row"
+                :class="{ open: isOpen(r), checked: rowChecked(r), 'flash-new': isNewRow(r) }"
+              >
                 <td class="td-check">
                   <span class="expand" @click="toggleOpen(r)">
                     <AppIcon :name="isOpen(r) ? 'chevron-down' : 'chevron-left'" :size="16" />

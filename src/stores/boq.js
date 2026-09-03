@@ -31,6 +31,9 @@ export const useBoqStore = defineStore("boq", {
     openAllRows: false, // תצוגת סעיפים פתוחים
     filters: {},
     searchTerm: "",
+    /* just-created things, highlighted for 5s so they're easy to spot */
+    flashElementIds: [], // שיוך: newly added structure elements
+    flashItemIds: [], // כתב כמויות: newly added item rows (by catalog itemId)
   }),
 
   getters: {
@@ -229,6 +232,20 @@ export const useBoqStore = defineStore("boq", {
       });
       this.db.persist();
     },
+    /**
+     * Mark just-created things so the UI can highlight them for 5 seconds,
+     * making a fresh בן / פרק / סעיף easy to find among the existing rows.
+     * kind: 'element' (שיוך tree) | 'item' (כתב כמויות rows, by catalog itemId).
+     */
+    flash(kind, ids) {
+      const list = [...new Set((Array.isArray(ids) ? ids : [ids]).filter((v) => v != null))];
+      if (!list.length) return;
+      const key = kind === "element" ? "flashElementIds" : "flashItemIds";
+      this[key] = [...new Set([...this[key], ...list])];
+      setTimeout(() => {
+        this[key] = this[key].filter((id) => !list.includes(id));
+      }, 5000);
+    },
 
     /* =============== editor session =============== */
     openBoq(boqId) {
@@ -354,6 +371,7 @@ export const useBoqStore = defineStore("boq", {
     addItems(itemIds, { toAllElements = false, elementIds = null } = {}) {
       const targets = elementIds || (toAllElements ? this.allLeafIds() : [this.selectedElementId]);
       let added = 0;
+      const addedItemIds = new Set();
       for (const elId of targets) {
         if (!elId || !this.isLeaf(elId)) continue;
         for (const itemId of itemIds) {
@@ -369,10 +387,12 @@ export const useBoqStore = defineStore("boq", {
             qty: 0,
           });
           this.ensureBoqItem(itemId);
+          addedItemIds.add(itemId);
           added++;
         }
       }
       this.db.persist();
+      this.flash("item", [...addedItemIds]);
       return added;
     },
 
@@ -389,6 +409,7 @@ export const useBoqStore = defineStore("boq", {
       const el = this.selectedElement;
       if (!el || !ui.clipboard.seiIds.length || ui.clipboard.sourceElementId === el.id) return;
       let count = 0;
+      const pastedItemIds = new Set();
       for (const seiId of ui.clipboard.seiIds) {
         const src = this.db.structureElementItems.find((s) => s.id === seiId);
         if (!src) continue;
@@ -406,9 +427,11 @@ export const useBoqStore = defineStore("boq", {
             qty: src.qty,
           });
         }
+        pastedItemIds.add(src.itemId);
         count++;
       }
       this.db.persist();
+      this.flash("item", [...pastedItemIds]);
       ui.toast(`${count} סעיפים הודבקו ל${el.name}`);
       this.checkedSeiIds = [];
     },
@@ -434,6 +457,7 @@ export const useBoqStore = defineStore("boq", {
       this.db.db.structureElements.push(el);
       if (parentId && !this.expandedElementIds.includes(parentId)) this.expandedElementIds.push(parentId);
       this.db.persist();
+      this.flash("element", el.id);
       return el;
     },
     updateElement(id, patch) {
