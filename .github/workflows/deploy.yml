@@ -26,8 +26,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      # SPA fallback: GitHub Pages serves 404.html for unknown deep links
-      - run: cp dist/index.html dist/404.html
+      # SPA fallback lives in public/404.html (hash-free redirect), copied into dist by Vite
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -17,22 +17,28 @@ const projects = computed(() => {
   return db.projects.filter((p) => !t || p.name.includes(t) || (p.location || "").includes(t));
 });
 
-/* ---- tiles data ---- */
+/* ---- tiles data (order + colors per the Figma dashboard legend) ---- */
 const typeColors = {
-  "שיפוץ דירה": "var(--status-purple)",
-  "בנייה פרטית": "var(--graph-blue-light)",
-  'תמ"א 38': "var(--graph-blue-dark)",
-  אחר: "var(--status-pink)",
+  בית: "var(--status-pink)",
+  דירה: "var(--status-purple)",
+  בניין: "var(--graph-blue-light)",
+  מסחר: "var(--graph-blue-dark)",
+  אחר: "#e9a9c9",
 };
-const typeCounts = computed(() => {
-  const m = new Map();
-  for (const p of db.projects) m.set(p.typeName, (m.get(p.typeName) || 0) + 1);
-  return [...m.entries()].map(([name, count]) => ({
-    name,
-    count,
-    color: typeColors[name] || "var(--status-gray)",
-  }));
-});
+const typeIcons = {
+  בית: "type-house",
+  דירה: "type-apartment",
+  בניין: "type-building",
+  מסחר: "type-shop",
+  אחר: "type-other",
+};
+const typeCounts = computed(() =>
+  db.projectTypes.map((t) => ({
+    name: t.name,
+    count: db.projects.filter((p) => p.typeId === t.id).length,
+    color: typeColors[t.name] || "var(--status-gray)",
+  }))
+);
 const totalProjects = computed(() => db.projects.length);
 const slaAgg = computed(() => {
   const agg = { late: 0, near: 0, ok: 0 };
@@ -43,25 +49,19 @@ const slaAgg = computed(() => {
   }
   return agg;
 });
-const statusSteps = computed(() => [
-  {
-    label: "חדש",
-    count: db.boqHeaders.filter((h) => h.status === "draft" && !h.stagePills.length).length,
-    cls: "st-new",
-  },
-  { label: "כתב כמויות", count: db.boqHeaders.length, cls: "st-boq" },
-  {
-    label: "מכרז",
-    count: db.boqHeaders.filter((h) => h.stagePills.some((p) => p.label === "מכרז")).length,
-    cls: "st-tender",
-  },
-  {
-    label: "תומחר",
-    count: db.boqHeaders.filter((h) => h.stagePills.some((p) => p.label === "תומחר")).length,
-    cls: "st-priced",
-  },
-  { label: "חוזה", count: 0, cls: "st-contract" },
-]);
+const STATUS_STEPS = [
+  { label: "חדש", cls: "st-new" },
+  { label: "כתב כמויות", cls: "st-boq" },
+  { label: "מכרז", cls: "st-tender" },
+  { label: "תומחר", cls: "st-priced" },
+  { label: "חוזה", cls: "st-contract" },
+];
+const statusSteps = computed(() =>
+  STATUS_STEPS.map((s) => ({
+    ...s,
+    count: db.projects.filter((p) => (p.status || "חדש") === s.label).length,
+  }))
+);
 
 /* donut for project types */
 const R = 40;
@@ -141,7 +141,7 @@ function projectStatus(p) {
         <div class="tile">
           <h3 class="tile-title">שליחת תמחור SLA</h3>
           <div class="tile-body sla-big">
-            <SlaDonut :sla="slaAgg" class="sla-scaled" />
+            <SlaDonut :sla="slaAgg" layout="tile" class="sla-scaled" />
           </div>
         </div>
 
@@ -210,13 +210,13 @@ function projectStatus(p) {
             :key="p.id"
             class="project-row"
             :class="{ zebra: i % 2 === 1 }"
-            @click="router.push(`/projects/${p.id}/quantities`)"
+            @click="router.push(`/projects/${p.id}/general`)"
           >
             <td class="td-idx num">{{ String(i + 1).padStart(2, "0") }}</td>
             <td class="p-name">{{ p.name }}</td>
             <td>{{ p.location }}</td>
             <td class="td-type" :title="p.typeName">
-              <AppIcon name="menu-reports" :size="18" />
+              <AppIcon :name="typeIcons[p.typeName] || 'type-other'" :size="20" />
             </td>
             <td class="td-desc ellipsis">{{ p.description || "---" }}</td>
             <td class="num">{{ formatDate(p.createdAt) }}</td>

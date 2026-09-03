@@ -172,8 +172,8 @@ function toggleSystem() {
   overflow: hidden;
 }
 .rail.expanded {
-  width: 230px;
-  padding: 14px 18px 24px;
+  width: 240px;
+  padding: 14px 16px 24px;
 }
 .rail-top,
 .rail-bottom {
@@ -277,9 +277,10 @@ function toggleSystem() {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-right: 10px;
+  padding-right: 8px;
   border-right: 1.5px solid rgba(255, 255, 255, 0.25);
-  margin-right: 15px;
+  margin-right: 12px;
+  min-width: 0;
 }
 .sys-item {
   display: flex;
@@ -296,6 +297,7 @@ function toggleSystem() {
 .sys-label {
   flex: 1;
   text-align: right;
+  white-space: nowrap;
 }
 .sys-bullet {
   width: 5px;

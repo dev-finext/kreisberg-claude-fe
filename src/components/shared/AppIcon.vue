@@ -193,5 +193,31 @@ defineProps({
     <template v-else-if="name === 'filter'">
       <path d="M4 5.5h16L13.8 13v5.5l-3.6 1.5V13L4 5.5Z" />
     </template>
+    <!-- project types (dashboard) -->
+    <template v-else-if="name === 'type-house'">
+      <path d="M3.5 11.5L12 4.5l8.5 7" />
+      <path d="M6 10v9.5h12V10" />
+      <path d="M10 19.5v-5h4v5" />
+    </template>
+    <template v-else-if="name === 'type-apartment'">
+      <rect x="5" y="4" width="14" height="16.5" rx="1.5" />
+      <path d="M8.5 8h2M13.5 8h2M8.5 12h2M13.5 12h2M8.5 16h2M13.5 16h2" />
+    </template>
+    <template v-else-if="name === 'type-building'">
+      <path d="M4 20.5h16" />
+      <path d="M6 20.5V6.5l6-3 6 3v14" />
+      <path d="M9 9.5h2M13 9.5h2M9 13h2M13 13h2M10.5 20.5v-4h3v4" />
+    </template>
+    <template v-else-if="name === 'type-shop'">
+      <path d="M4 9.5l1.5-5h13l1.5 5" />
+      <path
+        d="M4 9.5c0 1.5 1.2 2.5 2.7 2.5s2.6-1 2.6-2.5c0 1.5 1.2 2.5 2.7 2.5s2.7-1 2.7-2.5c0 1.5 1.2 2.5 2.6 2.5S20 11 20 9.5"
+      />
+      <path d="M5.5 12v8.5h13V12M10 20.5v-5h4v5" />
+    </template>
+    <template v-else-if="name === 'type-other'">
+      <rect x="4" y="9" width="16" height="11.5" rx="1.5" />
+      <path d="M8 9V5.5h8V9M4 13.5h16" />
+    </template>
   </svg>
 </template>

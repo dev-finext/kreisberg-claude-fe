@@ -1,0 +1,5 @@
+# Keep LF everywhere (Prettier + CI expect it); Windows checkouts included.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
