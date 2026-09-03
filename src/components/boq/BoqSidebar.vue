@@ -156,27 +156,30 @@ function toggleChapterExpand(chId) {
         </button>
       </div>
       <div class="tree scroll-slim">
-        <!-- root: הכל -->
-        <div class="tree-root-row" :class="{ selected: rootSelected }" @click="boq.selectElement(0)">
-          <span class="chevron" @click.stop="rootExpanded = !rootExpanded">
-            <AppIcon :name="rootExpanded ? 'chevron-down' : 'chevron-left'" :size="16" />
-          </span>
-          <span class="root-label">הכל</span>
-          <span class="spacer" />
-          <span class="eye"><AppIcon name="eye" :size="18" /></span>
+        <!-- tree-body sizes to its widest row so deep nesting scrolls on X, rows stay aligned -->
+        <div class="tree-body">
+          <!-- root: הכל -->
+          <div class="tree-root-row" :class="{ selected: rootSelected }" @click="boq.selectElement(0)">
+            <span class="chevron" @click.stop="rootExpanded = !rootExpanded">
+              <AppIcon :name="rootExpanded ? 'chevron-down' : 'chevron-left'" :size="16" />
+            </span>
+            <span class="root-label">הכל</span>
+            <span class="spacer" />
+            <span class="eye"><AppIcon name="eye" :size="18" /></span>
+          </div>
+          <template v-if="rootExpanded">
+            <StructureTreeRow
+              v-for="node in tree"
+              :key="node.id"
+              :node="node"
+              :depth="1"
+              :renaming-id="renamingId"
+              @kebab="openKebab"
+              @rename-done="renamingId = null"
+              @request-rename="renamingId = $event"
+            />
+          </template>
         </div>
-        <template v-if="rootExpanded">
-          <StructureTreeRow
-            v-for="node in tree"
-            :key="node.id"
-            :node="node"
-            :depth="1"
-            :renaming-id="renamingId"
-            @kebab="openKebab"
-            @rename-done="renamingId = null"
-            @request-rename="renamingId = $event"
-          />
-        </template>
       </div>
     </template>
 
@@ -333,6 +336,15 @@ function toggleChapterExpand(chId) {
 .chapters-tree {
   overflow-y: auto;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+/* horizontal scroll only when a deep branch is wider than the sidebar */
+.tree {
+  overflow-x: auto;
+}
+.tree-body {
+  min-width: max-content;
   display: flex;
   flex-direction: column;
 }
