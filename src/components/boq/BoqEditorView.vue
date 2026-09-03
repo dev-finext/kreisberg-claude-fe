@@ -16,6 +16,7 @@ import ChapterNotesModal from "./ChapterNotesModal.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
 import TenderModal from "./TenderModal.vue";
 import AddTagModal from "./AddTagModal.vue";
+import BoqExportModal from "./BoqExportModal.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { BOQ_STATUS_LABELS, CLASSIFICATION_LABELS, SIDEBAR_MODE } from "@/constants";
 
@@ -60,6 +61,7 @@ const replaceScopeAsk = ref(null); // {oldItemId, newItemId}
 const dontAskScope = ref(false);
 const showTender = ref(false);
 const showAddTag = ref(false);
+const showExport = ref(false);
 /** catalog item ids of the checked table rows (targets for a new tag) */
 const checkedItemIds = computed(() => {
   const ids = new Set();
@@ -175,6 +177,9 @@ function deleteChecked() {
         <button class="tender-btn" title="יציאה למכרז" @click="showTender = true">
           <AppIcon name="megaphone" :size="16" />
         </button>
+        <button class="tender-btn" title="הדפסה / ייצוא כתב הכמויות" @click="showExport = true">
+          <AppIcon name="file" :size="16" />
+        </button>
       </div>
       <div class="doc-start">
         <!-- toolbar actions (שיוך) — rightmost of the left cluster -->
@@ -264,6 +269,7 @@ function deleteChecked() {
     />
     <TenderModal v-if="showTender && header" :boq-id="header.id" @close="showTender = false" />
     <AddTagModal v-if="showAddTag" :item-ids="checkedItemIds" @close="showAddTag = false" />
+    <BoqExportModal v-if="showExport && header" :boq-id="header.id" @close="showExport = false" />
     <DeleteConfirmModal
       v-if="deleteRowsConfirm"
       title="הסרת סעיפים"
