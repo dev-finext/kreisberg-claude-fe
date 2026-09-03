@@ -132,10 +132,6 @@ function toggleChecked(id, v) {
         <button class="icon-btn" title="עריכת שם המסמך" @click="startRenameDoc">
           <AppIcon name="pencil" :size="18" />
         </button>
-        <select class="select lang-select">
-          <option>עברית</option>
-          <option>English</option>
-        </select>
         <div class="active-toggle">
           <span class="active-lbl">פעיל</span>
           <BaseToggle v-model="active" />
@@ -372,11 +368,6 @@ function toggleChecked(id, v) {
 }
 .sub-end .icon-btn {
   order: 3;
-}
-.lang-select {
-  width: 96px;
-  height: 32px;
-  order: 2;
 }
 .active-toggle {
   display: flex;

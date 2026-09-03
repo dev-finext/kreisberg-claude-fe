@@ -237,10 +237,6 @@ function finishImport() {
               <button class="icon-btn" title="שינוי שם" @click="startRename">
                 <AppIcon name="pencil" :size="18" />
               </button>
-              <select class="select lang">
-                <option>עברית</option>
-                <option>English</option>
-              </select>
               <span class="dot" />
               <span class="active-lbl">פעיל</span>
               <BaseToggle
@@ -476,10 +472,6 @@ function finishImport() {
   border: none;
   color: var(--text-secondary);
   display: inline-flex;
-}
-.lang {
-  width: 96px;
-  height: 32px;
 }
 .dot {
   width: 4px;

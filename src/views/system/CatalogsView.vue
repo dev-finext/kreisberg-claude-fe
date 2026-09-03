@@ -18,7 +18,7 @@ const ui = useUiStore();
 const menu = ref(null);
 const showCreate = ref(false);
 const deleteTarget = ref(null);
-const form = reactive({ name: "", lang: "עברית" });
+const form = reactive({ name: "" });
 
 const MENU_ITEMS = [
   { key: "edit", label: "עריכה", icon: "pencil" },
@@ -58,16 +58,11 @@ function setActive(c, v) {
   db.persist();
   ui.toast(v ? `הקטלוג "${c.name}" הופעל` : `הקטלוג "${c.name}" הושבת`);
 }
-function setLang(c, v) {
-  c.lang = v;
-  db.persist();
-}
 function create() {
   if (!form.name.trim()) return;
   const c = {
     id: db.nextId("catalogs"),
     name: form.name.trim(),
-    lang: form.lang,
     active: true,
     uploadedAt: today(),
     updatedAt: new Date().toISOString(),
@@ -109,7 +104,6 @@ function confirmDelete() {
         <thead>
           <tr>
             <th>שם קטלוג <AppIcon name="chevron-down" :size="12" /></th>
-            <th>שפה <AppIcon name="chevron-down" :size="12" /></th>
             <th>סטטוס <AppIcon name="chevron-down" :size="12" /></th>
             <th>תאריך העלאה <AppIcon name="chevron-down" :size="12" /></th>
             <th>תאריך עדכון אחרון <AppIcon name="chevron-down" :size="12" /></th>
@@ -125,12 +119,6 @@ function confirmDelete() {
             @click="router.push(`/system/catalogs/${c.id}`)"
           >
             <td class="td-name">{{ c.name }}</td>
-            <td @click.stop>
-              <select class="lang-select" :value="c.lang" @change="setLang(c, $event.target.value)">
-                <option>עברית</option>
-                <option>English</option>
-              </select>
-            </td>
             <td @click.stop>
               <div class="status-cell">
                 <BaseToggle :model-value="c.active" @update:model-value="(v) => setActive(c, v)" />
@@ -169,13 +157,6 @@ function confirmDelete() {
         <div class="field">
           <label class="field-label">שם קטלוג</label>
           <input v-model="form.name" class="input" placeholder="הקלד שם קטלוג" @keyup.enter="create" />
-        </div>
-        <div class="field">
-          <label class="field-label">שפה</label>
-          <select v-model="form.lang" class="select">
-            <option>עברית</option>
-            <option>English</option>
-          </select>
         </div>
       </div>
     </BaseModal>
@@ -263,14 +244,6 @@ function confirmDelete() {
 }
 .td-name {
   font-weight: 500;
-}
-.lang-select {
-  border: none;
-  background: none;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--text-primary);
-  cursor: pointer;
 }
 .status-cell {
   display: flex;
