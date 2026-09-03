@@ -13,6 +13,7 @@ import SlaDonut from "./SlaDonut.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
 import TenderModal from "./TenderModal.vue";
 import BoqExportModal from "./BoqExportModal.vue";
+import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 import ImportBoqDialog from "./ImportBoqDialog.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { formatDate } from "@/utils/format";
@@ -244,19 +245,7 @@ function toggleChecked(id, v) {
 
     <!-- empty state -->
     <div v-else class="empty-state">
-      <div class="empty-art">
-        <svg width="150" height="136" viewBox="0 0 150 136" fill="none">
-          <ellipse cx="75" cy="118" rx="55" ry="8" fill="#EEF2FA" />
-          <rect x="45" y="18" width="60" height="86" rx="6" stroke="#BBC5CF" stroke-width="2.5" fill="#fff" />
-          <rect x="62" y="10" width="26" height="14" rx="4" stroke="#BBC5CF" stroke-width="2.5" fill="#fff" />
-          <path
-            d="M56 40h28M56 54h38M56 68h32M56 82h20"
-            stroke="#BBC5CF"
-            stroke-width="2.5"
-            stroke-linecap="round"
-          />
-        </svg>
-      </div>
+      <EmptyClipboard />
       <p class="empty-title">עדיין לא טענת כתבי כמויות</p>
       <p class="empty-sub">הם יופיעו כאן ברגע שיתווספו</p>
       <div class="empty-actions">
