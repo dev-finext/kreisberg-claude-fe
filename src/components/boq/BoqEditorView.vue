@@ -238,6 +238,7 @@ function deleteChecked() {
           @edit-item="(r) => (editRow = r)"
           @replace-item="startReplace"
           @chapter-notes="(ctx) => (notesCtx = ctx)"
+          @add-items="openPicker"
         />
       </div>
     </div>
@@ -402,21 +403,18 @@ function deleteChecked() {
   display: inline-flex;
   padding: 3px;
 }
+/* subtle ghost icon buttons that blend with the pencil (Figma shows no bordered circles here) */
 .tender-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface);
-  border: 1.5px solid var(--brand-primary);
-  color: var(--brand-primary);
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  margin-right: 4px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 3px;
 }
 .tender-btn:hover {
-  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
 }
 .doc-start {
   display: flex;
