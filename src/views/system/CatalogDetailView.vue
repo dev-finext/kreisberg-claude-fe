@@ -263,17 +263,6 @@ function setActive(v) {
           <button class="icon-btn" title="שינוי שם" @click="startRename">
             <AppIcon name="pencil" :size="18" />
           </button>
-          <select
-            class="select lang"
-            :value="catalogMeta?.lang"
-            @change="
-              catalogMeta.lang = $event.target.value;
-              db.persist();
-            "
-          >
-            <option>עברית</option>
-            <option>English</option>
-          </select>
           <span class="dot" />
           <span class="active-lbl">פעיל</span>
           <BaseToggle :model-value="!!catalogMeta?.active" @update:model-value="setActive" />
@@ -574,10 +563,6 @@ function setActive(v) {
   color: var(--text-secondary);
   display: inline-flex;
   padding: 2px;
-}
-.lang {
-  width: 96px;
-  height: 32px;
 }
 .dot {
   width: 4px;
