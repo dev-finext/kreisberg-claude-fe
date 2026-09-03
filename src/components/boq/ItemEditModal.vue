@@ -6,6 +6,7 @@ import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import PriorityControl from "./PriorityControl.vue";
+import ItemPickerModal from "./ItemPickerModal.vue";
 import { formatDate } from "@/utils/format";
 
 const props = defineProps({
@@ -49,6 +50,29 @@ const resources = computed(() =>
 const parentItem = computed(() => (item.parentId ? cat.item(item.parentId) : null));
 const childItems = computed(() => cat.childrenOf(item.id));
 const alternatives = computed(() => boq.alternativesOf(item.id));
+
+/* parent-item picker (single) + alternatives picker (multi) */
+const picker = ref(null); // 'parent' | 'alternatives' | null
+function onPicked(ids) {
+  if (picker.value === "parent") {
+    const pid = ids[0];
+    if (pid && pid !== item.id) {
+      item.parentId = pid;
+      boq.updateBoqItem(item.id, { parentId: pid });
+      ui.toast("סעיף האב עודכן");
+    }
+  } else if (picker.value === "alternatives") {
+    item.alternativeIds = ids.filter((id) => id !== item.id);
+    db.persist();
+    ui.toast("הסעיפים החלופיים עודכנו");
+  }
+  picker.value = null;
+}
+function detachParent() {
+  item.parentId = null;
+  boq.updateBoqItem(item.id, { parentId: null });
+  ui.toast("הקשר לסעיף האב נותק");
+}
 
 const noteDraft = ref("");
 const notes = computed(() => boq.commentsFor("item", item.id));
@@ -211,7 +235,10 @@ function deleteFromBoq() {
                   placeholder="לא הוגדר סעיף אב"
                   disabled
                 />
-                <button class="btn-text" disabled title="בחירת סעיף אב תתאפשר בגרסה הבאה">בחירה</button>
+                <button class="btn-text" @click="picker = 'parent'">בחירה</button>
+                <button v-if="parentItem" class="btn-danger-text" title="ניתוק הקשר" @click="detachParent">
+                  <AppIcon name="cancel" :size="14" />
+                </button>
               </div>
             </div>
             <div class="field">
@@ -236,7 +263,7 @@ function deleteFromBoq() {
               </div>
             </div>
             <p v-else class="p-empty">לא הוגדרו סעיפים חלופיים בקטלוג</p>
-            <button class="btn-text" disabled title="עריכת חלופות מהקטלוג — לא זמין בדמו">הוספה</button>
+            <button class="btn-text" @click="picker = 'alternatives'">הוספה</button>
           </template>
         </div>
 
@@ -253,6 +280,14 @@ function deleteFromBoq() {
         </div>
       </div>
     </div>
+    <ItemPickerModal
+      v-if="picker"
+      :mode="picker === 'parent' ? 'single' : 'multi'"
+      :catalog-name="db.catalog.name"
+      :already-selected="picker === 'alternatives' ? [] : [item.id]"
+      @close="picker = null"
+      @picked="onPicked"
+    />
   </Teleport>
 </template>
 

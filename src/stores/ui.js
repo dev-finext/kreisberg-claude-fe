@@ -15,6 +15,7 @@ let toastSeq = 1;
 export const useUiStore = defineStore("ui", {
   state: () => ({
     toasts: [],
+    railExpanded: false,
     // user preferences ("אל תציג הודעה זו שוב")
     prefs: {
       skipAddToAllStructuresPrompt: false,

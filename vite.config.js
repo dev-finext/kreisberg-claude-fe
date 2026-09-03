@@ -2,7 +2,9 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { fileURLToPath, URL } from "node:url";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // GitHub Pages serves the app from /<repo>/ — dev stays at /
+  base: command === "build" ? "/kreisberg-claude-fe/" : "/",
   plugins: [vue()],
   resolve: {
     alias: {
@@ -13,4 +15,4 @@ export default defineConfig({
   server: {
     port: 5188,
   },
-});
+}));

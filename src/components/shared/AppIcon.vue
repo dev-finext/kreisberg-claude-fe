@@ -160,5 +160,38 @@ defineProps({
     <template v-else-if="name === 'collapse'">
       <path d="M10 6l6 6-6 6" />
     </template>
+    <!-- folder (closed) -->
+    <template v-else-if="name === 'folder'">
+      <path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V7.5Z" />
+    </template>
+    <!-- folder (open) -->
+    <template v-else-if="name === 'folder-open'">
+      <path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h6.5a2 2 0 0 1 2 2V11" />
+      <path d="M3.5 11h16.2a1 1 0 0 1 .96 1.27l-1.4 5.2A2 2 0 0 1 17.33 19H5.5a2 2 0 0 1-2-2v-6Z" />
+    </template>
+    <!-- document / file -->
+    <template v-else-if="name === 'file'">
+      <path d="M7 3.5h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1Z" />
+      <path d="M14 3.5V8h4.5M9 12.5h6M9 16h6" />
+    </template>
+    <!-- tag -->
+    <template v-else-if="name === 'tag'">
+      <path d="M3.5 12.5V5a1.5 1.5 0 0 1 1.5-1.5h7.5l8 8-8.5 8.5-8.5-8.5Z" />
+      <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none" />
+    </template>
+    <!-- calendar -->
+    <template v-else-if="name === 'calendar'">
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 9.5h17M8 3v4M16 3v4" />
+    </template>
+    <!-- upload -->
+    <template v-else-if="name === 'upload'">
+      <path d="M12 16V5M7.5 9.5L12 5l4.5 4.5" />
+      <path d="M4.5 16.5v2a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2" />
+    </template>
+    <!-- filter -->
+    <template v-else-if="name === 'filter'">
+      <path d="M4 5.5h16L13.8 13v5.5l-3.6 1.5V13L4 5.5Z" />
+    </template>
   </svg>
 </template>
