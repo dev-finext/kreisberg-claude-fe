@@ -6,6 +6,7 @@ import { useEscape } from "@/composables/useEscape";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import PickerCombo from "./PickerCombo.vue";
+import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 
 const props = defineProps({
   mode: { type: String, default: "multi" }, // 'multi' | 'single'
@@ -220,10 +221,12 @@ function confirm() {
         <!-- body -->
         <div class="picker-body">
           <div v-if="!searched" class="picker-empty">
+            <EmptyClipboard />
             <p class="empty-title">עדיין אין כאן סעיפים</p>
             <p class="empty-sub">בחר פילטרים ולחץ על "חיפוש" כדי להציג סעיפים</p>
           </div>
           <div v-else-if="!visibleItems.length" class="picker-empty">
+            <EmptyClipboard />
             <p class="empty-title">לא נמצאו סעיפים התואמים לחיפוש</p>
           </div>
           <template v-else>
