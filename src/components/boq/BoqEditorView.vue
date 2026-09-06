@@ -50,6 +50,7 @@ const chips = computed(() => {
 /* modals / dialogs */
 const showPicker = ref(false);
 const pickerMode = ref("multi");
+const itemsTable = ref(null);
 const replaceContext = ref(null); // row being replaced
 const editRow = ref(null);
 const notesCtx = ref(null); // {scope, ref}
@@ -137,6 +138,7 @@ function resolveScope(toAll) {
 function finishAdd(itemIds, toAll) {
   const n = boq.addItems(itemIds, { toAllElements: toAll });
   ui.toast(n ? "סעיפים נוספו בהצלחה" : "הסעיפים כבר קיימים במבנה");
+  if (n) itemsTable.value?.focusQtyForItems(itemIds); // a typed number now lands in the new row's qty
 }
 
 /* replace item flow */
@@ -234,6 +236,7 @@ function deleteChecked() {
       <div class="main-area">
         <BoqFilterRow />
         <BoqItemsTable
+          ref="itemsTable"
           :mode="boq.sidebarMode"
           @edit-item="(r) => (editRow = r)"
           @replace-item="startReplace"
