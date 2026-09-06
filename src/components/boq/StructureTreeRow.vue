@@ -2,7 +2,6 @@
 import { ref, computed, nextTick } from "vue";
 import { useBoqStore } from "@/stores/boq";
 import AppIcon from "@/components/shared/AppIcon.vue";
-import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 
 const props = defineProps({
   node: { type: Object, required: true },
@@ -17,10 +16,8 @@ const renameValue = ref("");
 const dropPos = ref(null); // 'inside' | 'before' | null
 
 const hasChildren = computed(() => props.node.children.length > 0);
-const isLeaf = computed(() => !hasChildren.value);
 const expanded = computed(() => boq.expandedElementIds.includes(props.node.id));
 const selected = computed(() => boq.selectedElementId === props.node.id);
-const checked = computed(() => boq.checkedLeafElementIds.includes(props.node.id));
 const isNew = computed(() => boq.flashElementIds.includes(props.node.id));
 const isRenaming = computed(() => props.renamingId === props.node.id);
 const pathTitle = computed(() => boq.elementPath(props.node.id).join(" › "));
@@ -29,12 +26,6 @@ function toggleExpand() {
   const i = boq.expandedElementIds.indexOf(props.node.id);
   if (i >= 0) boq.expandedElementIds.splice(i, 1);
   else boq.expandedElementIds.push(props.node.id);
-}
-function toggleChecked(v) {
-  const list = boq.checkedLeafElementIds;
-  const i = list.indexOf(props.node.id);
-  if (v && i < 0) list.push(props.node.id);
-  if (!v && i >= 0) list.splice(i, 1);
 }
 async function startRename() {
   renameValue.value = props.node.name;
@@ -129,12 +120,6 @@ function onDrop(e) {
     <template v-else>
       <span class="label">{{ node.name }}</span>
     </template>
-    <BaseCheckbox
-      v-if="isLeaf && !isRenaming"
-      size="small"
-      :model-value="checked"
-      @update:model-value="toggleChecked"
-    />
     <span class="spacer" />
     <span class="eye" :class="{ off: !node.visible }" @click.stop="boq.toggleElementVisibility(node.id)">
       <AppIcon :name="node.visible ? 'eye' : 'eye-closed'" :size="18" />
