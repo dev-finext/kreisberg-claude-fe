@@ -321,13 +321,6 @@ function deleteChecked() {
           <p class="m-msg">היכן להחליף את הסעיף? הכמות, העדיפות והלסיכום יישמרו.</p>
           <div class="m-actions column">
             <button class="btn btn-primary" @click="resolveReplaceScope('this')">במבנה זה</button>
-            <button
-              class="btn btn-secondary"
-              :disabled="!boq.checkedLeafElementIds.length"
-              @click="resolveReplaceScope('checked')"
-            >
-              במבנים נבחרים
-            </button>
             <button class="btn btn-secondary" @click="resolveReplaceScope('all')">בכל המבנים</button>
           </div>
         </div>
