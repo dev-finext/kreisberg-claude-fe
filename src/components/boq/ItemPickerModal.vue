@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { useCatalogStore } from "@/stores/catalog";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import { useEscape } from "@/composables/useEscape";
@@ -21,12 +21,12 @@ const cat = useCatalogStore();
 const chapterId = ref(null);
 const subChapterId = ref(null);
 const tagId = ref(null);
-const term = ref("");
-const searched = ref(false);
-const results = ref({ items: [], groups: [] });
+const term = ref(""); // what's typed in the search pill
+const appliedTerm = ref(""); // filters apply live; free text applies on Enter / "חיפוש"
 const selection = ref(new Set());
 const activeGroupId = ref(null);
 const resultsPane = ref(null);
+const chapterCombo = ref(null);
 
 const alreadySet = computed(() => new Set(props.alreadySelected));
 
@@ -52,57 +52,45 @@ watch(chapterId, () => {
 watch([chapterId, subChapterId], () => {
   if (tagId.value && !tagOptions.value.some((o) => o.value === tagId.value)) tagId.value = null;
 });
+/* erasing the text drops the applied search, so results never stay filtered by a phantom term */
+watch(term, (v) => {
+  if (!v.trim()) appliedTerm.value = "";
+});
 
-const canSearch = computed(() => chapterId.value || subChapterId.value || tagId.value || term.value.trim());
+/* opens focused on the chapter combo, so typing starts narrowing right away */
+onMounted(() => nextTick(() => chapterCombo.value?.focus()));
 
-function runSearch() {
-  if (!canSearch.value) return;
-  results.value = cat.pickerSearch({
-    chapterId: chapterId.value,
-    subChapterId: subChapterId.value,
-    tagId: tagId.value,
-    term: "",
-  });
-  searched.value = true;
+/* results: any filter shows results immediately; free text only once submitted */
+const hasQuery = computed(
+  () => !!(chapterId.value || subChapterId.value || tagId.value || appliedTerm.value.trim())
+);
+const results = computed(() =>
+  hasQuery.value
+    ? cat.pickerSearch({
+        chapterId: chapterId.value,
+        subChapterId: subChapterId.value,
+        tagId: tagId.value,
+        term: appliedTerm.value,
+      })
+    : { items: [], groups: [] }
+);
+const visibleGroups = computed(() => results.value.groups);
+const visibleItems = computed(() => visibleGroups.value.flatMap((g) => g.subGroups.flatMap((s) => s.items)));
+
+function applyTerm() {
+  appliedTerm.value = term.value.trim();
 }
 function clearAll() {
   chapterId.value = null;
   subChapterId.value = null;
   tagId.value = null;
   term.value = "";
-  searched.value = false;
-  results.value = { items: [], groups: [] };
+  appliedTerm.value = "";
+  chapterCombo.value?.focus();
 }
 
-/* free text filters *within* returned results, live */
-const visibleGroups = computed(() => {
-  const t = term.value.trim().toLowerCase();
-  if (!searched.value) return [];
-  return results.value.groups
-    .map((g) => ({
-      ...g,
-      subGroups: g.subGroups
-        .map((sg) => ({
-          ...sg,
-          items: sg.items.filter(
-            (i) =>
-              !t ||
-              i.code.toLowerCase().includes(t) ||
-              (i.name || "").toLowerCase().includes(t) ||
-              (i.unit || "").toLowerCase().includes(t)
-          ),
-        }))
-        .filter((sg) => sg.items.length),
-    }))
-    .filter((g) => g.subGroups.length);
-});
-const visibleItems = computed(() => visibleGroups.value.flatMap((g) => g.subGroups.flatMap((s) => s.items)));
-const showTree = computed(
-  () => visibleGroups.value.length > 1 || visibleGroups.value.some((g) => g.subGroups.length > 1)
-);
-
 function highlight(name) {
-  const t = term.value.trim();
+  const t = appliedTerm.value.trim();
   if (!t) return escapeHtml(name);
   const idx = name.indexOf(t);
   if (idx < 0) return escapeHtml(name);
@@ -138,13 +126,18 @@ function toggleItem(item) {
   }
   selection.value = next;
 }
-function selectAll() {
+/* header checkbox = select / clear every selectable visible row */
+const selectableVisible = computed(() => visibleItems.value.filter((i) => !isDisabled(i)));
+const allVisibleChecked = computed(
+  () => selectableVisible.value.length > 0 && selectableVisible.value.every((i) => selection.value.has(i.id))
+);
+function toggleAll(v) {
   const next = new Set(selection.value);
-  for (const i of visibleItems.value) if (!isDisabled(i)) next.add(i.id);
+  for (const i of selectableVisible.value) {
+    if (v) next.add(i.id);
+    else next.delete(i.id);
+  }
   selection.value = next;
-}
-function clearSelection() {
-  selection.value = new Set();
 }
 
 function scrollToGroup(gId) {
@@ -165,71 +158,94 @@ function confirm() {
         <!-- header -->
         <div class="picker-header">
           <div class="ph-start">
-            <button class="icon-btn" @click="emit('close')"><AppIcon name="cancel" :size="20" /></button>
+            <button class="icon-btn" title="סגירה" @click="emit('close')">
+              <AppIcon name="cancel" :size="24" />
+            </button>
             <span class="ph-catalog">{{ catalogName }}</span>
           </div>
           <h2 class="ph-title">בחירת סעיפים</h2>
         </div>
         <div class="picker-divider" />
 
-        <!-- filters -->
+        <!-- filters. DOM order = Tab order = RTL visual order: פרק → תת-פרק → תגית → חיפוש -->
         <div class="picker-filters">
           <div class="combos">
-            <PickerCombo v-model="tagId" :options="tagOptions" placeholder="הקלד או בחר תגית" />
+            <PickerCombo
+              ref="chapterCombo"
+              v-model="chapterId"
+              :options="chapterOptions"
+              placeholder="הקלד או בחר פרק"
+            />
             <PickerCombo
               v-model="subChapterId"
               :options="subChapterOptions"
               :placeholder="chapterId ? 'כל תתי הפרקים' : 'בחר פרק תחילה'"
               :disabled="!chapterId"
             />
-            <PickerCombo v-model="chapterId" :options="chapterOptions" placeholder="הקלד או בחר פרק" />
+            <PickerCombo v-model="tagId" :options="tagOptions" placeholder="הקלד או בחר תגית" />
           </div>
           <div class="search-row">
-            <div class="sr-start">
-              <button class="btn btn-primary search-btn" :disabled="!canSearch" @click="runSearch">
+            <SearchPill v-model="term" placeholder="חיפוש סעיפים" width="568px" @submit="applyTerm" />
+            <div class="sr-actions">
+              <button class="btn btn-primary search-btn" :disabled="!term.trim()" @click="applyTerm">
                 חיפוש
               </button>
               <button
-                class="btn-text"
-                :class="{ 'text-disabled': !canSearch && !searched }"
+                class="btn-text clear-btn"
+                :class="{ 'text-disabled': !hasQuery && !term }"
                 @click="clearAll"
               >
                 ניקוי
               </button>
             </div>
-            <SearchPill
-              v-model="term"
-              class="pill-wide"
-              placeholder="חיפוש סעיפים"
-              width="568px"
-              @submit="runSearch"
-            />
           </div>
         </div>
 
-        <!-- results header -->
-        <div v-if="searched" class="results-meta">
-          <span
-            >נמצאו <span class="num">{{ visibleItems.length }}</span> סעיפים</span
-          >
-          <div class="rm-actions">
-            <button v-if="mode === 'multi'" class="btn-text" @click="selectAll">בחר הכל</button>
-            <button class="btn-text" @click="clearSelection">נקה</button>
-          </div>
+        <!-- results count -->
+        <div v-if="hasQuery" class="results-meta">
+          נמצאו <span class="num">{{ visibleItems.length }}</span> סעיפים
         </div>
 
         <!-- body -->
         <div class="picker-body">
-          <div v-if="!searched" class="picker-empty">
+          <div v-if="!hasQuery" class="picker-empty">
             <EmptyClipboard />
             <p class="empty-title">עדיין אין כאן סעיפים</p>
-            <p class="empty-sub">בחר פילטרים ולחץ על "חיפוש" כדי להציג סעיפים</p>
+            <p class="empty-sub">הם יופיעו כאן לאחר החיפוש</p>
           </div>
           <div v-else-if="!visibleItems.length" class="picker-empty">
             <EmptyClipboard />
             <p class="empty-title">לא נמצאו סעיפים התואמים לחיפוש</p>
           </div>
           <template v-else>
+            <!-- chapter tree with counts (first in DOM = rightmost in RTL) -->
+            <div class="tree-pane scroll-slim">
+              <template v-for="g in visibleGroups" :key="g.chapter.id">
+                <button
+                  class="tp-row chapter"
+                  :class="{ active: activeGroupId === 'c' + g.chapter.id }"
+                  @click="scrollToGroup('c' + g.chapter.id)"
+                >
+                  <AppIcon name="chevron-down" :size="16" />
+                  <span class="tp-label ellipsis">{{ g.chapter.num }}: {{ g.chapter.name }}</span>
+                  <span class="tp-count num"
+                    >({{ g.subGroups.reduce((n, s) => n + s.items.length, 0) }})</span
+                  >
+                </button>
+                <button
+                  v-for="sg in g.subGroups"
+                  :key="sg.subChapter.id"
+                  class="tp-row sub"
+                  :class="{ active: activeGroupId === 's' + sg.subChapter.id }"
+                  @click="scrollToGroup('s' + sg.subChapter.id)"
+                >
+                  <AppIcon name="chevron-left" :size="16" />
+                  <span class="tp-label ellipsis">{{ sg.subChapter.num }} - {{ sg.subChapter.name }}</span>
+                  <span class="tp-count num">({{ sg.items.length }})</span>
+                </button>
+              </template>
+            </div>
+
             <!-- results table -->
             <div ref="resultsPane" class="results-pane scroll-slim">
               <table class="results-table">
@@ -238,29 +254,34 @@ function confirm() {
                     <th class="th-check">
                       <BaseCheckbox
                         v-if="mode === 'multi'"
-                        :model-value="false"
-                        @update:model-value="selectAll"
+                        size="small"
+                        :model-value="allVisibleChecked"
+                        @update:model-value="toggleAll"
                       />
                     </th>
-                    <th>מספר סעיף</th>
-                    <th>שם סעיף</th>
-                    <th>יח' מידה</th>
+                    <th class="th-code">מספר סעיף</th>
+                    <th class="th-name">שם סעיף</th>
+                    <th class="th-unit">יח' מידה</th>
                   </tr>
                 </thead>
                 <tbody>
                   <template v-for="g in visibleGroups" :key="g.chapter.id">
                     <tr class="r-group" :data-group="'c' + g.chapter.id">
-                      <td colspan="4">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</td>
+                      <td colspan="4">
+                        <span class="rg-inner">
+                          <span>פרק {{ g.chapter.num }} - {{ g.chapter.name }}</span>
+                          <AppIcon name="note" :size="16" />
+                        </span>
+                      </td>
                     </tr>
+                    <!-- grouped by chapter only (per design); a sub-chapter's first row is the tree's scroll target -->
                     <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
-                      <tr class="r-group sub" :data-group="'s' + sg.subChapter.id">
-                        <td colspan="4">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</td>
-                      </tr>
                       <tr
-                        v-for="item in sg.items"
+                        v-for="(item, i) in sg.items"
                         :key="item.key"
                         class="r-row"
                         :class="{ disabled: isDisabled(item), checked: isChecked(item) && !isDisabled(item) }"
+                        :data-group="i === 0 ? 's' + sg.subChapter.id : null"
                         @click="toggleItem(item)"
                       >
                         <td class="td-check">
@@ -271,63 +292,38 @@ function confirm() {
                           />
                           <BaseCheckbox
                             v-else
+                            size="small"
                             :model-value="isChecked(item)"
                             :disabled="isDisabled(item)"
                             @update:model-value="() => toggleItem(item)"
                           />
                         </td>
-                        <td>
-                          <span class="item-code">{{ item.code }}</span>
+                        <td class="td-code">
+                          <span class="item-code num">{{ item.code }}</span>
                         </td>
-                        <td class="r-name">
-                          <span v-html="highlight(item.name)" />
+                        <td class="td-name">
+                          <span class="r-name-text ellipsis" v-html="highlight(item.name)" />
                           <span v-if="isDisabled(item)" class="already">כבר נבחר</span>
                         </td>
-                        <td>{{ item.unit }}</td>
+                        <td class="td-unit">{{ item.unit }}</td>
                       </tr>
                     </template>
                   </template>
                 </tbody>
               </table>
             </div>
-            <!-- chapter tree with counts -->
-            <div v-if="showTree" class="tree-pane scroll-slim">
-              <div v-for="g in visibleGroups" :key="g.chapter.id">
-                <button
-                  class="tp-row"
-                  :class="{ active: activeGroupId === 'c' + g.chapter.id }"
-                  @click="scrollToGroup('c' + g.chapter.id)"
-                >
-                  <span class="tp-count num"
-                    >({{ g.subGroups.reduce((n, s) => n + s.items.length, 0) }})</span
-                  >
-                  <span class="ellipsis">{{ g.chapter.num }}: {{ g.chapter.name }}</span>
-                  <AppIcon name="chevron-down" :size="14" />
-                </button>
-                <button
-                  v-for="sg in g.subGroups"
-                  :key="sg.subChapter.id"
-                  class="tp-row sub"
-                  :class="{ active: activeGroupId === 's' + sg.subChapter.id }"
-                  @click="scrollToGroup('s' + sg.subChapter.id)"
-                >
-                  <span class="tp-count num">({{ sg.items.length }})</span>
-                  <span class="ellipsis">{{ sg.subChapter.num }} - {{ sg.subChapter.name }}</span>
-                </button>
-              </div>
-            </div>
           </template>
         </div>
 
-        <!-- footer -->
-        <div class="picker-footer">
+        <!-- footer (only once there's a search, per the design's empty state) -->
+        <div v-if="hasQuery" class="picker-footer">
           <div class="pf-start">
             <button class="btn btn-primary" :disabled="!selection.size" @click="confirm">בחירה</button>
             <button class="btn btn-secondary" @click="emit('close')">ביטול</button>
           </div>
-          <span class="pf-count"
-            >נבחרו: <span class="num">{{ selection.size }}</span> סעיפים</span
-          >
+          <span class="pf-count">
+            נבחרו: <span class="num">{{ selection.size }}</span> סעיפים
+          </span>
         </div>
       </div>
     </div>
@@ -350,12 +346,13 @@ function confirm() {
   height: 657px;
   max-height: 92vh;
   background: var(--surface);
-  border-radius: var(--radius-modal);
+  border-radius: 6px;
   box-shadow: var(--shadow-modal);
   display: flex;
   flex-direction: column;
-  padding: 8px 0 16px;
+  padding: 8px 0 24px;
 }
+/* header: title right, X + catalog left (RTL + row-reverse puts the first child leftmost) */
 .picker-header {
   display: flex;
   align-items: center;
@@ -367,6 +364,7 @@ function confirm() {
 .ph-title {
   font-size: 16px;
   font-weight: 700;
+  line-height: 24px;
   color: var(--text-secondary);
 }
 .ph-start {
@@ -383,13 +381,14 @@ function confirm() {
   border: none;
   color: var(--text-primary);
   display: inline-flex;
-  padding: 2px;
+  padding: 0;
 }
 .picker-divider {
-  height: 1.5px;
+  height: 1px;
   background: var(--divider);
-  margin: 8px 0 12px;
+  margin: 8px 0;
 }
+/* filters */
 .picker-filters {
   padding: 0 32px;
   display: flex;
@@ -398,50 +397,50 @@ function confirm() {
 }
 .combos {
   display: flex;
-  gap: 8px;
-  flex-direction: row-reverse;
+  gap: 8px; /* DOM order chapter → sub → tag; RTL renders chapter rightmost */
 }
 .search-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px; /* pill first in DOM = right; actions left */
 }
-.sr-start {
+.sr-actions {
   display: flex;
   align-items: center;
-  gap: 18px;
-  flex-direction: row-reverse;
+  gap: 40px;
 }
 .search-btn {
   min-width: 96px;
+  height: 40px;
   padding: 0 24px;
+}
+.search-btn:disabled {
+  background: var(--border-strong);
+  border-color: transparent;
+  color: #f4f4f4;
+  box-shadow: none;
+}
+.clear-btn {
+  font-size: 14px;
 }
 .text-disabled {
   color: var(--text-disabled);
 }
-.pill-wide {
-  max-width: 60%;
-}
 .results-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: row-reverse;
-  padding: 10px 32px 6px;
-  font-size: 13px;
+  padding: 12px 32px 0;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-primary);
+  text-align: right;
 }
-.rm-actions {
-  display: flex;
-  gap: 12px;
-}
+/* body */
 .picker-body {
   flex: 1;
   min-height: 0;
   display: flex;
-  flex-direction: row;
-  gap: 12px;
-  padding: 0 32px;
+  gap: 20px;
+  padding: 12px 32px 0;
 }
 .picker-empty {
   flex: 1;
@@ -449,7 +448,7 @@ function confirm() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 .empty-title {
   font-size: 16px;
@@ -461,86 +460,126 @@ function confirm() {
 }
 /* tree pane (right) */
 .tree-pane {
-  width: 240px;
+  width: 275px;
   flex-shrink: 0;
   overflow-y: auto;
-  border-left: 1.5px solid var(--divider);
-  padding-left: 8px;
-  order: -1; /* rightmost in RTL flex */
+  border-left: 2px solid var(--surface-muted);
+  padding: 4px 0 0 16px;
 }
 .tp-row {
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-direction: row-reverse;
   width: 100%;
+  height: 32px;
   background: none;
   border: none;
-  font-size: 13px;
-  color: var(--text-primary);
-  padding: 6px 4px;
   border-radius: 6px;
+  padding: 0 8px;
+  font-size: 14px;
+  color: var(--text-primary);
   text-align: right;
 }
-.tp-row .ellipsis {
+.tp-row.chapter {
+  background: var(--brand-primary-soft);
+}
+.tp-row.sub {
+  height: 26px;
+  padding-right: 20px;
+}
+.tp-label {
   flex: 1;
   text-align: right;
 }
-.tp-row.sub {
-  padding-right: 22px;
-  font-size: 12px;
+.tp-count {
+  color: var(--text-primary);
 }
 .tp-row:hover {
   background: var(--surface-subtle);
 }
 .tp-row.active {
-  background: var(--brand-primary-soft);
   font-weight: 600;
 }
-.tp-count {
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-/* results */
+/* results table */
 .results-pane {
   flex: 1;
-  overflow-y: auto;
   min-width: 0;
+  overflow-y: auto;
+  border-radius: 8px 8px 0 0;
 }
 .results-table {
   width: 100%;
   border-collapse: collapse;
 }
 .results-table th {
+  height: 32px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
   text-align: right;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--divider);
+  padding: 0 12px;
+  background: var(--page-bg);
+  border-bottom: 1px solid #eaeffb;
   position: sticky;
   top: 0;
-  background: var(--surface);
   z-index: 2;
+  white-space: nowrap;
 }
 .results-table td {
-  font-size: 13px;
+  height: 48px;
+  font-size: 14px;
+  color: var(--text-primary);
   text-align: right;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--divider);
+  padding: 0 12px;
+  border-bottom: 1px solid #eeeefc;
+}
+.results-table tr > td:first-child {
+  border-right: 1px solid #eeeefc;
+}
+.results-table tr > td:last-child {
+  border-left: 1px solid #eeeefc;
+}
+.th-check,
+.td-check {
+  width: 40px;
+  padding: 0 4px 0 12px;
+}
+.th-code,
+.td-code {
+  width: 100px;
+  white-space: nowrap;
+}
+.th-unit,
+.td-unit {
+  width: 61px;
+  text-align: center;
+}
+.td-name {
+  max-width: 310px;
+}
+.r-name-text {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.r-name-text :deep(.hl) {
+  background: var(--highlight);
 }
 .r-group td {
-  background: var(--surface-subtle);
-  font-weight: 700;
+  background: #fcfcfc;
+  height: 34px;
   font-size: 12px;
-  padding: 5px 10px;
+  font-weight: 600;
+  padding: 0 64px 0 60px;
 }
-.r-group.sub td {
-  font-weight: 400;
-  padding-right: 22px;
+.rg-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 .r-row {
   cursor: pointer;
+  background: var(--surface);
 }
 .r-row:hover {
   background: var(--surface-subtle);
@@ -552,9 +591,6 @@ function confirm() {
   cursor: not-allowed;
   color: var(--text-muted);
 }
-.r-name :deep(.hl) {
-  background: var(--highlight);
-}
 .already {
   color: var(--text-muted);
   font-size: 11px;
@@ -562,9 +598,7 @@ function confirm() {
   border-radius: 4px;
   padding: 1px 6px;
   margin-right: 8px;
-}
-.td-check {
-  width: 40px;
+  vertical-align: middle;
 }
 .radio {
   width: 15px;
@@ -572,6 +606,7 @@ function confirm() {
   border-radius: 50%;
   border: 1.5px solid var(--border-strong);
   display: inline-block;
+  vertical-align: middle;
 }
 .radio.checked {
   border-color: var(--brand-primary);
@@ -579,21 +614,26 @@ function confirm() {
     inset 0 0 0 3.5px var(--surface),
     inset 0 0 0 10px var(--brand-primary);
 }
-/* footer */
+/* footer: buttons left, count right */
 .picker-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: row-reverse;
-  border-top: 1.5px solid var(--divider);
-  padding: 14px 32px 0;
+  padding: 0 32px;
+  margin-top: 24px;
 }
 .pf-start {
   display: flex;
   gap: 12px;
 }
+.pf-start .btn {
+  min-width: 123px;
+  height: 40px;
+}
 .pf-count {
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 </style>

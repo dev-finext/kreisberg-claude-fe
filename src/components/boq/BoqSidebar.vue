@@ -15,7 +15,6 @@ const ui = useUiStore();
 
 const renamingId = ref(null);
 const menu = ref(null); // {node, x, y}
-const addMenu = ref(null); // {x, y}
 const elementModal = ref(null); // {mode, refElement}
 const deleteTarget = ref(null);
 
@@ -23,22 +22,12 @@ const tree = computed(() => boq.elementTree);
 const rootSelected = computed(() => boq.selectedElementId === 0);
 const rootExpanded = ref(true);
 
-/* ---------- שיוך: add flow ---------- */
-function openAddMenu(e) {
-  const rect = e.currentTarget.getBoundingClientRect();
-  if (!boq.selectedElement) {
-    if (!tree.value.length) {
-      elementModal.value = { mode: "brother", refElement: null };
-    } else {
-      ui.toast("אנא בחר מבנה מהרשימה", "warning");
-    }
-    return;
-  }
-  addMenu.value = { x: rect.left, y: rect.bottom + 4 };
-}
-function onAddSelect(key) {
-  addMenu.value = null;
-  elementModal.value = { mode: key, refElement: boq.selectedElement };
+/* ---------- שיוך: add flow ----------
+   הוספה always creates a child of the focused structure — no אח/בן question.
+   "הכל" (id 0) or no selection means a root-level element (depth 0). */
+function openAdd() {
+  const parent = boq.selectedElementId > 0 ? boq.selectedElement : null;
+  elementModal.value = { mode: "son", refElement: parent };
 }
 function saveElement(data) {
   const m = elementModal.value;
@@ -46,8 +35,7 @@ function saveElement(data) {
     boq.updateElement(m.refElement.id, data);
     ui.toast("המבנה עודכן בהצלחה");
   } else {
-    const parentId = m.mode === "son" ? m.refElement.id : m.refElement ? m.refElement.parentId : null;
-    boq.addElement({ ...data, parentId });
+    boq.addElement({ ...data, parentId: m.refElement?.id ?? null });
     ui.toast("המבנה נוסף בהצלחה");
   }
   elementModal.value = null;
@@ -150,7 +138,7 @@ function toggleChapterExpand(chId) {
     <!-- ================= שיוך ================= -->
     <template v-if="boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT">
       <div class="add-row">
-        <button class="ghost-btn" @click="openAddMenu">
+        <button class="ghost-btn" @click="openAdd">
           <span>הוספה</span>
           <AppIcon name="plus-circle" :size="20" />
         </button>
@@ -234,21 +222,10 @@ function toggleChapterExpand(chId) {
       @select="onKebabSelect"
       @close="menu = null"
     />
-    <ContextMenu
-      v-if="addMenu"
-      :items="[
-        { key: 'brother', label: 'הוספת אח', icon: 'plus-circle' },
-        { key: 'son', label: 'הוספת בן', icon: 'plus-circle' },
-      ]"
-      :x="addMenu.x"
-      :y="addMenu.y"
-      @select="onAddSelect"
-      @close="addMenu = null"
-    />
     <StructureElementModal
       v-if="elementModal"
       :mode="elementModal.mode"
-      :ref-element-name="elementModal.refElement?.name || ''"
+      :ref-element-name="elementModal.refElement?.name || 'הכל'"
       :initial="elementModal.mode === 'edit' ? elementModal.refElement : null"
       @close="elementModal = null"
       @save="saveElement"

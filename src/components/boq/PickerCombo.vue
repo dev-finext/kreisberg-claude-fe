@@ -12,15 +12,41 @@ const emit = defineEmits(["update:modelValue"]);
 
 const open = ref(false);
 const query = ref("");
+const activeIdx = ref(0); // the highlighted ("closest") option — Enter picks it
 const inputEl = ref(null);
+const menuEl = ref(null);
 
 const selectedLabel = computed(() => props.options.find((o) => o.value === props.modelValue)?.label || "");
+
+/**
+ * Typing narrows the list live; the closest match is ranked first and highlighted.
+ * Leading zeros in numeric runs are ignored so "7" finds "07- …" (and "07" still does).
+ */
+const stripZeros = (s) => s.toLowerCase().replace(/(^|\D)0+(\d)/g, "$1$2");
+function rank(label, q) {
+  const l = label.toLowerCase();
+  const ls = stripZeros(label);
+  const qs = stripZeros(q);
+  if (l.startsWith(q) || ls.startsWith(qs)) return 0; // starts with what was typed = closest
+  if (l.includes(q) || ls.includes(qs)) return 1;
+  return -1;
+}
 const filtered = computed(() => {
-  const q = query.value.trim();
-  if (q.length < 2) return props.options;
-  return props.options.filter((o) => o.label.includes(q));
+  const q = query.value.trim().toLowerCase();
+  if (!q) return props.options;
+  return props.options
+    .map((o) => ({ o, r: rank(o.label, q) }))
+    .filter((x) => x.r >= 0)
+    .sort((a, b) => a.r - b.r)
+    .map((x) => x.o);
 });
 
+watch(filtered, () => {
+  activeIdx.value = 0;
+});
+watch(activeIdx, () => {
+  menuEl.value?.children[activeIdx.value]?.scrollIntoView?.({ block: "nearest" });
+});
 watch(
   () => props.modelValue,
   () => {
@@ -38,15 +64,52 @@ function clear() {
   query.value = "";
   inputEl.value?.focus();
 }
-function onEnter() {
-  if (filtered.value.length === 1) choose(filtered.value[0]);
+function focus() {
+  inputEl.value?.focus();
+}
+defineExpose({ focus });
+
+/* keyboard: arrows move the highlight, Enter selects it, Tab moves on WITHOUT selecting */
+function onKeydown(e) {
+  const n = filtered.value.length;
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    open.value = true;
+    if (n) activeIdx.value = (activeIdx.value + 1) % n;
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    open.value = true;
+    if (n) activeIdx.value = (activeIdx.value - 1 + n) % n;
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    const opt = filtered.value[activeIdx.value];
+    if (open.value && opt) choose(opt);
+  } else if (e.key === "Tab") {
+    open.value = false;
+  } else if (e.key === "Escape" && open.value) {
+    e.stopPropagation(); // close only the list, not the whole picker
+    open.value = false;
+  }
+}
+function onFieldMousedown(e) {
+  if (props.disabled) return;
+  e.preventDefault(); // keep the caret in the input
+  inputEl.value?.focus();
+  open.value = !open.value;
 }
 </script>
 
 <template>
-  <div class="combo" :class="{ disabled }">
-    <div class="combo-field" @click="!disabled && (open = !open)">
-      <button v-if="modelValue !== null" class="combo-clear" @click.stop="clear">
+  <div class="combo" :class="{ disabled, open }">
+    <div class="combo-field" @mousedown="onFieldMousedown">
+      <button
+        v-if="modelValue !== null"
+        class="combo-clear"
+        tabindex="-1"
+        title="ניקוי"
+        @mousedown.stop.prevent
+        @click="clear"
+      >
         <AppIcon name="cancel" :size="14" />
       </button>
       <span class="combo-chevron"><AppIcon name="chevron-down" :size="16" /></span>
@@ -56,20 +119,25 @@ function onEnter() {
         :value="open ? query : selectedLabel"
         :placeholder="selectedLabel || placeholder"
         :disabled="disabled"
+        autocomplete="off"
+        @mousedown.stop
         @input="
           query = $event.target.value;
           open = true;
         "
-        @keyup.enter="onEnter"
+        @keydown="onKeydown"
         @focus="open = true"
+        @blur="open = false"
       />
     </div>
-    <div v-if="open && !disabled" class="combo-menu scroll-slim" @mouseleave="open = false">
+    <div v-if="open && !disabled" ref="menuEl" class="combo-menu scroll-slim" @mousedown.prevent>
       <button
-        v-for="o in filtered"
+        v-for="(o, i) in filtered"
         :key="o.value"
         class="combo-opt ellipsis"
-        :class="{ active: o.value === modelValue }"
+        :class="{ active: o.value === modelValue, hl: i === activeIdx }"
+        tabindex="-1"
+        @mouseenter="activeIdx = i"
         @click="choose(o)"
       >
         {{ o.label }}
@@ -83,18 +151,22 @@ function onEnter() {
 .combo {
   position: relative;
   flex: 1;
+  min-width: 0;
 }
 .combo-field {
   display: flex;
   align-items: center;
   flex-direction: row-reverse;
-  gap: 6px;
+  gap: 8px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   height: 40px;
   padding: 0 8px;
   background: var(--surface);
   cursor: pointer;
+}
+.combo.open .combo-field {
+  border-color: var(--brand-primary);
 }
 .combo.disabled .combo-field {
   background: var(--surface-muted);
@@ -154,7 +226,7 @@ function onEnter() {
   border-radius: 6px;
   color: var(--text-primary);
 }
-.combo-opt:hover {
+.combo-opt.hl {
   background: var(--surface-subtle);
 }
 .combo-opt.active {

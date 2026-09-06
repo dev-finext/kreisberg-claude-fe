@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { useBoqStore } from "@/stores/boq";
 import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
@@ -104,20 +104,52 @@ function toggleOpen(r) {
   else boq.expandedRowKeys.push(r.key);
 }
 
-/* ---------------- quantity editing ---------------- */
-function startEditQty(r) {
+/* ---------------- quantity editing ----------------
+   The qty cell is a plain always-on input: "0" is only a placeholder (so typing "5"
+   gives 5, not 50), an existing value is selected on focus so typing replaces it,
+   Tab / Shift+Tab hop straight to the next / previous row's qty. */
+const tableWrap = ref(null);
+function qtyInputs() {
+  return [...(tableWrap.value?.querySelectorAll("input.qty-input") || [])];
+}
+function onQtyFocus(r, e) {
   if (!r.editable || props.mode === SIDEBAR_MODE.CHAPTERS) return;
   editingQtyKey.value = r.key;
-  qtyDraft.value = String(r.qty);
+  qtyDraft.value = r.qty ? String(r.qty) : "";
+  nextTick(() => e.target.select());
 }
-function blockInvalidChars(e) {
-  if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+function onQtyKeydown(e, r) {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    commitQty(r);
+    const list = qtyInputs();
+    list[list.indexOf(e.target) + (e.shiftKey ? -1 : 1)]?.focus();
+    return;
+  }
+  if (e.key === "Enter") {
+    e.preventDefault();
+    e.target.blur(); // blur commits
+    return;
+  }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key.length === 1 && !/[\d.]/.test(e.key)) e.preventDefault();
+  if (e.key === "." && e.target.value.includes(".")) e.preventDefault();
 }
+/** after adding items, land the caret in the first new row's qty so a typed number goes there */
+function focusQtyForItems(itemIds) {
+  nextTick(() => {
+    const ids = new Set(itemIds.map(String));
+    qtyInputs()
+      .find((inp) => ids.has(inp.dataset.itemId))
+      ?.focus();
+  });
+}
+defineExpose({ focusQtyForItems });
 function commitQty(r) {
   if (editingQtyKey.value !== r.key) return;
-  const raw = qtyDraft.value;
+  const raw = qtyDraft.value.trim();
   editingQtyKey.value = null;
-  const val = parseFloat(raw);
+  const val = raw === "" ? 0 : parseFloat(raw);
   if (isNaN(val) || val < 0) {
     ui.toast("כמות חייבת להיות מספר חיובי", "error");
     return;
@@ -188,7 +220,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
 </script>
 
 <template>
-  <div class="items-table-wrap scroll-slim">
+  <div ref="tableWrap" class="items-table-wrap scroll-slim">
     <!-- selected structure path (שיוך) -->
     <div v-if="mode === SIDEBAR_MODE.ASSIGNMENT && selectedPath" class="selected-path">
       {{ selectedPath }}
@@ -234,18 +266,19 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
             <td class="td-unit">{{ r.unit || "--" }}</td>
             <td class="td-qty">
               <input
-                v-if="editingQtyKey === r.key"
-                v-model="qtyDraft"
-                type="number"
-                class="qty-input editing num"
-                autofocus
-                @keydown="blockInvalidChars"
-                @keyup.enter="commitQty(r)"
+                v-if="assignment.editable"
+                type="text"
+                inputmode="decimal"
+                class="qty-input num"
+                :class="{ editing: editingQtyKey === r.key }"
+                placeholder="0"
+                :value="editingQtyKey === r.key ? qtyDraft : r.qty ? formatQty(r.qty) : ''"
+                :data-item-id="r.item?.id"
+                @focus="onQtyFocus(r, $event)"
+                @input="qtyDraft = $event.target.value"
+                @keydown="onQtyKeydown($event, r)"
                 @blur="commitQty(r)"
               />
-              <button v-else-if="assignment.editable" class="qty-input num" @click="startEditQty(r)">
-                {{ formatQty(r.qty) }}
-              </button>
               <span v-else class="qty-text num">{{ formatQty(r.qty) }}</span>
             </td>
             <td class="td-prio">
@@ -536,10 +569,15 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
   text-align: center;
   font-family: inherit;
   color: var(--text-primary);
+  padding: 0 6px;
+  outline: none;
 }
+.qty-input::placeholder {
+  color: var(--text-muted);
+}
+.qty-input:focus,
 .qty-input.editing {
   border-color: var(--brand-primary);
-  outline: none;
 }
 .qty-text {
   font-weight: 600;
