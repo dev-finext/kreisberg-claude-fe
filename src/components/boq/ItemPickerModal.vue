@@ -22,7 +22,7 @@ const chapterId = ref(null);
 const subChapterId = ref(null);
 const tagId = ref(null);
 const term = ref(""); // what's typed in the search pill
-const appliedTerm = ref(""); // filters apply live; free text applies on Enter / "חיפוש"
+const applied = ref(null); // last submitted search {chapterId, subChapterId, tagId, term}; null = nothing searched yet
 const selection = ref(new Set());
 const activeGroupId = ref(null);
 const resultsPane = ref(null);
@@ -52,45 +52,39 @@ watch(chapterId, () => {
 watch([chapterId, subChapterId], () => {
   if (tagId.value && !tagOptions.value.some((o) => o.value === tagId.value)) tagId.value = null;
 });
-/* erasing the text drops the applied search, so results never stay filtered by a phantom term */
-watch(term, (v) => {
-  if (!v.trim()) appliedTerm.value = "";
-});
 
 /* opens focused on the chapter combo, so typing starts narrowing right away */
 onMounted(() => nextTick(() => chapterCombo.value?.focus()));
 
-/* results: any filter shows results immediately; free text only once submitted */
-const hasQuery = computed(
-  () => !!(chapterId.value || subChapterId.value || tagId.value || appliedTerm.value.trim())
+/* every search runs only on "חיפוש" (Enter in the search field = the button); results show the last submitted snapshot */
+const canSearch = computed(
+  () => !!(chapterId.value || subChapterId.value || tagId.value || term.value.trim())
 );
-const results = computed(() =>
-  hasQuery.value
-    ? cat.pickerSearch({
-        chapterId: chapterId.value,
-        subChapterId: subChapterId.value,
-        tagId: tagId.value,
-        term: appliedTerm.value,
-      })
-    : { items: [], groups: [] }
-);
+const hasQuery = computed(() => applied.value !== null);
+const results = computed(() => (applied.value ? cat.pickerSearch(applied.value) : { items: [], groups: [] }));
 const visibleGroups = computed(() => results.value.groups);
 const visibleItems = computed(() => visibleGroups.value.flatMap((g) => g.subGroups.flatMap((s) => s.items)));
 
-function applyTerm() {
-  appliedTerm.value = term.value.trim();
+function runSearch() {
+  if (!canSearch.value) return;
+  applied.value = {
+    chapterId: chapterId.value,
+    subChapterId: subChapterId.value,
+    tagId: tagId.value,
+    term: term.value.trim(),
+  };
 }
 function clearAll() {
   chapterId.value = null;
   subChapterId.value = null;
   tagId.value = null;
   term.value = "";
-  appliedTerm.value = "";
+  applied.value = null;
   chapterCombo.value?.focus();
 }
 
 function highlight(name) {
-  const t = appliedTerm.value.trim();
+  const t = applied.value?.term || "";
   if (!t) return escapeHtml(name);
   const idx = name.indexOf(t);
   if (idx < 0) return escapeHtml(name);
@@ -185,14 +179,14 @@ function confirm() {
             <PickerCombo v-model="tagId" :options="tagOptions" placeholder="הקלד או בחר תגית" />
           </div>
           <div class="search-row">
-            <SearchPill v-model="term" placeholder="חיפוש סעיפים" width="568px" @submit="applyTerm" />
+            <SearchPill v-model="term" placeholder="חיפוש סעיפים" width="568px" @submit="runSearch" />
             <div class="sr-actions">
-              <button class="btn btn-primary search-btn" :disabled="!term.trim()" @click="applyTerm">
+              <button class="btn btn-primary search-btn" :disabled="!canSearch" @click="runSearch">
                 חיפוש
               </button>
               <button
                 class="btn-text clear-btn"
-                :class="{ 'text-disabled': !hasQuery && !term }"
+                :class="{ 'text-disabled': !canSearch && !applied }"
                 @click="clearAll"
               >
                 ניקוי
