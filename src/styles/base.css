@@ -247,6 +247,35 @@ textarea {
   white-space: nowrap;
 }
 
+/* ---------- שיוך tree rows: pinned actions gutter ----------
+   The eye (and kebab) sit in a fixed-width column pinned to the tree's right
+   edge, so they stay visible and aligned however deep a branch scrolls on X,
+   and never move with the structure name's length. The indentation lives on
+   .tree-main instead of the row, which keeps the gutter off the depth ramp. */
+.tree-actions {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  align-self: stretch;
+  flex-shrink: 0;
+  width: 50px;
+  display: flex;
+  align-items: center;
+  /* start-aligned (= right in RTL) so the eye lands on the same pixel in every
+     row, including the "הכל" root row that carries no kebab */
+  justify-content: flex-start;
+  gap: 2px;
+  padding-right: 4px;
+  background-color: inherit;
+  border-radius: 0 8px 8px 0;
+}
+.tree-main {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
 /* ---------- new-item highlight ----------
    A just-created בן / פרק / סעיף gets a soft brand-blue wash that holds for a
    beat and then gently fades over 5s, so it's easy to spot among existing rows. */

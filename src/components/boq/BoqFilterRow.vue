@@ -118,7 +118,6 @@ function clearAll() {
     </div>
     <div class="filter-actions">
       <button class="btn-text" @click="clearAll">ניקוי</button>
-      <button class="filter-chip">סינון</button>
     </div>
   </div>
 </template>
@@ -197,15 +196,5 @@ function clearAll() {
   align-items: center;
   gap: 10px;
   flex-direction: row-reverse;
-}
-.filter-chip {
-  background: var(--brand-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-pill);
-  height: 30px;
-  padding: 0 18px;
-  font-size: 12px;
-  font-weight: 600;
 }
 </style>
