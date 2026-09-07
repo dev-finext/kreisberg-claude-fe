@@ -148,12 +148,15 @@ function toggleChapterExpand(chId) {
         <div class="tree-body">
           <!-- root: הכל -->
           <div class="tree-root-row" :class="{ selected: rootSelected }" @click="boq.selectElement(0)">
-            <span class="chevron" @click.stop="rootExpanded = !rootExpanded">
-              <AppIcon :name="rootExpanded ? 'chevron-down' : 'chevron-left'" :size="16" />
+            <span class="tree-actions">
+              <span class="eye"><AppIcon name="eye" :size="18" /></span>
             </span>
-            <span class="root-label">הכל</span>
-            <span class="spacer" />
-            <span class="eye"><AppIcon name="eye" :size="18" /></span>
+            <div class="tree-main">
+              <span class="chevron" @click.stop="rootExpanded = !rootExpanded">
+                <AppIcon :name="rootExpanded ? 'chevron-down' : 'chevron-left'" :size="16" />
+              </span>
+              <span class="root-label">הכל</span>
+            </div>
           </div>
           <template v-if="rootExpanded">
             <StructureTreeRow
@@ -328,11 +331,12 @@ function toggleChapterExpand(chId) {
 .tree-root-row {
   display: flex;
   align-items: center;
-  gap: 4px;
   height: var(--row-h-tree);
   border-radius: 8px;
-  padding: 0 4px;
+  padding-left: 4px;
   cursor: pointer;
+  /* opaque base so the pinned actions gutter can inherit the row's tint */
+  background-color: var(--surface);
 }
 .tree-root-row:hover {
   background: var(--surface-subtle);
@@ -342,9 +346,6 @@ function toggleChapterExpand(chId) {
 }
 .root-label {
   font-size: 14px;
-}
-.spacer {
-  flex: 1;
 }
 .chevron {
   display: inline-flex;

@@ -90,7 +90,6 @@ function onDrop(e) {
       'drop-before': dropPos === 'before',
       'hidden-el': !node.visible,
     }"
-    :style="{ paddingRight: 4 + depth * 16 + 'px' }"
     :title="pathTitle"
     draggable="true"
     @dragstart="onDragStart"
@@ -100,14 +99,24 @@ function onDrop(e) {
     @click="boq.selectElement(node.id)"
     @dblclick.stop="beginRenaming"
   >
-    <span class="drag-handle" @click.stop>
-      <AppIcon name="drag" :size="16" />
+    <!-- actions pinned to the tree's right edge: always visible, never shifted by the name -->
+    <span class="tree-actions">
+      <span class="eye" :class="{ off: !node.visible }" @click.stop="boq.toggleElementVisibility(node.id)">
+        <AppIcon :name="node.visible ? 'eye' : 'eye-closed'" :size="18" />
+      </span>
+      <span class="kebab" @click.stop="emit('kebab', { node, event: $event })">
+        <AppIcon name="kebab" :size="16" />
+      </span>
     </span>
-    <span v-if="hasChildren" class="chevron" @click.stop="toggleExpand">
-      <AppIcon :name="expanded ? 'chevron-down' : 'chevron-left'" :size="16" />
-    </span>
-    <template v-if="isRenaming">
+    <div class="tree-main" :style="{ paddingRight: 4 + depth * 16 + 'px' }">
+      <span class="drag-handle" @click.stop>
+        <AppIcon name="drag" :size="16" />
+      </span>
+      <span v-if="hasChildren" class="chevron" @click.stop="toggleExpand">
+        <AppIcon :name="expanded ? 'chevron-down' : 'chevron-left'" :size="16" />
+      </span>
       <input
+        v-if="isRenaming"
         ref="renameInput"
         v-model="renameValue"
         class="rename-input"
@@ -116,17 +125,8 @@ function onDrop(e) {
         @blur="commitRename"
         @click.stop
       />
-    </template>
-    <template v-else>
-      <span class="label">{{ node.name }}</span>
-    </template>
-    <span class="spacer" />
-    <span class="eye" :class="{ off: !node.visible }" @click.stop="boq.toggleElementVisibility(node.id)">
-      <AppIcon :name="node.visible ? 'eye' : 'eye-closed'" :size="18" />
-    </span>
-    <span class="kebab" @click.stop="emit('kebab', { node, event: $event })">
-      <AppIcon name="kebab" :size="16" />
-    </span>
+      <span v-else class="label">{{ node.name }}</span>
+    </div>
   </div>
   <template v-if="expanded">
     <StructureTreeRow
@@ -146,13 +146,14 @@ function onDrop(e) {
 .tree-row {
   display: flex;
   align-items: center;
-  gap: 4px;
   height: var(--row-h-tree);
   border-radius: 8px;
   padding-left: 4px;
   cursor: pointer;
   position: relative;
   color: var(--text-primary);
+  /* opaque base so the pinned actions gutter can inherit the row's tint */
+  background-color: var(--surface);
 }
 .tree-row:hover {
   background: var(--surface-subtle);
@@ -171,7 +172,7 @@ function onDrop(e) {
     box-shadow: inset 0 0 0 1.5px rgba(91, 147, 239, 0.55);
   }
   100% {
-    background-color: rgba(91, 147, 239, 0);
+    background-color: var(--surface);
     box-shadow: inset 0 0 0 1.5px rgba(91, 147, 239, 0);
   }
 }
@@ -230,9 +231,6 @@ function onDrop(e) {
   width: 149px;
   outline: none;
 }
-.spacer {
-  flex: 1;
-}
 .eye {
   display: inline-flex;
   color: var(--brand-primary);
@@ -242,7 +240,7 @@ function onDrop(e) {
 .eye.off {
   color: var(--brand-primary);
 }
-.hidden-el > .label {
+.hidden-el .label {
   color: var(--text-primary);
 }
 .kebab {
