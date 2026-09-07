@@ -20,6 +20,13 @@ export function formatDateTime(value) {
   return time ? `${date}, ${time}` : date;
 }
 
+/** "21.03.2023  15:33" — date then time, as the catalogs table shows updated-at. */
+export function formatStamp(value) {
+  const date = formatDate(value);
+  const time = formatTime(value);
+  return time ? `${date}  ${time}` : date;
+}
+
 export function formatQty(value, digits = 2) {
   const n = Number(value);
   return Number.isNaN(n) ? "---" : n.toFixed(digits);

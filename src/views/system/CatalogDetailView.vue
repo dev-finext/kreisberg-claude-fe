@@ -116,7 +116,8 @@ const newMenu = ref(null);
 const itemModal = ref(null); // {item, subChapter, initialType}
 const chapterModal = ref(null); // {kind, parentChapter, initial}
 const notesCtx = ref(null);
-const deleteItems = ref(false);
+const deleteIds = ref([]); // items pending deletion (toolbar selection or a single row)
+const rowMenu = ref(null); // {item, x, y}
 const tagPrompt = ref(false);
 const tagName = ref("");
 
@@ -189,13 +190,24 @@ function openItem(item) {
   itemModal.value = { item, subChapter: cat.subChapter(item.subChapterId), initialType: item.type };
 }
 function confirmDeleteItems() {
-  const ids = [...checkedItemIds.value];
+  const ids = [...deleteIds.value];
   for (const ch of db.db.catalog.chapters)
     for (const sc of ch.subChapters) sc.items = sc.items.filter((i) => !ids.includes(i.id));
-  checkedItemIds.value = [];
+  checkedItemIds.value = checkedItemIds.value.filter((id) => !ids.includes(id));
   db.persist();
-  deleteItems.value = false;
-  ui.toast(`${ids.length} סעיפים נמחקו מהקטלוג`);
+  deleteIds.value = [];
+  ui.toast(ids.length === 1 ? "הסעיף נמחק מהקטלוג" : `${ids.length} סעיפים נמחקו מהקטלוג`);
+}
+/* per-row kebab (shows on hover, like the master list) */
+function openRowMenu(item, e) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  rowMenu.value = { item, x: rect.left - 120, y: rect.bottom + 4 };
+}
+function onRowMenu(key) {
+  const item = rowMenu.value.item;
+  rowMenu.value = null;
+  if (key === "edit") openItem(item);
+  else if (key === "delete") deleteIds.value = [item.id];
 }
 function createTag() {
   const name = tagName.value.trim();
@@ -269,14 +281,19 @@ function setActive(v) {
         </div>
         <div class="sh-start">
           <button class="tb-btn" @click="openAddMenu">
-            <AppIcon name="plus-circle" :size="20" />
+            <AppIcon name="plus-circle" :size="24" />
             <span>סעיף</span>
           </button>
-          <button class="tb-btn" @click="tagPrompt = true">
-            <AppIcon name="plus-circle" :size="20" />
+          <button
+            class="tb-btn"
+            :disabled="!checkedItemIds.length"
+            title="ניתן להוסיף תגית חדשה כאשר בוחרים סעיפים"
+            @click="tagPrompt = true"
+          >
+            <AppIcon name="plus-circle" :size="24" />
             <span>תגית</span>
           </button>
-          <button class="tb-btn" :disabled="!checkedItemIds.length" @click="deleteItems = true">
+          <button v-if="checkedItemIds.length" class="tb-btn" @click="deleteIds = [...checkedItemIds]">
             <AppIcon name="trash" :size="18" />
             <span>מחק</span>
           </button>
@@ -291,7 +308,7 @@ function setActive(v) {
           <div class="panel-box">פרקים</div>
           <button class="ghost-btn" @click="openNewMenu">
             <span>חדש</span>
-            <AppIcon name="plus-circle" :size="20" />
+            <AppIcon name="plus-circle" :size="24" />
           </button>
           <div class="tree scroll-slim">
             <div class="tree-root"><AppIcon name="chevron-down" :size="16" /><span>הכל</span></div>
@@ -312,7 +329,7 @@ function setActive(v) {
                   :model-value="chapterChecked(ch)"
                   @update:model-value="(v) => setChapter(ch, v)"
                 />
-                <span class="lbl ellipsis">פרק-{{ ch.num }} {{ ch.name }}</span>
+                <span class="lbl ellipsis">פרק {{ ch.num }}-{{ ch.name }}</span>
               </div>
               <template v-if="expandedChapterIds.includes(ch.id)">
                 <div
@@ -349,13 +366,14 @@ function setActive(v) {
                 <th>סעיף אב</th>
                 <th>עדיפות</th>
                 <th>פחת</th>
+                <th class="th-kebab"></th>
               </tr>
             </thead>
             <tbody>
               <template v-for="g in groups" :key="g.chapter.id">
                 <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
                   <tr class="group-row">
-                    <td colspan="9">
+                    <td colspan="10">
                       <div class="group-inner">
                         <div class="g-lines">
                           <div class="g-title">
@@ -364,7 +382,7 @@ function setActive(v) {
                               class="note-btn"
                               @click="notesCtx = { scope: 'chapter', target: g.chapter }"
                             >
-                              <AppIcon name="note" :size="16" />
+                              <AppIcon name="note" :size="20" />
                               <span v-if="noteCount('chapter', g.chapter.id)" class="note-count num">{{
                                 noteCount("chapter", g.chapter.id)
                               }}</span>
@@ -376,7 +394,7 @@ function setActive(v) {
                               class="note-btn"
                               @click="notesCtx = { scope: 'subChapter', target: sg.subChapter }"
                             >
-                              <AppIcon name="note" :size="16" />
+                              <AppIcon name="note" :size="20" />
                               <span v-if="noteCount('subChapter', sg.subChapter.id)" class="note-count num">{{
                                 noteCount("subChapter", sg.subChapter.id)
                               }}</span>
@@ -418,21 +436,26 @@ function setActive(v) {
                           @update:model-value="(v) => setPriority(item, v)"
                         />
                       </td>
-                      <td class="num">{{ item.amortization || 0 }}%</td>
+                      <td class="td-amort num">{{ item.amortization || 0 }}%</td>
+                      <td class="td-kebab" @click.stop>
+                        <button class="row-kebab" title="פעולות" @click="openRowMenu(item, $event)">
+                          <AppIcon name="kebab" :size="16" />
+                        </button>
+                      </td>
                     </tr>
                     <tr v-if="expandedItemIds.includes(item.id)" class="desc-row">
-                      <td colspan="9">
+                      <td colspan="10">
                         <div class="desc-panel">{{ item.description }}</div>
                       </td>
                     </tr>
                   </template>
                   <tr v-if="!sg.items.length">
-                    <td colspan="9" class="empty-sub">אין סעיפים בתת פרק זה</td>
+                    <td colspan="10" class="empty-sub">אין סעיפים בתת פרק זה</td>
                   </tr>
                 </template>
               </template>
               <tr v-if="!groups.length">
-                <td colspan="9" class="empty-sub">בחר פרק או תת פרק להצגת סעיפים</td>
+                <td colspan="10" class="empty-sub">בחר פרק או תת פרק להצגת סעיפים</td>
               </tr>
             </tbody>
           </table>
@@ -486,11 +509,26 @@ function setActive(v) {
       :target="notesCtx.target"
       @close="notesCtx = null"
     />
+    <ContextMenu
+      v-if="rowMenu"
+      :items="[
+        { key: 'edit', label: 'עריכה', icon: 'pencil' },
+        { key: 'delete', label: 'מחיקה', icon: 'trash', danger: true },
+      ]"
+      :x="rowMenu.x"
+      :y="rowMenu.y"
+      @select="onRowMenu"
+      @close="rowMenu = null"
+    />
     <DeleteConfirmModal
-      v-if="deleteItems"
-      title="מחיקת סעיפים"
-      :message="`האם למחוק ${checkedItemIds.length} סעיפים מהקטלוג?`"
-      @close="deleteItems = false"
+      v-if="deleteIds.length"
+      :title="deleteIds.length === 1 ? 'מחיקת סעיף' : 'מחיקת סעיפים'"
+      :message="
+        deleteIds.length === 1
+          ? 'האם למחוק את הסעיף מהקטלוג?'
+          : `האם למחוק ${deleteIds.length} סעיפים מהקטלוג?`
+      "
+      @close="deleteIds = []"
       @confirm="confirmDeleteItems"
     />
     <Teleport to="body">
@@ -607,17 +645,19 @@ function setActive(v) {
   border-top: 2px solid var(--divider);
   padding-top: 12px;
 }
+/* Figma "cataloge.menu": 291 wide, 2px light divider on the left, 16px side padding */
 .panel {
   width: 291px;
   flex-shrink: 0;
-  border-left: 2px solid var(--divider);
-  padding: 0 0 8px 16px;
+  border-left: 2px solid var(--surface-muted);
+  padding: 0 16px 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+/* the single "פרקים" tab in the BoQ side-menu tabs shell */
 .panel-box {
-  border: 1px solid var(--border);
+  border: 1px solid var(--page-bg);
   border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   height: 34px;
@@ -626,7 +666,7 @@ function setActive(v) {
   justify-content: center;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #315583;
 }
 .ghost-btn {
   display: inline-flex;
@@ -652,16 +692,16 @@ function setActive(v) {
   align-items: center;
   gap: 4px;
   height: 32px;
-  padding: 0 6px;
+  padding: 0 4px 0 28px;
   font-size: 14px;
 }
 .tree-row {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   height: 32px;
   border-radius: 8px;
-  padding: 0 4px;
+  padding: 0 0 0 28px;
   cursor: pointer;
   font-size: 14px;
 }
@@ -673,8 +713,7 @@ function setActive(v) {
   background: var(--brand-primary-soft);
 }
 .tree-row.sub {
-  padding-right: 28px;
-  font-size: 13px;
+  padding-right: 32px;
 }
 .chev {
   display: inline-flex;
@@ -692,28 +731,40 @@ function setActive(v) {
   width: 100%;
   border-collapse: collapse;
 }
+/* Figma "Catalog table": 32px header on the page-bg band, 48px rows with #eeeefc hairlines */
 .items-table th {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
   text-align: right;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--divider);
-  background: var(--surface-subtle);
+  padding: 0 12px;
+  border-bottom: 1px solid #eaeffb;
+  background: var(--page-bg);
   white-space: nowrap;
   position: sticky;
   top: 0;
+  z-index: 2;
 }
 .items-table td {
-  font-size: 13px;
+  height: 48px;
+  font-size: 14px;
+  color: var(--text-primary);
   text-align: right;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--divider);
-  height: 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid #eeeefc;
 }
+.items-table tr > td:first-child {
+  border-right: 1px solid #eeeefc;
+}
+.items-table tr > td:last-child {
+  border-left: 1px solid #eeeefc;
+}
+/* Figma "headers": chapter + sub-chapter lines on #fcfcfc */
 .group-row td {
-  background: var(--surface-subtle);
-  padding: 8px 10px;
+  height: 60px;
+  background: #fcfcfc;
+  padding: 8px 36px;
 }
 .g-lines {
   display: flex;
@@ -725,13 +776,10 @@ function setActive(v) {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
 }
 .g-title {
-  font-weight: 700;
-}
-.g-sub {
-  padding-right: 8px;
+  font-weight: 600;
 }
 .note-btn {
   display: inline-flex;
@@ -765,7 +813,7 @@ function setActive(v) {
 }
 .td-check {
   white-space: nowrap;
-  width: 58px;
+  width: 64px;
 }
 .expand {
   display: inline-flex;
@@ -778,20 +826,56 @@ function setActive(v) {
   table-layout: fixed;
 }
 .td-name {
-  max-width: 150px;
+  max-width: 135px;
 }
 .td-desc {
-  max-width: 220px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  letter-spacing: 0.07px;
 }
+.td-amort {
+  font-size: 12px;
+  text-align: center;
+}
+/* design column widths; the description takes the remainder */
 .items-table th:nth-child(1) {
-  width: 58px;
+  width: 64px;
 }
 .items-table th:nth-child(2) {
-  width: 110px;
+  width: 124px;
 }
-.items-table th:nth-child(4) {
-  width: 24%;
+.items-table th:nth-child(3) {
+  width: 135px;
+}
+.items-table th:nth-child(5) {
+  width: 80px;
+}
+.items-table th:nth-child(6) {
+  width: 124px;
+}
+.items-table th:nth-child(7) {
+  width: 70px;
+}
+.items-table th:nth-child(8) {
+  width: 120px;
+}
+.items-table th:nth-child(9) {
+  width: 67px;
+}
+.th-kebab,
+.td-kebab {
+  width: 48px;
+  padding: 0 12px;
+}
+.row-kebab {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  display: inline-flex;
+  padding: 2px;
+  opacity: 0;
+}
+.item-row:hover .row-kebab {
+  opacity: 1;
 }
 .desc-row td {
   background: var(--row-open-bg);

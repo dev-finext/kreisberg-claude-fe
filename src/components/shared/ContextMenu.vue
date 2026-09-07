@@ -29,8 +29,8 @@ onBeforeUnmount(() => document.removeEventListener("mousedown", onDocClick));
         :disabled="it.disabled"
         @click="emit('select', it.key)"
       >
+        <AppIcon :name="it.icon" :size="24" />
         <span class="ctx-label">{{ it.label }}</span>
-        <AppIcon :name="it.icon" :size="18" />
       </button>
     </div>
   </Teleport>
@@ -41,24 +41,25 @@ onBeforeUnmount(() => document.removeEventListener("mousedown", onDocClick));
   position: fixed;
   z-index: 80;
   background: var(--surface);
-  border-radius: 8px;
-  box-shadow: var(--shadow-menu);
-  min-width: 150px;
-  padding: 6px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 .ctx-item {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start; /* icon hugs the right edge, label to its left (Figma "menu edit") */
   gap: 8px;
-  height: 36px;
-  padding: 0 10px;
+  height: 24px;
+  padding: 0;
   background: none;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  letter-spacing: 0.12px;
   color: var(--text-primary);
 }
 .ctx-item:hover:not(.disabled) {
@@ -72,7 +73,6 @@ onBeforeUnmount(() => document.removeEventListener("mousedown", onDocClick));
   cursor: not-allowed;
 }
 .ctx-label {
-  flex: 1;
   text-align: right;
 }
 </style>

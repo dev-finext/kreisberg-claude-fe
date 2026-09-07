@@ -648,6 +648,17 @@ export const useBoqStore = defineStore("boq", {
       });
       this.db.persist();
     },
+    updateComment(id, text) {
+      const c = this.db.db.comments.find((x) => x.id === id);
+      if (!c) return;
+      c.text = text;
+      c.ts = new Date().toISOString();
+      this.db.persist();
+    },
+    deleteComment(id) {
+      this.db.db.comments = this.db.db.comments.filter((x) => x.id !== id);
+      this.db.persist();
+    },
     historyFor(itemId) {
       return this.db.history
         .filter((h) => h.boqId === this.activeBoqId && h.itemId === itemId)
