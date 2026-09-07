@@ -4,7 +4,8 @@ import { useRoute, useRouter } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
-import { PRIORITY } from "@/constants";
+import { PRIORITY, HISTORY_FIELD_LABELS, HISTORY_VALUE_LABELS } from "@/constants";
+import { formatDateTime } from "@/utils/format";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
@@ -16,6 +17,8 @@ import PriorityControl from "@/components/boq/PriorityControl.vue";
 import ChapterNotesModal from "@/components/boq/ChapterNotesModal.vue";
 import CatalogItemModal from "@/components/catalog/CatalogItemModal.vue";
 import ChapterModal from "@/components/catalog/ChapterModal.vue";
+import TagCreateModal from "@/components/catalog/TagCreateModal.vue";
+import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -109,6 +112,57 @@ function setPriority(item, v) {
 function noteCount(scope, id) {
   return db.comments.filter((c) => c.scope === scope && c.refId === id).length;
 }
+/* chapter / sub-chapter headers carry an "הוספת הערה" pill and show the latest note inline */
+function noteLabel(scope, id) {
+  const n = noteCount(scope, id);
+  return n ? `הערות (${n})` : "הוספת הערה";
+}
+function latestNote(scope, id) {
+  const list = db.comments.filter((c) => c.scope === scope && c.refId === id);
+  return list.length ? list[list.length - 1] : null;
+}
+
+/* ---------- expanded row (Figma "בחירת שורה והצגת תיאור") ---------- */
+const ROW_TABS = [
+  { id: "desc", label: "תיאור" },
+  { id: "notes", label: "הערות" },
+  { id: "related", label: "סעיפים קשורים" },
+  { id: "alts", label: "סעיפים חלופיים" },
+  { id: "history", label: "הסטוריית סעיף" },
+];
+const rowTabs = ref({});
+function rowTab(id) {
+  return rowTabs.value[id] || "desc";
+}
+function setRowTab(id, tab) {
+  rowTabs.value = { ...rowTabs.value, [id]: tab };
+}
+function itemTags(item) {
+  return (item.tags || []).map((id) => cat.tagById.get(id)).filter(Boolean);
+}
+function itemNotes(item) {
+  return db.comments.filter((c) => c.scope === "item" && c.refId === item.id);
+}
+function itemHistory(item) {
+  return db.history.filter((h) => h.itemId === item.id).sort((a, b) => b.ts.localeCompare(a.ts));
+}
+function itemAlts(item) {
+  return (item.alternativeIds || []).map((id) => cat.item(id)).filter(Boolean);
+}
+function fieldLabel(name) {
+  return HISTORY_FIELD_LABELS[name] || name;
+}
+function valueLabel(v) {
+  return HISTORY_VALUE_LABELS[v] ?? v;
+}
+
+/* the catalog is empty until the first section is added (Figma "קטלוג חדש") */
+const totalItems = computed(() =>
+  cat.chapters.reduce(
+    (n, ch) => n + ch.subChapters.reduce((m, sc) => m + sc.items.filter((i) => !i.isNote).length, 0),
+    0
+  )
+);
 
 /* ---------- modals ---------- */
 const addMenu = ref(null);
@@ -118,8 +172,7 @@ const chapterModal = ref(null); // {kind, parentChapter, initial}
 const notesCtx = ref(null);
 const deleteIds = ref([]); // items pending deletion (toolbar selection or a single row)
 const rowMenu = ref(null); // {item, x, y}
-const tagPrompt = ref(false);
-const tagName = ref("");
+const tagModal = ref(false);
 
 function openAddMenu(e) {
   const rect = e.currentTarget.getBoundingClientRect();
@@ -130,12 +183,18 @@ function targetSubChapter() {
   return (
     cat.subChapter(scId) ||
     cat.chapter(selectedChapterId.value)?.subChapters[0] ||
-    cat.chapters[0].subChapters[0]
+    cat.chapters[0]?.subChapters[0] ||
+    null
   );
 }
 function onAdd(kind) {
   addMenu.value = null;
-  itemModal.value = { item: null, subChapter: targetSubChapter(), initialType: kind };
+  const sc = targetSubChapter();
+  if (!sc) {
+    ui.toast("יש להוסיף פרק ותת פרק לפני הוספת סעיפים", "warning");
+    return;
+  }
+  itemModal.value = { item: null, subChapter: sc, initialType: kind };
 }
 function openNewMenu(e) {
   const rect = e.currentTarget.getBoundingClientRect();
@@ -209,26 +268,9 @@ function onRowMenu(key) {
   if (key === "edit") openItem(item);
   else if (key === "delete") deleteIds.value = [item.id];
 }
-function createTag() {
-  const name = tagName.value.trim();
-  if (!name) return;
-  let tag = db.tags.find((t) => t.name === name);
-  if (!tag) {
-    tag = { id: db.nextId("tags"), name };
-    db.db.tags.push(tag);
-  }
-  for (const id of checkedItemIds.value) {
-    const it = cat.item(id);
-    if (it && !it.tags.includes(tag.id)) it.tags.push(tag.id);
-  }
-  db.persist();
-  ui.toast(
-    checkedItemIds.value.length
-      ? `התגית "${name}" שויכה ל-${checkedItemIds.value.length} סעיפים`
-      : `התגית "${name}" נוצרה`
-  );
-  tagPrompt.value = false;
-  tagName.value = "";
+function onTagCreated() {
+  tagModal.value = false;
+  checkedItemIds.value = [];
 }
 
 /* ---------- rename / active ---------- */
@@ -288,7 +330,7 @@ function setActive(v) {
             class="tb-btn"
             :disabled="!checkedItemIds.length"
             title="ניתן להוסיף תגית חדשה כאשר בוחרים סעיפים"
-            @click="tagPrompt = true"
+            @click="tagModal = true"
           >
             <AppIcon name="plus-circle" :size="24" />
             <span>תגית</span>
@@ -352,7 +394,7 @@ function setActive(v) {
 
         <!-- items table -->
         <section class="main scroll-slim">
-          <table class="items-table">
+          <table v-if="totalItems" class="items-table">
             <thead>
               <tr>
                 <th class="th-check">
@@ -374,33 +416,42 @@ function setActive(v) {
                 <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
                   <tr class="group-row">
                     <td colspan="10">
-                      <div class="group-inner">
-                        <div class="g-lines">
-                          <div class="g-title">
-                            <span>פרק {{ g.chapter.num }} - {{ g.chapter.name }}</span>
-                            <button
-                              class="note-btn"
-                              @click="notesCtx = { scope: 'chapter', target: g.chapter }"
-                            >
-                              <AppIcon name="note" :size="20" />
-                              <span v-if="noteCount('chapter', g.chapter.id)" class="note-count num">{{
-                                noteCount("chapter", g.chapter.id)
-                              }}</span>
-                            </button>
-                          </div>
-                          <div class="g-sub">
-                            <span>תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</span>
-                            <button
-                              class="note-btn"
-                              @click="notesCtx = { scope: 'subChapter', target: sg.subChapter }"
-                            >
-                              <AppIcon name="note" :size="20" />
-                              <span v-if="noteCount('subChapter', sg.subChapter.id)" class="note-count num">{{
-                                noteCount("subChapter", sg.subChapter.id)
-                              }}</span>
-                            </button>
-                          </div>
+                      <div class="g-lines">
+                        <div class="g-title">
+                          <span>פרק {{ g.chapter.num }}-{{ g.chapter.name }}</span>
+                          <button
+                            class="note-pill"
+                            @click="notesCtx = { scope: 'chapter', target: g.chapter }"
+                          >
+                            {{ noteLabel("chapter", g.chapter.id) }}
+                          </button>
                         </div>
+                        <!-- latest note, inline under the chapter title (Figma "Note") -->
+                        <p
+                          v-if="latestNote('chapter', g.chapter.id)"
+                          class="g-note"
+                          @click="notesCtx = { scope: 'chapter', target: g.chapter }"
+                        >
+                          <span class="g-note-lbl">הערה:</span>
+                          {{ latestNote("chapter", g.chapter.id).text }}
+                        </p>
+                        <div class="g-sub">
+                          <span>תת פרק {{ sg.subChapter.num }}-{{ sg.subChapter.name }}</span>
+                          <button
+                            class="note-pill"
+                            @click="notesCtx = { scope: 'subChapter', target: sg.subChapter }"
+                          >
+                            {{ noteLabel("subChapter", sg.subChapter.id) }}
+                          </button>
+                        </div>
+                        <p
+                          v-if="latestNote('subChapter', sg.subChapter.id)"
+                          class="g-note"
+                          @click="notesCtx = { scope: 'subChapter', target: sg.subChapter }"
+                        >
+                          <span class="g-note-lbl">הערה:</span>
+                          {{ latestNote("subChapter", sg.subChapter.id).text }}
+                        </p>
                       </div>
                     </td>
                   </tr>
@@ -445,7 +496,70 @@ function setActive(v) {
                     </tr>
                     <tr v-if="expandedItemIds.includes(item.id)" class="desc-row">
                       <td colspan="10">
-                        <div class="desc-panel">{{ item.description }}</div>
+                        <div class="dp">
+                          <div class="dp-head">
+                            <div class="dp-tabs">
+                              <button
+                                v-for="t in ROW_TABS"
+                                :key="t.id"
+                                class="dp-tab"
+                                :class="{ active: rowTab(item.id) === t.id }"
+                                @click="setRowTab(item.id, t.id)"
+                              >
+                                {{ t.label }}
+                              </button>
+                            </div>
+                            <button class="icon-btn" title="עריכת סעיף" @click="openItem(item)">
+                              <AppIcon name="pencil" :size="24" />
+                            </button>
+                          </div>
+
+                          <template v-if="rowTab(item.id) === 'desc'">
+                            <div v-if="itemTags(item).length" class="chips">
+                              <span v-for="t in itemTags(item)" :key="t.id" class="chip">{{ t.name }}</span>
+                            </div>
+                            <p class="dp-text">{{ item.description }}</p>
+                          </template>
+
+                          <template v-else-if="rowTab(item.id) === 'notes'">
+                            <p v-for="n in itemNotes(item)" :key="n.id" class="dp-text">
+                              <span class="g-note-lbl">{{ n.author }} · {{ formatDateTime(n.ts) }}</span>
+                              <br />{{ n.text }}
+                            </p>
+                            <p v-if="!itemNotes(item).length" class="dp-empty">אין הערות לסעיף זה</p>
+                          </template>
+
+                          <template v-else-if="rowTab(item.id) === 'related'">
+                            <p v-if="item.parentId" class="dp-text">
+                              <span class="g-note-lbl">סעיף אב:</span>
+                              {{ parentCode(item) }} · {{ cat.item(item.parentId)?.name }}
+                            </p>
+                            <p v-for="c in cat.childrenOf(item.id)" :key="c.id" class="dp-text">
+                              <span class="g-note-lbl">סעיף בן:</span> {{ c.code }} · {{ c.name }}
+                            </p>
+                            <p v-if="!item.parentId && !cat.childrenOf(item.id).length" class="dp-empty">
+                              אין סעיפים קשורים
+                            </p>
+                          </template>
+
+                          <template v-else-if="rowTab(item.id) === 'alts'">
+                            <p v-for="a in itemAlts(item)" :key="a.id" class="dp-text">
+                              {{ a.code }} · {{ a.name }}
+                            </p>
+                            <p v-if="!itemAlts(item).length" class="dp-empty">לא הוגדרו סעיפים חלופיים</p>
+                          </template>
+
+                          <template v-else>
+                            <p v-for="h in itemHistory(item)" :key="h.id" class="dp-text">
+                              <span class="g-note-lbl">{{ h.user }} · {{ formatDateTime(h.ts) }}</span>
+                              <br />
+                              <span v-for="(c, ci) in h.changes" :key="ci">
+                                {{ fieldLabel(c.field) }}: {{ valueLabel(c.from) }} ← {{ valueLabel(c.to) }}
+                              </span>
+                            </p>
+                            <p v-if="!itemHistory(item).length" class="dp-empty">אין היסטוריה לסעיף זה</p>
+                          </template>
+                        </div>
                       </td>
                     </tr>
                   </template>
@@ -459,6 +573,14 @@ function setActive(v) {
               </tr>
             </tbody>
           </table>
+
+          <!-- Figma "קטלוג חדש": nothing added yet -->
+          <div v-else class="empty">
+            <EmptyClipboard />
+            <p class="empty-title">עדיין לא נוספו סעיפים</p>
+            <p class="empty-sub">אפשר להוסיף סעיפים לקטלוג</p>
+            <button class="btn btn-primary empty-cta" @click="onAdd('regular')">הוספת סעיפים</button>
+          </div>
         </section>
       </div>
     </div>
@@ -531,32 +653,12 @@ function setActive(v) {
       @close="deleteIds = []"
       @confirm="confirmDeleteItems"
     />
-    <Teleport to="body">
-      <div v-if="tagPrompt" class="mini-overlay" @mousedown.self="tagPrompt = false">
-        <div class="mini-modal">
-          <h3 class="m-title">הוספת תגית</h3>
-          <p class="m-msg">
-            {{
-              checkedItemIds.length
-                ? `התגית תשויך ל-${checkedItemIds.length} הסעיפים המסומנים`
-                : "לא סומנו סעיפים — התגית תיווצר בלבד"
-            }}
-          </p>
-          <input
-            v-model="tagName"
-            list="cd-tags"
-            class="input"
-            placeholder="בחר/הקלד ליצירת תגית חדשה"
-            @keyup.enter="createTag"
-          />
-          <datalist id="cd-tags"><option v-for="t in db.tags" :key="t.id" :value="t.name" /></datalist>
-          <div class="m-actions">
-            <button class="btn btn-primary" :disabled="!tagName.trim()" @click="createTag">אישור</button>
-            <button class="btn btn-secondary" @click="tagPrompt = false">ביטול</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <TagCreateModal
+      v-if="tagModal"
+      :preselected="checkedItemIds"
+      @close="tagModal = false"
+      @created="onTagCreated"
+    />
   </div>
 </template>
 
@@ -766,6 +868,9 @@ function setActive(v) {
   background: #fcfcfc;
   padding: 8px 36px;
 }
+.group-row .g-note {
+  padding: 4px 0;
+}
 .g-lines {
   display: flex;
   flex-direction: column;
@@ -781,26 +886,36 @@ function setActive(v) {
 .g-title {
   font-weight: 600;
 }
-.note-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: none;
+/* "הוספת הערה" pill next to a chapter / sub-chapter title */
+.note-pill {
+  height: 24px;
+  padding: 0 8px;
   border: none;
-  color: var(--brand-primary);
-  padding: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  white-space: nowrap;
 }
-.note-count {
-  background: var(--brand-primary);
-  color: #fff;
-  font-size: 10px;
-  border-radius: 999px;
-  min-width: 15px;
-  height: 15px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
+.note-pill:hover {
+  background: var(--surface-muted);
+}
+/* the latest note, shown inline under the title */
+.g-note {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  max-width: 584px;
+  margin-right: auto;
+  cursor: pointer;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.g-note-lbl {
+  font-weight: 600;
 }
 .item-row {
   cursor: pointer;
@@ -877,57 +992,93 @@ function setActive(v) {
 .item-row:hover .row-kebab {
   opacity: 1;
 }
+/* expanded row: tabs on the right, edit on the left, then chips + text */
 .desc-row td {
-  background: var(--row-open-bg);
-  padding: 8px 24px 12px;
+  background: var(--brand-primary-soft);
+  padding: 0;
 }
-.desc-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  line-height: 1.6;
+.dp {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 24px;
+}
+.dp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dp-tabs {
+  display: flex;
+}
+.dp-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid var(--surface-muted);
+  padding: 8px 24px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  white-space: nowrap;
+}
+.dp-tab.active {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+  font-weight: 500;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Figma "Tag catalog" */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 12px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 20px;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.dp-text {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-primary);
   white-space: pre-line;
+}
+.dp-empty {
+  font-size: 14px;
+  color: var(--text-muted);
 }
 .empty-sub {
   text-align: center;
   color: var(--text-muted);
   padding: 20px 0;
 }
-.mini-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(35, 44, 66, 0.4);
+/* empty catalog */
+.empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  z-index: 75;
+  gap: 8px;
+  padding: 72px 0 40px;
 }
-.mini-modal {
-  background: var(--surface);
-  border-radius: 6px;
-  box-shadow: var(--shadow-modal);
-  width: 430px;
-  padding: 24px 28px;
-  text-align: right;
-}
-.m-title {
+.empty-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
+  line-height: 24px;
 }
-.m-msg {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
+.empty-sub {
+  font-size: 14px;
+  color: var(--text-muted);
 }
-.m-actions {
-  display: flex;
-  gap: 12px;
-  flex-direction: row-reverse;
-  justify-content: flex-start;
-  margin-top: 16px;
+.empty-cta {
+  margin-top: 24px;
+  min-width: 199px;
 }
 </style>

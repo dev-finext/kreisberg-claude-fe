@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, computed } from "vue";
+import { reactive, ref, computed, nextTick } from "vue";
 import { useDbStore } from "@/stores/db";
 import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
@@ -8,6 +8,7 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 import { useEscape } from "@/composables/useEscape";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ItemPickerModal from "@/components/boq/ItemPickerModal.vue";
+import { formatDateTime } from "@/utils/format";
 
 const props = defineProps({
   /** existing item (edit) or null (create) */
@@ -25,12 +26,17 @@ const cat = useCatalogStore();
 const ui = useUiStore();
 
 const UNITS = ['מ"ר', 'מ"ק', 'מ"א', "מטר", "יח'", "קומפ'", "נק'", 'ש"ע', "טון", 'ק"ג', "שעה"];
+const AMORT = [0, 3, 5, 8, 10, 12, 15, 20, 25, 30];
+/* right-to-left the tabs read פרטים · הערות · סעיפים קשורים · סעיפים חלופיים */
 const TABS = [
   { id: "details", label: "פרטים" },
   { id: "notes", label: "הערות" },
   { id: "related", label: "סעיפים קשורים" },
   { id: "alternatives", label: "סעיפים חלופיים" },
 ];
+/* the rich-text toolbar is presentational in the demo */
+const TOOLBAR = ["B", "I", "U", "S", "T", "≡", "•", "1.", "❝", "¶", "↺", "↻"];
+
 const activeTab = ref("details");
 const chapter = computed(() => cat.chapter(props.subChapter.chapterId));
 
@@ -52,13 +58,11 @@ const form = reactive({
   parentId: props.item?.parentId ?? null,
   alternativeIds: [...(props.item?.alternativeIds || [])],
 });
-const tagDraft = ref("");
 const picker = ref(null); // 'sub' | 'parent' | 'alt'
 
 const resources = computed(() =>
   form.resourceTypeId ? db.constructors.filter((c) => c.typeId === form.resourceTypeId) : db.constructors
 );
-const tagNames = computed(() => form.tagIds.map((id) => cat.tagById.get(id)?.name).filter(Boolean));
 const parentItem = computed(() => (form.parentId ? cat.item(form.parentId) : null));
 const childItems = computed(() => (props.item ? cat.childrenOf(props.item.id) : []));
 const alternatives = computed(() => form.alternativeIds.map((id) => cat.item(id)).filter(Boolean));
@@ -69,22 +73,63 @@ const valid = computed(
   () => form.code.trim() && form.name.trim() && (!form.isComposite || form.subItems.length >= 2)
 );
 
-function addTag() {
-  const name = tagDraft.value.trim();
-  if (!name) return;
-  let tag = db.tags.find((t) => t.name === name);
-  if (!tag) {
-    tag = { id: db.nextId("tags"), name };
-    db.db.tags.push(tag);
-    db.persist();
-    ui.toast(`התגית "${name}" נוצרה`);
-  }
+/* ---------- tags: pick an existing one or type a new name (Figma "בחירת תגית קיימת") ---------- */
+const tagDraft = ref("");
+const tagOpen = ref(false);
+const tagIdx = ref(0);
+const tagInput = ref(null);
+const chosenTags = computed(() => form.tagIds.map((id) => cat.tagById.get(id)).filter(Boolean));
+const tagMatches = computed(() => {
+  const q = tagDraft.value.trim();
+  return db.tags.filter((t) => !form.tagIds.includes(t.id) && (!q || t.name.includes(q)));
+});
+const canCreateTag = computed(() => {
+  const q = tagDraft.value.trim();
+  return !!q && !db.tags.some((t) => t.name === q);
+});
+function openTags() {
+  tagOpen.value = true;
+  tagIdx.value = 0;
+}
+function pickTag(tag) {
   if (!form.tagIds.includes(tag.id)) form.tagIds.push(tag.id);
   tagDraft.value = "";
+  tagIdx.value = 0;
+  nextTick(() => tagInput.value?.focus());
+}
+function createTag() {
+  const name = tagDraft.value.trim();
+  if (!name) return;
+  const tag = { id: db.nextId("tags"), name };
+  db.db.tags.push(tag);
+  db.persist();
+  ui.toast(`התגית "${name}" נוצרה`);
+  pickTag(tag);
 }
 function removeTag(id) {
   form.tagIds = form.tagIds.filter((t) => t !== id);
 }
+function onTagKeydown(e) {
+  const rows = tagMatches.value.length + (canCreateTag.value ? 1 : 0);
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    tagOpen.value = true;
+    if (!rows) return;
+    tagIdx.value = (tagIdx.value + (e.key === "ArrowDown" ? 1 : -1) + rows) % rows;
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (tagIdx.value < tagMatches.value.length) {
+      const t = tagMatches.value[tagIdx.value];
+      if (t) pickTag(t);
+    } else if (canCreateTag.value) createTag();
+  } else if (e.key === "Escape") {
+    e.stopPropagation();
+    tagOpen.value = false;
+  } else if (e.key === "Backspace" && !tagDraft.value && form.tagIds.length) {
+    form.tagIds.pop();
+  }
+}
+
 function onPicked(ids) {
   if (picker.value === "sub") {
     for (const id of ids)
@@ -100,7 +145,7 @@ function removeSubItem(itemId) {
   form.subItems = form.subItems.filter((s) => s.itemId !== itemId);
 }
 
-/* notes */
+/* ---------- notes tab ---------- */
 const noteDraft = ref("");
 const notes = computed(() =>
   props.item ? db.comments.filter((c) => c.scope === "item" && c.refId === props.item.id) : []
@@ -118,6 +163,12 @@ function addNote() {
   });
   db.persist();
   noteDraft.value = "";
+  ui.toast("ההערה נוספה בהצלחה");
+}
+function removeNote(id) {
+  db.db.comments = db.db.comments.filter((c) => c.id !== id);
+  db.persist();
+  ui.toast("ההערה נמחקה");
 }
 
 function save() {
@@ -177,10 +228,13 @@ function remove() {
 <template>
   <Teleport to="body">
     <div class="cim-overlay" @mousedown.self="emit('close')">
+      <!-- Figma "Popup branches-catalog" / "Popup section edit": 822 wide, 758 content -->
       <div class="cim">
         <div class="cim-header">
           <div class="h-start">
-            <button class="icon-btn" @click="emit('close')"><AppIcon name="cancel" :size="20" /></button>
+            <button class="icon-btn" title="סגירה" @click="emit('close')">
+              <AppIcon name="cancel" :size="24" />
+            </button>
             <span class="cat-lbl">{{ catalogName }}</span>
           </div>
           <div class="h-end">
@@ -190,8 +244,8 @@ function remove() {
         </div>
 
         <div class="composite-row">
-          <BaseToggle v-model="form.isComposite" />
           <span class="composite-lbl">סעיף מורכב</span>
+          <BaseToggle v-model="form.isComposite" />
         </div>
 
         <div class="cim-tabs">
@@ -223,10 +277,8 @@ function remove() {
             <div class="field">
               <label class="field-label">תיאור סעיף</label>
               <div class="desc-box">
-                <div class="desc-toolbar" title="עורך טקסט">
-                  <span class="dt">B</span><span class="dt"><i>I</i></span
-                  ><span class="dt"><u>U</u></span
-                  ><span class="dt"><s>S</s></span>
+                <div class="desc-toolbar" title="עורך טקסט עשיר — בקרוב">
+                  <span v-for="t in TOOLBAR" :key="t" class="dt">{{ t }}</span>
                 </div>
                 <textarea
                   v-model="form.description"
@@ -258,10 +310,9 @@ function remove() {
               </div>
               <div class="field">
                 <label class="field-label">פחת</label>
-                <div class="pct">
-                  <input v-model="form.amortization" type="number" min="0" max="100" class="input num" />
-                  <span class="pct-sign">%</span>
-                </div>
+                <select v-model.number="form.amortization" class="select">
+                  <option v-for="a in AMORT" :key="a" :value="a">{{ a }}%</option>
+                </select>
               </div>
               <div class="field">
                 <label class="field-label">עדיפות</label>
@@ -271,54 +322,78 @@ function remove() {
               </div>
             </div>
 
-            <div class="row-2">
-              <div class="field">
-                <label class="field-label">סוג משאב</label>
-                <select v-model="form.resourceTypeId" class="select">
-                  <option :value="null">בחר סוג משאב</option>
-                  <option v-for="rt in db.resourceTypes" :key="rt.id" :value="rt.id">{{ rt.name }}</option>
-                </select>
+            <!-- right column: סוג משאב over תגיות · left column: משאב -->
+            <div class="row-res">
+              <div class="res-col">
+                <div class="field">
+                  <label class="field-label">סוג משאב</label>
+                  <select v-model="form.resourceTypeId" class="select">
+                    <option :value="null">בחר סוג משאב</option>
+                    <option v-for="rt in db.resourceTypes" :key="rt.id" :value="rt.id">{{ rt.name }}</option>
+                  </select>
+                </div>
+                <div class="field tag-field">
+                  <label class="field-label">תגיות</label>
+                  <div class="tags-field" :class="{ open: tagOpen }" @click="tagInput?.focus()">
+                    <span v-for="t in chosenTags" :key="t.id" class="tag-chip">
+                      {{ t.name }}
+                      <button class="chip-x" title="הסרה" @click.stop="removeTag(t.id)">
+                        <AppIcon name="cancel" :size="10" />
+                      </button>
+                    </span>
+                    <input
+                      ref="tagInput"
+                      v-model="tagDraft"
+                      class="tag-input"
+                      :placeholder="chosenTags.length ? '' : 'בחר/הקלד ליצירת תגית חדשה'"
+                      @focus="openTags"
+                      @blur="tagOpen = false"
+                      @keydown="onTagKeydown"
+                    />
+                    <AppIcon class="tag-caret" name="chevron-down" :size="24" />
+                  </div>
+                  <!-- existing-tag picker -->
+                  <div v-if="tagOpen && (tagMatches.length || canCreateTag)" class="tag-menu scroll-slim">
+                    <button
+                      v-for="(t, i) in tagMatches"
+                      :key="t.id"
+                      class="tag-opt"
+                      :class="{ hl: i === tagIdx }"
+                      @mousedown.prevent="pickTag(t)"
+                    >
+                      {{ t.name }}
+                    </button>
+                    <button
+                      v-if="canCreateTag"
+                      class="tag-opt create"
+                      :class="{ hl: tagIdx === tagMatches.length }"
+                      @mousedown.prevent="createTag"
+                    >
+                      <AppIcon name="plus-circle" :size="16" />
+                      <span>יצירת התגית "{{ tagDraft.trim() }}"</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div class="field grow">
-                <label class="field-label">משאב</label>
-                <select v-model="form.resourceId" class="select">
-                  <option :value="null">בחר משאב</option>
-                  <option v-for="r in resources" :key="r.id" :value="r.id">{{ r.name }}</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="field-label">תגיות</label>
-              <div class="tags-field">
-                <span v-for="(n, i) in tagNames" :key="n" class="tag-chip">
-                  {{ n }}
-                  <button class="chip-x" @click="removeTag(form.tagIds[i])">
-                    <AppIcon name="cancel" :size="10" />
-                  </button>
-                </span>
-                <input
-                  v-model="tagDraft"
-                  list="cim-tag-options"
-                  class="tag-input"
-                  placeholder="בחר/הקלד ליצירת תגית חדשה"
-                  @keyup.enter="addTag"
-                  @blur="addTag"
-                />
-                <datalist id="cim-tag-options">
-                  <option v-for="t in db.tags" :key="t.id" :value="t.name" />
-                </datalist>
+              <div class="res-col res-left">
+                <div class="field">
+                  <label class="field-label">משאב</label>
+                  <select v-model="form.resourceId" class="select">
+                    <option :value="null">בחר משאב</option>
+                    <option v-for="r in resources" :key="r.id" :value="r.id">{{ r.name }}</option>
+                  </select>
+                </div>
               </div>
             </div>
 
             <!-- composite sub-items -->
             <div v-if="form.isComposite" class="sub-section">
               <div class="sub-head">
-                <button class="btn-text add-sub" @click="picker = 'sub'">
-                  <AppIcon name="plus-circle" :size="18" />
-                  <span>הוספת תתי סעיפים</span>
-                </button>
                 <h4 class="sub-title">תתי סעיפים ({{ form.subItems.length }})</h4>
+                <button class="btn-text add-sub" @click="picker = 'sub'">
+                  <span>הוספת תתי סעיפים</span>
+                  <AppIcon name="plus-circle" :size="24" />
+                </button>
               </div>
               <table v-if="subItemRows.length" class="nested">
                 <thead>
@@ -347,8 +422,8 @@ function remove() {
                       />
                     </td>
                     <td>
-                      <button class="icon-btn danger" @click="removeSubItem(s.itemId)">
-                        <AppIcon name="trash" :size="15" />
+                      <button class="icon-btn danger" title="הסרה" @click="removeSubItem(s.itemId)">
+                        <AppIcon name="trash" :size="18" />
                       </button>
                     </td>
                   </tr>
@@ -374,14 +449,18 @@ function remove() {
             </div>
             <p v-if="!item" class="hint">ניתן להוסיף הערות לאחר שמירת הסעיף</p>
             <div v-for="n in notes" :key="n.id" class="note-card">
-              <div class="note-meta">
-                <span class="author">{{ n.author }}</span>
+              <div class="note-head">
+                <span class="author">{{ n.author }} · {{ formatDateTime(n.ts) }}</span>
+                <button class="icon-btn danger" title="מחיקה" @click="removeNote(n.id)">
+                  <AppIcon name="trash" :size="18" />
+                </button>
               </div>
               <p>{{ n.text }}</p>
             </div>
+            <p v-if="item && !notes.length" class="hint">אין הערות עדיין</p>
           </template>
 
-          <!-- קשורים -->
+          <!-- סעיפים קשורים -->
           <template v-else-if="activeTab === 'related'">
             <div class="field">
               <label class="field-label">סעיף אב</label>
@@ -410,7 +489,7 @@ function remove() {
             </div>
           </template>
 
-          <!-- חלופיים -->
+          <!-- סעיפים חלופיים -->
           <template v-else>
             <div v-if="alternatives.length" class="list">
               <div v-for="a in alternatives" :key="a.id" class="list-row">
@@ -418,14 +497,18 @@ function remove() {
                 <span class="ellipsis">{{ a.name }}</span>
                 <button
                   class="icon-btn danger"
+                  title="הסרה"
                   @click="form.alternativeIds = form.alternativeIds.filter((x) => x !== a.id)"
                 >
-                  <AppIcon name="trash" :size="15" />
+                  <AppIcon name="trash" :size="18" />
                 </button>
               </div>
             </div>
             <p v-else class="hint">לא הוגדרו סעיפים חלופיים</p>
-            <button class="btn-text" @click="picker = 'alt'">הוספה</button>
+            <button class="btn-text add-sub" @click="picker = 'alt'">
+              <span>הוספת סעיפים חלופיים</span>
+              <AppIcon name="plus-circle" :size="24" />
+            </button>
           </template>
         </div>
 
@@ -434,9 +517,9 @@ function remove() {
             <button class="btn btn-primary" :disabled="!valid" @click="save">שמירה</button>
             <button class="btn btn-secondary" @click="emit('close')">ביטול</button>
           </div>
-          <button v-if="item" class="btn-danger-text" @click="remove">
-            <AppIcon name="trash" :size="16" />
+          <button v-if="item" class="del-btn" @click="remove">
             <span>מחיקת סעיף</span>
+            <AppIcon name="trash" :size="24" />
           </button>
         </div>
       </div>
@@ -463,40 +546,46 @@ function remove() {
   z-index: 65;
 }
 .cim {
-  width: 820px;
+  width: 822px;
   max-width: 95vw;
   max-height: 92vh;
   background: var(--surface);
-  border-radius: var(--radius-modal);
+  border-radius: 6px;
   box-shadow: var(--shadow-modal);
   display: flex;
   flex-direction: column;
-  padding: 8px 0 0;
+  gap: 16px;
+  padding: 16px 32px;
 }
+/* header: title block on the right, close + catalog name on the left */
 .cim-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   flex-direction: row-reverse;
-  padding: 10px 32px 4px;
 }
 .h-end {
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .cim-title {
   font-size: 16px;
   font-weight: 700;
+  line-height: 24px;
   color: var(--text-secondary);
 }
 .cim-sub {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-top: 4px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--text-primary);
 }
 .h-start {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-direction: row-reverse;
 }
 .cat-lbl {
   font-size: 12px;
@@ -507,36 +596,38 @@ function remove() {
   border: none;
   color: var(--text-primary);
   display: inline-flex;
-  padding: 2px;
+  padding: 0;
 }
 .icon-btn.danger {
   color: var(--danger);
 }
+/* סעיף מורכב sits on the right edge, label then toggle */
 .composite-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-direction: row-reverse;
-  padding: 8px 32px 4px;
+  gap: 8px;
+  height: 24px;
 }
 .composite-lbl {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--text-primary);
 }
+/* tabs: each carries its own 2px underline (gray-light, blue when active) */
 .cim-tabs {
   display: flex;
-  padding: 0 32px;
-  border-bottom: 1.5px solid var(--divider);
+  height: 34px;
 }
 .tab {
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1.5px;
-  padding: 8px 18px;
+  border-bottom: 2px solid var(--surface-muted);
+  padding: 8px 24px;
   font-size: 14px;
+  line-height: 18px;
   color: var(--text-secondary);
   font-family: inherit;
+  white-space: nowrap;
 }
 .tab.active {
   color: var(--brand-primary);
@@ -544,100 +635,128 @@ function remove() {
   font-weight: 500;
 }
 .cim-body {
-  padding: 18px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   overflow-y: auto;
   flex: 1;
   text-align: right;
 }
 .field {
-  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .field-label {
   font-size: 12px;
   font-weight: 600;
-  display: block;
-  margin-bottom: 4px;
+  line-height: 14px;
+  color: var(--text-primary);
+  padding: 0 8px;
   text-align: right;
 }
 .row-code-name,
-.row-2 {
+.row-res {
   display: flex;
-  gap: 16px;
+  gap: 24px;
 }
 .row-code-name .code {
-  width: 160px;
+  width: 171px;
   flex-shrink: 0;
 }
 .grow {
   flex: 1;
+  min-width: 0;
 }
 .row-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 24px;
 }
+.res-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.res-left {
+  align-self: flex-start;
+  width: 367px;
+  flex: 0 0 367px;
+}
+/* description: rich-text frame with a toolbar strip */
 .desc-box {
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
 }
 .desc-toolbar {
   display: flex;
-  gap: 6px;
-  border-bottom: 1px solid var(--divider);
-  padding: 6px 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--border-strong);
+  padding: 8px 16px;
   color: var(--text-secondary);
 }
 .dt {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 .desc-input {
   width: 100%;
   border: none;
   outline: none;
-  padding: 10px 12px;
+  padding: 13px 16px 16px;
   font-family: inherit;
-  font-size: 13px;
-  min-height: 96px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-primary);
+  min-height: 104px;
   resize: vertical;
   text-align: right;
 }
-.pct {
+/* tags combo */
+.tag-field {
   position: relative;
-}
-.pct-sign {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-  font-size: 13px;
 }
 .tags-field {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  min-height: var(--input-h);
+  min-height: 40px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 4px 8px;
+  cursor: text;
+  background: var(--surface);
+}
+.tags-field.open {
+  border-color: var(--brand-primary);
+}
+.tag-caret {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  order: 99;
 }
 .tag-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--brand-primary-soft);
-  color: var(--text-primary);
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 12px;
+  background: var(--surface-muted);
+  border: 1px solid var(--text-secondary);
+  color: var(--text-secondary);
+  border-radius: 20px;
+  height: 24px;
+  padding: 0 12px;
+  font-size: 14px;
 }
 .chip-x {
   background: none;
@@ -648,34 +767,79 @@ function remove() {
 }
 .tag-input {
   flex: 1;
-  min-width: 140px;
+  min-width: 120px;
   border: none;
   outline: none;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
+  color: var(--text-primary);
+  text-align: right;
+  background: none;
+}
+.tag-input::placeholder {
+  color: var(--text-disabled);
+}
+.tag-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 5;
+  max-height: 208px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(16, 37, 86, 0.14);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+.tag-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 0 10px;
+  height: 32px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-primary);
   text-align: right;
 }
+.tag-opt.hl,
+.tag-opt:hover {
+  background: var(--brand-primary-soft);
+}
+.tag-opt.create {
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+/* composite sub-items */
 .sub-section {
-  margin-top: 6px;
   border-top: 1px solid var(--divider);
   padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .sub-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-direction: row-reverse;
-  margin-bottom: 8px;
 }
 .sub-title {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 .add-sub {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  flex-direction: row-reverse;
+  gap: 2px;
+  font-size: 12px;
   font-weight: 600;
 }
 .nested {
@@ -688,34 +852,32 @@ function remove() {
 }
 .nested th {
   font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 500;
+  color: var(--text-primary);
+  font-weight: 600;
   text-align: right;
-  padding: 6px 10px;
-  background: var(--surface-subtle);
+  padding: 6px 12px;
+  background: var(--page-bg);
 }
 .nested td {
-  font-size: 13px;
+  font-size: 14px;
   text-align: right;
-  padding: 5px 10px;
-  border-top: 1px solid var(--divider);
-  height: 40px;
+  padding: 5px 12px;
+  border-top: 1px solid #eeeefc;
+  height: 48px;
 }
 .qty {
   width: 72px;
-  height: 30px;
+  height: 32px;
   text-align: center;
 }
 .hint {
   font-size: 13px;
   color: var(--text-muted);
-  padding: 8px 0;
 }
 .note-editor {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  margin-bottom: 10px;
 }
 .note-input {
   height: auto;
@@ -727,19 +889,22 @@ function remove() {
   font-size: 12px;
 }
 .note-card {
-  background: var(--surface-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 8px;
-  font-size: 13px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 18px;
 }
-.note-meta {
-  font-size: 11px;
-  color: var(--text-secondary);
-  margin-bottom: 3px;
+.note-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
 .author {
-  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 .parent-field {
   display: flex;
@@ -750,14 +915,13 @@ function remove() {
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 8px;
 }
 .list-row {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 14px;
   border-bottom: 1px solid var(--divider);
 }
 .list-row:last-child {
@@ -766,16 +930,31 @@ function remove() {
 .list-row .ellipsis {
   flex: 1;
 }
+/* footer: שמירה / ביטול on the left, מחיקת סעיף on the right */
 .cim-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: row-reverse;
-  border-top: 1.5px solid var(--divider);
-  padding: 14px 32px;
+  height: 40px;
 }
 .f-start {
   display: flex;
   gap: 12px;
+  flex-direction: row-reverse;
+}
+.del-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 0 8px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
 }
 </style>
