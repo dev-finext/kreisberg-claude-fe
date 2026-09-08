@@ -25,7 +25,7 @@ const adding = ref(false);
 const newName = ref("");
 const newActive = ref(true);
 const newInput = ref(null);
-const flashNew = useFlash();
+const flashNew = useFlash("catalog");
 
 const MENU_ITEMS = [
   { key: "edit", label: "עריכה", icon: "pencil" },
@@ -184,6 +184,7 @@ function confirmDelete() {
             :key="c.id"
             class="row"
             :class="{ 'flash-new': flashNew.isNew(c.id) }"
+            :data-flash="flashNew.mark(c.id)"
             @click="router.push(`/system/catalogs/${c.id}`)"
           >
             <td class="td-name">{{ c.name }}</td>

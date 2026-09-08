@@ -23,13 +23,9 @@ import TagCreateModal from "@/components/catalog/TagCreateModal.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 
 /* 5-second highlight on anything just created, so it stands out among the rest */
-const flashChapters = useFlash();
-const flashSubs = useFlash();
-const flashItems = useFlash();
-async function revealItemRow(id) {
-  await nextTick();
-  document.querySelector(`[data-item-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
-}
+const flashChapters = useFlash("chapter");
+const flashSubs = useFlash("sub");
+const flashItems = useFlash("item");
 
 const route = useRoute();
 const router = useRouter();
@@ -273,7 +269,6 @@ function onItemSaved(item) {
     checkedSubIds.value.push(item.subChapterId);
   selectedChapterId.value = item.chapterId;
   flashItems.flash(item.id);
-  revealItemRow(item.id);
 }
 function confirmDeleteItems() {
   const ids = [...deleteIds.value];
@@ -386,6 +381,7 @@ function setActive(v) {
               <div
                 class="tree-row"
                 :class="{ selected: ch.id === selectedChapterId, 'flash-ring': flashChapters.isNew(ch.id) }"
+                :data-flash="flashChapters.mark(ch.id)"
                 @click="selectedChapterId = ch.id"
               >
                 <span class="chev" @click.stop="toggleExpand(ch.id)">
@@ -407,6 +403,7 @@ function setActive(v) {
                   :key="sc.id"
                   class="tree-row sub"
                   :class="{ checked: checkedSubIds.includes(sc.id), 'flash-ring': flashSubs.isNew(sc.id) }"
+                  :data-flash="flashSubs.mark(sc.id)"
                 >
                   <BaseCheckbox
                     size="small"
@@ -490,7 +487,7 @@ function setActive(v) {
                         checked: checkedItemIds.includes(item.id),
                         'flash-new': flashItems.isNew(item.id),
                       }"
-                      :data-item-id="item.id"
+                      :data-flash="flashItems.mark(item.id)"
                       @click="openItem(item)"
                     >
                       <td class="td-check" @click.stop>

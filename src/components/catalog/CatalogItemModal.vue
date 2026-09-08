@@ -59,7 +59,7 @@ const form = reactive({
   alternativeIds: [...(props.item?.alternativeIds || [])],
 });
 const picker = ref(null); // 'sub' | 'parent' | 'alt'
-const flashSubItems = useFlash();
+const flashSubItems = useFlash("subitem");
 
 const resources = computed(() =>
   form.resourceTypeId ? db.constructors.filter((c) => c.typeId === form.resourceTypeId) : db.constructors
@@ -410,6 +410,7 @@ function remove() {
                     v-for="s in subItemRows"
                     :key="s.itemId"
                     :class="{ 'flash-new': flashSubItems.isNew(s.itemId) }"
+                    :data-flash="flashSubItems.mark(s.itemId)"
                   >
                     <td>
                       <span class="item-code">{{ s.item.code }}</span>

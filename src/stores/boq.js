@@ -1,8 +1,10 @@
+import { nextTick } from "vue";
 import { defineStore } from "pinia";
 import { useDbStore } from "./db";
 import { useCatalogStore } from "./catalog";
 import { useUiStore } from "./ui";
 import { PRIORITY, SIDEBAR_MODE } from "@/constants";
+import { revealFlashed } from "@/composables/useFlash";
 
 /**
  * BOQ domain logic. Encodes the business rules from Matty's spec (v5),
@@ -237,7 +239,7 @@ export const useBoqStore = defineStore("boq", {
      * making a fresh בן / פרק / סעיף easy to find among the existing rows.
      * kind: 'element' (שיוך tree) | 'item' (כתב כמויות rows, by catalog itemId).
      */
-    flash(kind, ids) {
+    async flash(kind, ids) {
       const list = [...new Set((Array.isArray(ids) ? ids : [ids]).filter((v) => v != null))];
       if (!list.length) return;
       const key = kind === "element" ? "flashElementIds" : "flashItemIds";
@@ -245,6 +247,9 @@ export const useBoqStore = defineStore("boq", {
       setTimeout(() => {
         this[key] = this[key].filter((id) => !list.includes(id));
       }, 5000);
+      /* bring the new row on screen, so the highlight is actually seen */
+      await nextTick();
+      revealFlashed(`${kind}:${list[0]}`);
     },
 
     /* =============== editor session =============== */

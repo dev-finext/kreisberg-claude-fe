@@ -304,7 +304,11 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
       <!-- ================= שיוך ================= -->
       <tbody v-if="mode === SIDEBAR_MODE.ASSIGNMENT">
         <template v-for="r in assignment.rows" :key="r.key">
-          <tr class="item-row" :class="{ open: isOpen(r), checked: rowChecked(r), 'flash-new': isNewRow(r) }">
+          <tr
+            class="item-row"
+            :class="{ open: isOpen(r), checked: rowChecked(r), 'flash-new': isNewRow(r) }"
+            :data-flash="`item:${r.item?.id}`"
+          >
             <td class="td-check">
               <span class="expand" @click="toggleOpen(r)">
                 <AppIcon :name="isOpen(r) ? 'chevron-down' : 'chevron-left'" :size="16" />
@@ -473,6 +477,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
               <tr
                 class="item-row"
                 :class="{ open: isOpen(r), checked: rowChecked(r), 'flash-new': isNewRow(r) }"
+                :data-flash="`item:${r.item?.id}`"
               >
                 <td class="td-check">
                   <span class="expand" @click="toggleOpen(r)">
