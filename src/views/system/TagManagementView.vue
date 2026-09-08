@@ -21,7 +21,7 @@ const active = ref(true);
 const search = ref("");
 
 /* ---------- tags panel ---------- */
-const flashTags = useFlash();
+const flashTags = useFlash("tag");
 const selectedTagId = ref(db.tags[0]?.id ?? null);
 const selectedTag = computed(() => db.tags.find((t) => t.id === selectedTagId.value) || null);
 const editingTagId = ref(null); // id, or "new"
@@ -201,6 +201,7 @@ function saveAll() {
                 editing: editingTagId === t.id,
                 'flash-ring': flashTags.isNew(t.id),
               }"
+              :data-flash="flashTags.mark(t.id)"
               @click="selectedTagId = t.id"
               @dblclick="startRename(t)"
             >

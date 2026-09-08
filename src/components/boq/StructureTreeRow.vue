@@ -91,6 +91,7 @@ function onDrop(e) {
       'hidden-el': !node.visible,
     }"
     :title="pathTitle"
+    :data-flash="`element:${node.id}`"
     draggable="true"
     @dragstart="onDragStart"
     @dragover="onDragOver"
