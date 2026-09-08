@@ -7,6 +7,7 @@ import { useDbStore } from "@/stores/db";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import PriorityControl from "./PriorityControl.vue";
 import { formatDateTime, formatQty } from "@/utils/format";
+import { sanitizeHtml } from "@/utils/html";
 import { HISTORY_FIELD_LABELS, HISTORY_VALUE_LABELS } from "@/constants";
 
 const props = defineProps({
@@ -95,7 +96,12 @@ function fmtVal(field, v) {
 
     <!-- תיאור -->
     <div v-if="activeTab === 'desc'" class="p-body desc scroll-slim">
-      <p class="desc-text">{{ row.description || item.description || "אין תיאור לסעיף זה" }}</p>
+      <p
+        v-if="row.description || item.description"
+        class="desc-text"
+        v-html="sanitizeHtml(row.description || item.description)"
+      ></p>
+      <p v-else class="desc-text">אין תיאור לסעיף זה</p>
     </div>
 
     <!-- הערות -->
@@ -127,7 +133,7 @@ function fmtVal(field, v) {
             <span class="note-author">{{ n.author }}</span>
             <span class="note-ts num">{{ formatDateTime(n.ts) }}</span>
           </div>
-          <p class="note-text">{{ n.text }}</p>
+          <p class="note-text" v-html="sanitizeHtml(n.text)"></p>
         </div>
       </div>
       <p v-else-if="!addingNote" class="p-empty">אין הערות לסעיף זה</p>

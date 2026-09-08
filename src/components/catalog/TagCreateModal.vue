@@ -7,6 +7,7 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import { useEscape } from "@/composables/useEscape";
+import { stripHtml } from "@/utils/html";
 
 const props = defineProps({
   /** item ids ticked in the catalog table when the popup was opened */
@@ -84,7 +85,7 @@ const tree = computed(() => {
       if (tab.value === "picked") items = items.filter((i) => checked.value.includes(i.id));
       if (q)
         items = items.filter(
-          (i) => i.name.includes(q) || i.code.includes(q) || (i.description || "").includes(q)
+          (i) => i.name.includes(q) || i.code.includes(q) || stripHtml(i.description).includes(q)
         );
       if (items.length) subs.push({ sub: sc, items });
     }
@@ -113,7 +114,7 @@ const rows = computed(() => {
       });
       if (!isOpen(`s${s.sub.id}`)) continue;
       for (const i of s.items)
-        out.push({ kind: "item", key: `i${i.id}`, label: i.description || i.name, ids: [i.id] });
+        out.push({ kind: "item", key: `i${i.id}`, label: stripHtml(i.description) || i.name, ids: [i.id] });
     }
   }
   return out;

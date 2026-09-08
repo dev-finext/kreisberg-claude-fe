@@ -219,5 +219,147 @@ defineProps({
       <rect x="4" y="9" width="16" height="11.5" rx="1.5" />
       <path d="M8 9V5.5h8V9M4 13.5h16" />
     </template>
+    <!-- rich-text toolbar (Figma "rich text"): letterforms plus 1.5px line glyphs -->
+    <template v-else-if="name === 'rt-bold'">
+      <text
+        x="12"
+        y="17.5"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="16"
+        fill="currentColor"
+        stroke="none"
+      >
+        B
+      </text>
+    </template>
+    <template v-else-if="name === 'rt-italic'">
+      <text
+        x="12"
+        y="17.5"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="16"
+        font-style="italic"
+        fill="currentColor"
+        stroke="none"
+      >
+        I
+      </text>
+    </template>
+    <template v-else-if="name === 'rt-underline'">
+      <text
+        x="12"
+        y="16"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="15"
+        fill="currentColor"
+        stroke="none"
+      >
+        U
+      </text>
+      <path d="M6 19.5h12" />
+    </template>
+    <template v-else-if="name === 'rt-strike'">
+      <text
+        x="12"
+        y="17.5"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="16"
+        fill="currentColor"
+        stroke="none"
+      >
+        S
+      </text>
+      <path d="M5 12h14" />
+    </template>
+    <template v-else-if="name === 'rt-text-color'">
+      <text
+        x="10"
+        y="16"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="14"
+        fill="currentColor"
+        stroke="none"
+      >
+        T
+      </text>
+      <path d="M17.5 15.5c1 1.1 1.5 1.9 1.5 2.6a1.5 1.5 0 0 1-3 0c0-.7.5-1.5 1.5-2.6z" />
+    </template>
+    <template v-else-if="name === 'rt-fill'">
+      <path d="M9 4.5l7.5 7.5-6 6a1.8 1.8 0 0 1-2.6 0l-3.9-3.9a1.8 1.8 0 0 1 0-2.6z" />
+      <path d="M6.5 7l-1.6-1.6" />
+      <path d="M19.5 16.4c.9 1 1.4 1.8 1.4 2.4a1.4 1.4 0 0 1-2.8 0c0-.6.5-1.4 1.4-2.4z" />
+    </template>
+    <template v-else-if="name === 'rt-emoji'">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M9 14.2c.7.9 1.7 1.4 3 1.4s2.3-.5 3-1.4" />
+      <path d="M9.3 9.8h.01M14.7 9.8h.01" stroke-width="2" />
+    </template>
+    <template v-else-if="name === 'rt-pilcrow'">
+      <text
+        x="12"
+        y="18"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="17"
+        fill="currentColor"
+        stroke="none"
+      >
+        ¶
+      </text>
+    </template>
+    <template v-else-if="name === 'rt-align'">
+      <path d="M4 7h14M4 11h9M4 15h12" />
+      <path d="M17.5 18l1.7 1.8L21 18" />
+    </template>
+    <template v-else-if="name === 'rt-ol'">
+      <path d="M9 7h9M9 12h9M9 17h6" />
+      <text x="4.5" y="9" text-anchor="middle" font-size="6.5" fill="currentColor" stroke="none">1</text>
+      <text x="4.5" y="14.5" text-anchor="middle" font-size="6.5" fill="currentColor" stroke="none">2</text>
+      <path d="M17.5 18.2l1.7 1.8L21 18.2" />
+    </template>
+    <template v-else-if="name === 'rt-ul'">
+      <path d="M9 7h9M9 12h9M9 17h6" />
+      <path d="M4.5 7h.01M4.5 12h.01M4.5 17h.01" stroke-width="2.2" />
+      <path d="M17.5 18.2l1.7 1.8L21 18.2" />
+    </template>
+    <template v-else-if="name === 'rt-indent'">
+      <path d="M4 5h16M9 9.5h11M9 14.5h11M4 19h16" />
+      <path d="M4 9.5l2.5 2.5L4 14.5z" fill="currentColor" stroke="none" />
+    </template>
+    <template v-else-if="name === 'rt-outdent'">
+      <path d="M4 5h16M9 9.5h11M9 14.5h11M4 19h16" />
+      <path d="M7 9.5L4.5 12 7 14.5z" fill="currentColor" stroke="none" />
+    </template>
+    <template v-else-if="name === 'rt-image'">
+      <rect x="3.5" y="5" width="17" height="14" rx="2" />
+      <circle cx="9" cy="10" r="1.4" />
+      <path d="M4 16.5l4.2-4.2a1.5 1.5 0 0 1 2.1 0L14 16m2-2.4a1.5 1.5 0 0 1 2.1 0l1.9 1.9" />
+    </template>
+    <template v-else-if="name === 'rt-clip'">
+      <path
+        d="M17.5 10.5l-6.6 6.6a3.4 3.4 0 0 1-4.8-4.8l7.4-7.4a2.3 2.3 0 0 1 3.2 3.2l-7.3 7.3a1.1 1.1 0 0 1-1.6-1.6l6.3-6.3"
+      />
+    </template>
+    <template v-else-if="name === 'rt-file'">
+      <path d="M6.5 3.5h7L18 8v12.5H6.5z" />
+      <path d="M13.5 3.5V8H18" />
+    </template>
+    <template v-else-if="name === 'rt-video'">
+      <rect x="3.5" y="6.5" width="12" height="11" rx="2" />
+      <path d="M15.5 11l4.5-2.8v7.6L15.5 13z" />
+    </template>
+    <template v-else-if="name === 'rt-undo'">
+      <path d="M9 8.5H15a4.5 4.5 0 0 1 0 9h-4" />
+      <path d="M11.5 5.5L8.5 8.5l3 3" />
+    </template>
+    <template v-else-if="name === 'rt-redo'">
+      <path d="M15 8.5H9a4.5 4.5 0 0 0 0 9h4" />
+      <path d="M12.5 5.5l3 3-3 3" />
+    </template>
   </svg>
 </template>

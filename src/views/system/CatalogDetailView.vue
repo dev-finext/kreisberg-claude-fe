@@ -6,6 +6,7 @@ import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
 import { PRIORITY, HISTORY_FIELD_LABELS, HISTORY_VALUE_LABELS } from "@/constants";
 import { formatDateTime } from "@/utils/format";
+import { sanitizeHtml, stripHtml } from "@/utils/html";
 import { useFlash } from "@/composables/useFlash";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
@@ -83,7 +84,9 @@ const groups = computed(() => {
     const subGroups = [];
     for (const sc of subs) {
       const items = sc.items.filter(
-        (i) => !i.isNote && (!t || i.name.includes(t) || i.code.includes(t) || i.description.includes(t))
+        (i) =>
+          !i.isNote &&
+          (!t || i.name.includes(t) || i.code.includes(t) || stripHtml(i.description).includes(t))
       );
       if (items.length || !t) subGroups.push({ subChapter: sc, items });
     }
@@ -458,7 +461,7 @@ function setActive(v) {
                           @click="notesCtx = { scope: 'chapter', target: g.chapter }"
                         >
                           <span class="g-note-lbl">הערה:</span>
-                          {{ latestNote("chapter", g.chapter.id).text }}
+                          {{ stripHtml(latestNote("chapter", g.chapter.id).text) }}
                         </p>
                         <div class="g-sub">
                           <span>תת פרק {{ sg.subChapter.num }}-{{ sg.subChapter.name }}</span>
@@ -475,7 +478,7 @@ function setActive(v) {
                           @click="notesCtx = { scope: 'subChapter', target: sg.subChapter }"
                         >
                           <span class="g-note-lbl">הערה:</span>
-                          {{ latestNote("subChapter", sg.subChapter.id).text }}
+                          {{ stripHtml(latestNote("subChapter", sg.subChapter.id).text) }}
                         </p>
                       </div>
                     </td>
@@ -506,7 +509,7 @@ function setActive(v) {
                         <span class="item-code">{{ item.code }}</span>
                       </td>
                       <td class="td-name ellipsis">{{ item.name }}</td>
-                      <td class="td-desc ellipsis">{{ item.description }}</td>
+                      <td class="td-desc ellipsis">{{ stripHtml(item.description) }}</td>
                       <td>{{ item.unit }}</td>
                       <td>{{ resourceTypeName(item) }}</td>
                       <td class="num">{{ parentCode(item) }}</td>
@@ -547,13 +550,13 @@ function setActive(v) {
                             <div v-if="itemTags(item).length" class="chips">
                               <span v-for="t in itemTags(item)" :key="t.id" class="chip">{{ t.name }}</span>
                             </div>
-                            <p class="dp-text">{{ item.description }}</p>
+                            <p class="dp-text" v-html="sanitizeHtml(item.description)"></p>
                           </template>
 
                           <template v-else-if="rowTab(item.id) === 'notes'">
                             <p v-for="n in itemNotes(item)" :key="n.id" class="dp-text">
                               <span class="g-note-lbl">{{ n.author }} · {{ formatDateTime(n.ts) }}</span>
-                              <br />{{ n.text }}
+                              <br /><span v-html="sanitizeHtml(n.text)"></span>
                             </p>
                             <p v-if="!itemNotes(item).length" class="dp-empty">אין הערות לסעיף זה</p>
                           </template>
