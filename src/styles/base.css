@@ -291,10 +291,26 @@ textarea {
   }
 }
 .flash-new {
-  animation: flashNew 5s ease-out forwards;
+  animation: flashNew 5s ease-out;
+}
+/* outline variant, for rows that already carry a selected background */
+@keyframes flashRing {
+  0% {
+    box-shadow: inset 0 0 0 2px rgba(91, 147, 239, 0.65);
+  }
+  14% {
+    box-shadow: inset 0 0 0 2px rgba(91, 147, 239, 0.65);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px rgba(91, 147, 239, 0);
+  }
+}
+.flash-ring {
+  animation: flashRing 5s ease-out;
 }
 @media (prefers-reduced-motion: reduce) {
-  .flash-new {
+  .flash-new,
+  .flash-ring {
     animation-duration: 5s;
     animation-timing-function: linear;
   }

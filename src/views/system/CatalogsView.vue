@@ -10,6 +10,7 @@ import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
+import { useFlash } from "@/composables/useFlash";
 
 const router = useRouter();
 const db = useDbStore();
@@ -24,7 +25,7 @@ const adding = ref(false);
 const newName = ref("");
 const newActive = ref(true);
 const newInput = ref(null);
-const flashId = ref(null);
+const flashNew = useFlash();
 
 const MENU_ITEMS = [
   { key: "edit", label: "עריכה", icon: "pencil" },
@@ -51,6 +52,7 @@ function onMenu(key) {
     };
     db.db.catalogs.push(copy);
     db.persist();
+    flashNew.flash(copy.id);
     ui.toast(`הקטלוג שוכפל: ${copy.name}`);
   } else if (key === "tags") router.push("/system/tags");
   else if (key === "delete") deleteTarget.value = c;
@@ -88,10 +90,7 @@ function confirmAdd() {
   db.db.catalogs.unshift(c); // lands where the editing row was
   db.persist();
   adding.value = false;
-  flashId.value = c.id;
-  setTimeout(() => {
-    if (flashId.value === c.id) flashId.value = null;
-  }, 5000);
+  flashNew.flash(c.id);
   ui.toast("הקטלוג נוצר בהצלחה");
 }
 function confirmDelete() {
@@ -184,7 +183,7 @@ function confirmDelete() {
             v-for="c in db.catalogs"
             :key="c.id"
             class="row"
-            :class="{ 'flash-new': c.id === flashId }"
+            :class="{ 'flash-new': flashNew.isNew(c.id) }"
             @click="router.push(`/system/catalogs/${c.id}`)"
           >
             <td class="td-name">{{ c.name }}</td>
