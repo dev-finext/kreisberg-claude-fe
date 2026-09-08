@@ -278,21 +278,26 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
       {{ selectedPath }}
     </div>
 
-    <table class="items-table">
+    <table class="items-table" :class="mode">
       <thead>
+        <!-- Figma "Header Row": one column set for both views; only the first
+             cell differs — a checkbox in שיוך, the row chevron in פרקים -->
         <tr>
           <th class="th-check">
-            <BaseCheckbox :model-value="allChecked" @update:model-value="setAllChecked" />
+            <BaseCheckbox
+              v-if="mode === SIDEBAR_MODE.ASSIGNMENT"
+              :model-value="allChecked"
+              @update:model-value="setAllChecked"
+            />
           </th>
-          <th>{{ mode === SIDEBAR_MODE.ASSIGNMENT ? "מס' סעיף" : "מספר סעיף" }}</th>
-          <th v-if="mode === SIDEBAR_MODE.ASSIGNMENT">שם סעיף</th>
-          <th v-else>תיאור הסעיף</th>
-          <th v-if="mode === SIDEBAR_MODE.ASSIGNMENT">סוג משאב</th>
-          <th>יח' מידה</th>
-          <th>כמות</th>
-          <th>עדיפות</th>
-          <th>לסיכום</th>
-          <th class="th-actions"></th>
+          <th class="th-code">מס' סעיף</th>
+          <th class="th-name">שם סעיף</th>
+          <th class="th-rt">סוג משאב</th>
+          <th class="th-unit">יח' מידה</th>
+          <th class="th-qty">כמות</th>
+          <th class="th-prio">עדיפות</th>
+          <th class="th-summary">לסיכום</th>
+          <th v-if="mode === SIDEBAR_MODE.ASSIGNMENT" class="th-actions"></th>
         </tr>
       </thead>
 
@@ -473,18 +478,13 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                   <span class="expand" @click="toggleOpen(r)">
                     <AppIcon :name="isOpen(r) ? 'chevron-down' : 'chevron-left'" :size="16" />
                   </span>
-                  <BaseCheckbox
-                    :model-value="rowChecked(r)"
-                    :disabled="!r.sei"
-                    @update:model-value="(v) => setRowChecked(r, v)"
-                  />
                 </td>
                 <td class="td-code">
                   <span class="item-code">{{ r.code }}</span>
                 </td>
-                <td class="td-desc">
-                  <div class="d-name ellipsis">{{ r.name }}</div>
-                  <div class="d-text ellipsis">{{ stripHtml(r.description) }}</div>
+                <td class="td-name ellipsis" :title="r.name">{{ r.name }}</td>
+                <td class="td-rt">
+                  {{ db.resourceTypes.find((t) => t.id === r.resourceTypeId)?.name || "--" }}
                 </td>
                 <td class="td-unit">{{ r.unit || "--" }}</td>
                 <td class="td-qty">
@@ -499,11 +499,6 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                     :disabled="summaryLocked(r)"
                     @update:model-value="(v) => onSummary(r, v)"
                   />
-                </td>
-                <td class="td-actions">
-                  <button class="row-kebab" @click="openRowMenu(r, $event)">
-                    <AppIcon name="kebab" :size="16" />
-                  </button>
                 </td>
               </tr>
               <!-- composite: "פרטים" line, then the sub-sections inline -->
@@ -532,9 +527,9 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                     <td class="td-code">
                       <span class="item-code">{{ sr.code }}</span>
                     </td>
-                    <td class="td-desc">
-                      <div class="d-name ellipsis">{{ sr.name }}</div>
-                      <div class="d-text ellipsis">{{ stripHtml(sr.description) }}</div>
+                    <td class="td-name ellipsis" :title="sr.name">{{ sr.name }}</td>
+                    <td class="td-rt">
+                      {{ db.resourceTypes.find((t) => t.id === sr.resourceTypeId)?.name || "--" }}
                     </td>
                     <td class="td-unit">{{ sr.unit || "--" }}</td>
                     <td class="td-qty">
@@ -544,7 +539,6 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                       <PriorityControl :model-value="sr.priority" disabled />
                     </td>
                     <td class="td-summary"></td>
-                    <td class="td-actions"></td>
                   </tr>
                   <tr v-if="subOpen(sr.key)" class="panel-row">
                     <td :colspan="colCount">
@@ -655,9 +649,35 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
 .item-row.checked {
   background: var(--brand-primary-soft);
 }
+/* column widths from the Figma header row (917 wide) */
+.th-check,
 .td-check {
   white-space: nowrap;
+  width: 36px;
+  padding-right: 6px;
+  padding-left: 0;
+}
+.items-table.assignment .th-check,
+.items-table.assignment .td-check {
   width: 58px;
+}
+.th-code {
+  width: 106px;
+}
+.th-rt {
+  width: 108px;
+}
+.th-unit {
+  width: 73px;
+}
+.th-qty {
+  width: 74px;
+}
+.th-prio {
+  width: 114px;
+}
+.th-summary {
+  width: 68px;
 }
 .expand {
   display: inline-flex;
@@ -670,19 +690,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
   white-space: nowrap;
 }
 .td-name {
-  max-width: 260px;
-  font-weight: 500;
-}
-.td-desc {
-  max-width: 340px;
-}
-.d-name {
-  font-weight: 600;
-}
-.d-text {
-  color: var(--text-secondary);
-  font-size: 12px;
-  max-width: 340px;
+  max-width: 338px;
 }
 .qty-input {
   width: 64px;
