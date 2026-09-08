@@ -143,6 +143,9 @@ defineProps({
       />
     </template>
     <!-- checkmark -->
+    <template v-else-if="name === 'alert'">
+      <path d="M12 6.5v7M12 17h.01" stroke-width="2.4" />
+    </template>
     <template v-else-if="name === 'check'">
       <path d="M5 12.5l4.5 4.5L19 7.5" />
     </template>
