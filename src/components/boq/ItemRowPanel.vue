@@ -30,11 +30,8 @@ const TABS = [
 const activeTab = ref("desc");
 const noteDraft = ref("");
 const addingNote = ref(false);
-const detailsOpen = ref(true);
-const openSubItems = ref([]);
 
 const item = computed(() => props.row.item);
-const isComposite = computed(() => item.value?.type === "composite");
 
 /* ---------- notes ---------- */
 const notes = computed(() => boq.commentsFor("item", item.value.id));
@@ -74,39 +71,6 @@ function chooseAlt(altId) {
 const history = computed(() => boq.historyFor(item.value.id));
 function fmtVal(field, v) {
   return HISTORY_VALUE_LABELS[v] || v;
-}
-
-/* ---------- composite sub items ---------- */
-const subItems = computed(() =>
-  (item.value.subItems || [])
-    .map((si) => {
-      const sub = cat.item(si.itemId);
-      return sub ? { ...si, item: sub } : null;
-    })
-    .filter(Boolean)
-);
-function toggleSubOpen(id) {
-  const i = openSubItems.value.indexOf(id);
-  if (i >= 0) openSubItems.value.splice(i, 1);
-  else openSubItems.value.push(id);
-}
-function subRow(si) {
-  return {
-    key: `sub-${si.itemId}`,
-    item: si.item,
-    sei: null,
-    seiIds: [],
-    qty: si.qty,
-    editable: false,
-    code: si.item.code,
-    name: si.item.name,
-    description: si.item.description,
-    unit: si.item.unit,
-    isComposite: false,
-    priority: si.item.priority || "recommended",
-    forSummary: true,
-    resourceTypeId: si.item.resourceTypeId,
-  };
 }
 </script>
 
@@ -264,45 +228,6 @@ function subRow(si) {
         </div>
       </div>
       <p v-else class="p-empty">אין עדיין שינויים מתועדים לסעיף זה</p>
-    </div>
-
-    <!-- composite: פרטים disclosure + sub items -->
-    <div v-if="isComposite && !nested" class="composite-details">
-      <button class="details-toggle" @click="detailsOpen = !detailsOpen">
-        <AppIcon :name="detailsOpen ? 'chevron-down' : 'chevron-left'" :size="15" />
-        <span>פרטים</span>
-      </button>
-      <table v-if="detailsOpen" class="nested-table sub-items">
-        <tbody>
-          <template v-for="si in subItems" :key="si.itemId">
-            <tr class="nested-row">
-              <td class="td-expand">
-                <span class="expand" @click="toggleSubOpen(si.itemId)">
-                  <AppIcon
-                    :name="openSubItems.includes(si.itemId) ? 'chevron-down' : 'chevron-left'"
-                    :size="14"
-                  />
-                </span>
-              </td>
-              <td>
-                <span class="item-code">{{ si.item.code }}</span>
-              </td>
-              <td class="ellipsis">{{ si.item.name }}</td>
-              <td>
-                {{ db.resourceTypes.find((t) => t.id === si.item.resourceTypeId)?.name || "קבלן ראשי" }}
-              </td>
-              <td>{{ si.item.unit }}</td>
-              <td class="num">{{ formatQty(si.qty, 0) }}</td>
-              <td><PriorityControl variant="squares" :model-value="si.item.priority || 'recommended'" /></td>
-            </tr>
-            <tr v-if="openSubItems.includes(si.itemId)" class="sub-panel-row">
-              <td colspan="7">
-                <ItemRowPanel :row="subRow(si)" nested @edit-item="emit('edit-item')" />
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
     </div>
   </div>
 </template>
@@ -540,33 +465,5 @@ function subRow(si) {
 }
 .h-new {
   font-weight: 600;
-}
-/* composite */
-.composite-details {
-  margin-top: 12px;
-}
-.details-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-direction: row-reverse;
-  background: none;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-.td-expand {
-  width: 30px;
-}
-.expand {
-  cursor: pointer;
-  color: var(--text-secondary);
-  display: inline-flex;
-}
-.sub-panel-row td {
-  background: var(--surface-subtle);
-  padding: 4px 12px;
 }
 </style>

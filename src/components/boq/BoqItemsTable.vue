@@ -30,6 +30,57 @@ const pendingCascade = ref(null); // {sei, newQty, childSeis}
 const dontAskAgain = ref(false);
 const rowMenu = ref(null);
 
+/* ---------------- composite sections ----------------
+   Figma "כתבי כמויות סעיף מורכב": opening a composite row does not open the tab
+   panel. In פרקים it reveals a 32px "פרטים" line (which opens the panel) followed
+   by the sub-sections inline in the table; in שיוך it reveals the sub-sections
+   only. A sub-section belongs to its parent, so it carries no לסיכום toggle. */
+const openDetails = ref([]);
+const openSubs = ref([]);
+function isComposite(r) {
+  return r.item?.type === "composite" && (r.item.subItems || []).length > 0;
+}
+function subRowsOf(r) {
+  return (r.item.subItems || [])
+    .map((si) => {
+      const sub = cat.item(si.itemId);
+      if (!sub) return null;
+      return {
+        key: `${r.key}|sub|${si.itemId}`,
+        item: sub,
+        sei: null,
+        seiIds: [],
+        qty: si.qty,
+        editable: false,
+        code: sub.code,
+        name: sub.name,
+        description: sub.description,
+        unit: sub.unit,
+        isComposite: false,
+        priority: sub.priority || PRIORITY.RECOMMENDED,
+        forSummary: true,
+        resourceTypeId: sub.resourceTypeId,
+      };
+    })
+    .filter(Boolean);
+}
+function detailsOpen(r) {
+  return openDetails.value.includes(r.key);
+}
+function toggleDetails(r) {
+  const i = openDetails.value.indexOf(r.key);
+  if (i >= 0) openDetails.value.splice(i, 1);
+  else openDetails.value.push(r.key);
+}
+function subOpen(key) {
+  return openSubs.value.includes(key);
+}
+function toggleSub(key) {
+  const i = openSubs.value.indexOf(key);
+  if (i >= 0) openSubs.value.splice(i, 1);
+  else openSubs.value.push(key);
+}
+
 /* ---------------- rows + filtering ---------------- */
 function applyFilters(rows) {
   const f = boq.filters;
@@ -300,7 +351,33 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
               </button>
             </td>
           </tr>
-          <tr v-if="isOpen(r)" class="panel-row">
+          <!-- composite: the sub-sections sit inline under their parent -->
+          <tr
+            v-for="sr in isOpen(r) && isComposite(r) ? subRowsOf(r) : []"
+            :key="sr.key"
+            class="item-row sub-item"
+          >
+            <td class="td-check">
+              <BaseCheckbox :model-value="false" disabled />
+            </td>
+            <td class="td-code">
+              <span class="item-code">{{ sr.code }}</span>
+            </td>
+            <td class="td-name ellipsis">{{ sr.name }}</td>
+            <td class="td-rt">
+              {{ db.resourceTypes.find((t) => t.id === sr.resourceTypeId)?.name || "--" }}
+            </td>
+            <td class="td-unit">{{ sr.unit || "--" }}</td>
+            <td class="td-qty">
+              <span class="qty-text num">{{ formatQty(sr.qty) }}</span>
+            </td>
+            <td class="td-prio">
+              <PriorityControl :model-value="sr.priority" disabled />
+            </td>
+            <td class="td-summary"></td>
+            <td class="td-actions"></td>
+          </tr>
+          <tr v-if="isOpen(r) && !isComposite(r)" class="panel-row">
             <td :colspan="colCount">
               <ItemRowPanel :row="r" @edit-item="emit('edit-item', r)" />
             </td>
@@ -428,7 +505,54 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                   </button>
                 </td>
               </tr>
-              <tr v-if="isOpen(r)" class="panel-row">
+              <!-- composite: "פרטים" line, then the sub-sections inline -->
+              <template v-if="isOpen(r) && isComposite(r)">
+                <tr class="details-row">
+                  <td class="td-check">
+                    <span class="expand" @click="toggleDetails(r)">
+                      <AppIcon :name="detailsOpen(r) ? 'chevron-down' : 'chevron-left'" :size="16" />
+                    </span>
+                  </td>
+                  <td class="td-code"><span class="details-lbl">פרטים</span></td>
+                  <td :colspan="colCount - 2"></td>
+                </tr>
+                <tr v-if="detailsOpen(r)" class="panel-row">
+                  <td :colspan="colCount">
+                    <ItemRowPanel :row="r" @edit-item="emit('edit-item', r)" />
+                  </td>
+                </tr>
+                <template v-for="sr in subRowsOf(r)" :key="sr.key">
+                  <tr class="item-row sub-item" :class="{ open: subOpen(sr.key) }">
+                    <td class="td-check">
+                      <span class="expand" @click="toggleSub(sr.key)">
+                        <AppIcon :name="subOpen(sr.key) ? 'chevron-down' : 'chevron-left'" :size="16" />
+                      </span>
+                    </td>
+                    <td class="td-code">
+                      <span class="item-code">{{ sr.code }}</span>
+                    </td>
+                    <td class="td-desc">
+                      <div class="d-name ellipsis">{{ sr.name }}</div>
+                      <div class="d-text ellipsis">{{ sr.description }}</div>
+                    </td>
+                    <td class="td-unit">{{ sr.unit || "--" }}</td>
+                    <td class="td-qty">
+                      <span class="qty-text num">{{ formatQty(sr.qty) }}</span>
+                    </td>
+                    <td class="td-prio">
+                      <PriorityControl :model-value="sr.priority" disabled />
+                    </td>
+                    <td class="td-summary"></td>
+                    <td class="td-actions"></td>
+                  </tr>
+                  <tr v-if="subOpen(sr.key)" class="panel-row">
+                    <td :colspan="colCount">
+                      <ItemRowPanel :row="sr" nested @edit-item="emit('edit-item', sr)" />
+                    </td>
+                  </tr>
+                </template>
+              </template>
+              <tr v-else-if="isOpen(r)" class="panel-row">
                 <td :colspan="colCount">
                   <ItemRowPanel :row="r" @edit-item="emit('edit-item', r)" />
                 </td>
@@ -607,6 +731,23 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
 .panel-row td {
   padding: 0 24px 14px;
   background: var(--row-open-bg);
+}
+/* composite: 32px "פרטים" line between the parent row and its sub-sections */
+.details-row td {
+  height: 32px;
+  padding: 0 12px;
+  background: var(--row-open-bg);
+  border-bottom: none;
+}
+.details-lbl {
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--text-primary);
+}
+/* a sub-section is part of its parent: no לסיכום toggle, no row actions */
+.item-row.sub-item .td-summary,
+.item-row.sub-item .td-actions {
+  pointer-events: none;
 }
 /* group rows */
 .group-row td {
