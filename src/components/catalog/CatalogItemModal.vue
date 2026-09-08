@@ -9,6 +9,7 @@ import { useEscape } from "@/composables/useEscape";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ItemPickerModal from "@/components/boq/ItemPickerModal.vue";
 import { formatDateTime } from "@/utils/format";
+import { useFlash } from "@/composables/useFlash";
 
 const props = defineProps({
   /** existing item (edit) or null (create) */
@@ -59,6 +60,7 @@ const form = reactive({
   alternativeIds: [...(props.item?.alternativeIds || [])],
 });
 const picker = ref(null); // 'sub' | 'parent' | 'alt'
+const flashSubItems = useFlash();
 
 const resources = computed(() =>
   form.resourceTypeId ? db.constructors.filter((c) => c.typeId === form.resourceTypeId) : db.constructors
@@ -132,8 +134,13 @@ function onTagKeydown(e) {
 
 function onPicked(ids) {
   if (picker.value === "sub") {
+    const added = [];
     for (const id of ids)
-      if (!form.subItems.some((s) => s.itemId === id)) form.subItems.push({ itemId: id, qty: 1 });
+      if (!form.subItems.some((s) => s.itemId === id)) {
+        form.subItems.push({ itemId: id, qty: 1 });
+        added.push(id);
+      }
+    flashSubItems.flash(added);
   } else if (picker.value === "parent") {
     form.parentId = ids[0] || null;
   } else if (picker.value === "alt") {
@@ -406,7 +413,11 @@ function remove() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="s in subItemRows" :key="s.itemId">
+                  <tr
+                    v-for="s in subItemRows"
+                    :key="s.itemId"
+                    :class="{ 'flash-new': flashSubItems.isNew(s.itemId) }"
+                  >
                     <td>
                       <span class="item-code">{{ s.item.code }}</span>
                     </td>

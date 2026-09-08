@@ -10,6 +10,7 @@ import BaseToggle from "@/components/shared/BaseToggle.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
+import { useFlash } from "@/composables/useFlash";
 
 const db = useDbStore();
 const cat = useCatalogStore();
@@ -20,6 +21,7 @@ const active = ref(true);
 const search = ref("");
 
 /* ---------- tags panel ---------- */
+const flashTags = useFlash();
 const selectedTagId = ref(db.tags[0]?.id ?? null);
 const selectedTag = computed(() => db.tags.find((t) => t.id === selectedTagId.value) || null);
 const editingTagId = ref(null); // id, or "new"
@@ -46,6 +48,7 @@ function commitTag() {
       db.db.tags.push(t);
       selectedTagId.value = t.id;
       db.persist();
+      flashTags.flash(t.id);
       ui.toast(`התגית "${name}" נוצרה`);
     }
   } else if (editingTagId.value) {
@@ -193,7 +196,11 @@ function saveAll() {
               v-for="t in db.tags"
               :key="t.id"
               class="tag-row"
-              :class="{ active: t.id === selectedTagId, editing: editingTagId === t.id }"
+              :class="{
+                active: t.id === selectedTagId,
+                editing: editingTagId === t.id,
+                'flash-ring': flashTags.isNew(t.id),
+              }"
               @click="selectedTagId = t.id"
               @dblclick="startRename(t)"
             >

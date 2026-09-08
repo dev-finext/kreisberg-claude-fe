@@ -6,6 +6,7 @@ import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
 import { PRIORITY, HISTORY_FIELD_LABELS, HISTORY_VALUE_LABELS } from "@/constants";
 import { formatDateTime } from "@/utils/format";
+import { useFlash } from "@/composables/useFlash";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
@@ -19,6 +20,15 @@ import CatalogItemModal from "@/components/catalog/CatalogItemModal.vue";
 import ChapterModal from "@/components/catalog/ChapterModal.vue";
 import TagCreateModal from "@/components/catalog/TagCreateModal.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
+
+/* 5-second highlight on anything just created, so it stands out among the rest */
+const flashChapters = useFlash();
+const flashSubs = useFlash();
+const flashItems = useFlash();
+async function revealItemRow(id) {
+  await nextTick();
+  document.querySelector(`[data-item-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
+}
 
 const route = useRoute();
 const router = useRouter();
@@ -225,6 +235,7 @@ function saveChapter(data) {
     };
     chapters.push(ch);
     selectedChapterId.value = ch.id;
+    flashChapters.flash(ch.id);
     ui.toast("הפרק נוסף");
   } else {
     const parent = chapters.find((c) => c.id === m.parentChapter.id);
@@ -240,6 +251,7 @@ function saveChapter(data) {
     parent.subChapters.push(sc);
     checkedSubIds.value.push(sc.id);
     if (!expandedChapterIds.value.includes(parent.id)) expandedChapterIds.value.push(parent.id);
+    flashSubs.flash(sc.id);
     ui.toast("תת הפרק נוסף");
   }
   db.persist();
@@ -247,6 +259,18 @@ function saveChapter(data) {
 }
 function openItem(item) {
   itemModal.value = { item, subChapter: cat.subChapter(item.subChapterId), initialType: item.type };
+}
+/* a brand-new section: make sure its branch is on screen, then highlight the row */
+function onItemSaved(item) {
+  const isNew = !itemModal.value?.item;
+  itemModal.value = null;
+  if (!isNew || !item) return;
+  if (!expandedChapterIds.value.includes(item.chapterId)) expandedChapterIds.value.push(item.chapterId);
+  if (checkedSubIds.value.length && !checkedSubIds.value.includes(item.subChapterId))
+    checkedSubIds.value.push(item.subChapterId);
+  selectedChapterId.value = item.chapterId;
+  flashItems.flash(item.id);
+  revealItemRow(item.id);
 }
 function confirmDeleteItems() {
   const ids = [...deleteIds.value];
@@ -270,6 +294,7 @@ function onRowMenu(key) {
 }
 function onTagCreated() {
   tagModal.value = false;
+  flashItems.flash([...checkedItemIds.value]);
   checkedItemIds.value = [];
 }
 
@@ -357,7 +382,7 @@ function setActive(v) {
             <template v-for="ch in cat.chapters" :key="ch.id">
               <div
                 class="tree-row"
-                :class="{ selected: ch.id === selectedChapterId }"
+                :class="{ selected: ch.id === selectedChapterId, 'flash-ring': flashChapters.isNew(ch.id) }"
                 @click="selectedChapterId = ch.id"
               >
                 <span class="chev" @click.stop="toggleExpand(ch.id)">
@@ -378,7 +403,7 @@ function setActive(v) {
                   v-for="sc in ch.subChapters"
                   :key="sc.id"
                   class="tree-row sub"
-                  :class="{ checked: checkedSubIds.includes(sc.id) }"
+                  :class="{ checked: checkedSubIds.includes(sc.id), 'flash-ring': flashSubs.isNew(sc.id) }"
                 >
                   <BaseCheckbox
                     size="small"
@@ -458,7 +483,11 @@ function setActive(v) {
                   <template v-for="item in sg.items" :key="item.id">
                     <tr
                       class="item-row"
-                      :class="{ checked: checkedItemIds.includes(item.id) }"
+                      :class="{
+                        checked: checkedItemIds.includes(item.id),
+                        'flash-new': flashItems.isNew(item.id),
+                      }"
+                      :data-item-id="item.id"
                       @click="openItem(item)"
                     >
                       <td class="td-check" @click.stop>
@@ -614,7 +643,7 @@ function setActive(v) {
       :initial-type="itemModal.initialType"
       :catalog-name="catalogMeta?.name"
       @close="itemModal = null"
-      @saved="itemModal = null"
+      @saved="onItemSaved"
       @deleted="itemModal = null"
     />
     <ChapterModal
