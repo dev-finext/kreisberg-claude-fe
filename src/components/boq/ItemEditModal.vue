@@ -6,6 +6,8 @@ import { useCatalogStore } from "@/stores/catalog";
 import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import { useEscape } from "@/composables/useEscape";
+import { sanitizeHtml } from "@/utils/html";
+import RichTextEditor from "@/components/shared/RichTextEditor.vue";
 import PriorityControl from "./PriorityControl.vue";
 import ItemPickerModal from "./ItemPickerModal.vue";
 import { formatDate } from "@/utils/format";
@@ -195,17 +197,7 @@ function deleteFromBoq() {
               </div>
             </div>
             <h3 class="desc-heading">תיאור סעיף</h3>
-            <div class="desc-box">
-              <div class="desc-toolbar" title="עורך טקסט עשיר — לא זמין בדמו">
-                <span class="dt-btn">B</span><span class="dt-btn">I</span><span class="dt-btn">U</span
-                ><span class="dt-btn">S</span>
-              </div>
-              <textarea
-                v-model="form.description"
-                class="desc-input scroll-slim"
-                placeholder="כתוב תיאור סעיף"
-              />
-            </div>
+            <RichTextEditor v-model="form.description" placeholder="כתוב תיאור סעיף" min-height="140px" />
           </template>
 
           <!-- הערות -->
@@ -220,7 +212,7 @@ function deleteFromBoq() {
                   <span class="note-author">{{ n.author }}</span>
                   <span class="num">{{ formatDate(n.ts) }}</span>
                 </div>
-                <p>{{ n.text }}</p>
+                <p v-html="sanitizeHtml(n.text)"></p>
               </div>
               <p v-if="!notes.length" class="p-empty">אין הערות לסעיף זה</p>
             </div>
@@ -379,39 +371,6 @@ function deleteFromBoq() {
   font-size: 16px;
   font-weight: 700;
   margin: 18px 0 8px;
-}
-.desc-box {
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.desc-toolbar {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--divider);
-  padding: 6px 10px;
-  color: var(--text-disabled);
-}
-.dt-btn {
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 4px;
-}
-.desc-input {
-  width: 100%;
-  border: none;
-  outline: none;
-  padding: 10px 12px;
-  font-family: inherit;
-  font-size: 13px;
-  min-height: 140px;
-  resize: vertical;
-  text-align: right;
 }
 .note-editor {
   display: flex;

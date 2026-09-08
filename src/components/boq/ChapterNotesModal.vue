@@ -4,7 +4,9 @@ import { useBoqStore } from "@/stores/boq";
 import { useUiStore } from "@/stores/ui";
 import BaseModal from "@/components/shared/BaseModal.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import RichTextEditor from "@/components/shared/RichTextEditor.vue";
 import { formatDateTime } from "@/utils/format";
+import { sanitizeHtml, stripHtml } from "@/utils/html";
 
 const props = defineProps({
   scope: { type: String, required: true }, // 'chapter' | 'subChapter'
@@ -30,7 +32,7 @@ const title = computed(() =>
 const notes = computed(() =>
   boq
     .commentsFor(props.scope, props.target.id)
-    .filter((n) => !search.value.trim() || n.text.includes(search.value.trim()))
+    .filter((n) => !search.value.trim() || stripHtml(n.text).includes(search.value.trim()))
 );
 /* one editor card, rendered either on top (new note) or in place of the note being edited */
 const rows = computed(() => {
@@ -41,12 +43,9 @@ const rows = computed(() => {
   return out;
 });
 
-/* the rich-text toolbar is presentational in the demo */
-const TOOLBAR = ["B", "I", "U", "S", "≡", "•", "1.", "❝", "¶"];
-
 function focusDraft() {
   const el = Array.isArray(draftEl.value) ? draftEl.value[0] : draftEl.value;
-  el?.focus();
+  el?.$el?.querySelector(".rte-body")?.focus();
 }
 
 async function startAdd() {
@@ -70,7 +69,7 @@ function cancelEdit() {
 }
 function commitEdit() {
   const text = draft.value.trim();
-  if (!text) {
+  if (!stripHtml(text)) {
     ui.toast("נא לכתוב הערה לפני השמירה", "warning");
     return;
   }
@@ -113,18 +112,14 @@ function removeNote(id) {
     <div class="notes-stack scroll-slim">
       <template v-for="r in rows" :key="r.key">
         <!-- rich-text editor card (Figma "rich text": toolbar strip, text, ✓ / ✕) -->
-        <div v-if="r.editor" class="editor-card">
-          <div class="rt-toolbar" title="עורך טקסט עשיר — בקרוב">
-            <span v-for="t in TOOLBAR" :key="t" class="rt-btn">{{ t }}</span>
-          </div>
+        <div v-if="r.editor" class="editor-card" @keydown.esc="cancelEdit">
           <div class="editor-row">
-            <textarea
+            <RichTextEditor
               ref="draftEl"
               v-model="draft"
               class="draft"
-              rows="3"
               placeholder="כתוב הערה..."
-              @keydown.esc="cancelEdit"
+              min-height="72px"
             />
             <div class="editor-actions">
               <button class="act" title="אישור" @click="commitEdit">
@@ -157,7 +152,7 @@ function removeNote(id) {
 
         <!-- note card: text, with edit / delete revealed on hover (Figma "Note") -->
         <div v-else class="note-card" :title="`${r.note.author} · ${formatDateTime(r.note.ts)}`">
-          <p class="note-text">{{ r.note.text }}</p>
+          <p class="note-text" v-html="sanitizeHtml(r.note.text)"></p>
           <div class="note-actions">
             <button class="icon-btn" title="עריכה" @click="startEdit(r.note)">
               <AppIcon name="pencil" :size="24" />
@@ -287,52 +282,22 @@ function removeNote(id) {
 /* editor card */
 .editor-card {
   background: var(--surface);
-  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  overflow: hidden;
-}
-.rt-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border-strong);
-}
-.rt-btn {
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
 }
 .editor-row {
   display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 13px 16px 16px;
+  align-items: flex-start;
+  gap: 16px;
 }
 .draft {
   flex: 1;
   min-width: 0;
-  border: none;
-  outline: none;
-  resize: none;
-  background: none;
-  padding: 0;
-  font-size: 14px;
-  line-height: 18px;
-  font-family: inherit;
-  color: var(--text-primary);
-  text-align: right;
 }
 .editor-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding-top: 8px;
 }
 .act {
   background: none;

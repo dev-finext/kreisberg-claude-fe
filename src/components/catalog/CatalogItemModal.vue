@@ -8,7 +8,9 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 import { useEscape } from "@/composables/useEscape";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ItemPickerModal from "@/components/boq/ItemPickerModal.vue";
+import RichTextEditor from "@/components/shared/RichTextEditor.vue";
 import { formatDateTime } from "@/utils/format";
+import { sanitizeHtml, stripHtml } from "@/utils/html";
 import { useFlash } from "@/composables/useFlash";
 
 const props = defineProps({
@@ -35,9 +37,6 @@ const TABS = [
   { id: "related", label: "סעיפים קשורים" },
   { id: "alternatives", label: "סעיפים חלופיים" },
 ];
-/* the rich-text toolbar is presentational in the demo */
-const TOOLBAR = ["B", "I", "U", "S", "T", "≡", "•", "1.", "❝", "¶", "↺", "↻"];
-
 const activeTab = ref("details");
 const chapter = computed(() => cat.chapter(props.subChapter.chapterId));
 
@@ -183,7 +182,7 @@ function save() {
   const payload = {
     code: form.code.trim(),
     name: form.name.trim(),
-    description: form.description.trim() || form.name.trim(),
+    description: stripHtml(form.description) ? form.description : form.name.trim(),
     unit: form.isComposite ? "קומפ'" : form.unit,
     unit2: form.unit2,
     amortization: Number(form.amortization) || 0,
@@ -283,16 +282,7 @@ function remove() {
 
             <div class="field">
               <label class="field-label">תיאור סעיף</label>
-              <div class="desc-box">
-                <div class="desc-toolbar" title="עורך טקסט עשיר — בקרוב">
-                  <span v-for="t in TOOLBAR" :key="t" class="dt">{{ t }}</span>
-                </div>
-                <textarea
-                  v-model="form.description"
-                  class="desc-input scroll-slim"
-                  placeholder="כתוב תיאור סעיף"
-                />
-              </div>
+              <RichTextEditor v-model="form.description" placeholder="כתוב תיאור סעיף" min-height="104px" />
             </div>
 
             <div class="row-4">
@@ -466,7 +456,7 @@ function remove() {
                   <AppIcon name="trash" :size="18" />
                 </button>
               </div>
-              <p>{{ n.text }}</p>
+              <p v-html="sanitizeHtml(n.text)"></p>
             </div>
             <p v-if="item && !notes.length" class="hint">אין הערות עדיין</p>
           </template>
@@ -695,43 +685,6 @@ function remove() {
   align-self: flex-start;
   width: 367px;
   flex: 0 0 367px;
-}
-/* description: rich-text frame with a toolbar strip */
-.desc-box {
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  overflow: hidden;
-}
-.desc-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  border-bottom: 1px solid var(--border-strong);
-  padding: 8px 16px;
-  color: var(--text-secondary);
-}
-.dt {
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-}
-.desc-input {
-  width: 100%;
-  border: none;
-  outline: none;
-  padding: 13px 16px 16px;
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--text-primary);
-  min-height: 104px;
-  resize: vertical;
-  text-align: right;
 }
 /* tags combo */
 .tag-field {

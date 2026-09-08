@@ -12,6 +12,7 @@ import ItemRowPanel from "./ItemRowPanel.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
 import { formatQty } from "@/utils/format";
+import { stripHtml } from "@/utils/html";
 import { PRIORITY, SIDEBAR_MODE } from "@/constants";
 
 const props = defineProps({
@@ -92,7 +93,7 @@ function applyFilters(rows) {
     if (f.resourceType?.length && !f.resourceType.includes(String(r.resourceTypeId))) return false;
     if (f.priority?.length && !f.priority.includes(r.priority)) return false;
     if (f.summary?.length && !f.summary.includes(String(r.forSummary))) return false;
-    if (term && !(r.code.includes(term) || r.name.includes(term) || r.description.includes(term)))
+    if (term && !(r.code.includes(term) || r.name.includes(term) || stripHtml(r.description).includes(term)))
       return false;
     // hidden alternatives: a non-chosen alternative whose group owner is present stays hidden
     return true;
@@ -483,7 +484,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                 </td>
                 <td class="td-desc">
                   <div class="d-name ellipsis">{{ r.name }}</div>
-                  <div class="d-text ellipsis">{{ r.description }}</div>
+                  <div class="d-text ellipsis">{{ stripHtml(r.description) }}</div>
                 </td>
                 <td class="td-unit">{{ r.unit || "--" }}</td>
                 <td class="td-qty">
@@ -533,7 +534,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                     </td>
                     <td class="td-desc">
                       <div class="d-name ellipsis">{{ sr.name }}</div>
-                      <div class="d-text ellipsis">{{ sr.description }}</div>
+                      <div class="d-text ellipsis">{{ stripHtml(sr.description) }}</div>
                     </td>
                     <td class="td-unit">{{ sr.unit || "--" }}</td>
                     <td class="td-qty">
