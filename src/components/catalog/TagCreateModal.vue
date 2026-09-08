@@ -137,7 +137,10 @@ function create() {
     if (it && !it.tags.includes(tag.id)) it.tags.push(tag.id);
   }
   db.persist();
-  ui.toast(`התגית "${label}" שויכה ל-${checked.value.length} סעיפים`);
+  ui.toast(`תגית "${label}" נוצרה ונוספה למערכת בהצלחה.`, "success", {
+    label: "למסך ניהול תגיות",
+    to: "/system/tags",
+  });
   emit("created", tag);
 }
 

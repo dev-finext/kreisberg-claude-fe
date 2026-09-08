@@ -104,7 +104,10 @@ function createTag() {
   const tag = { id: db.nextId("tags"), name };
   db.db.tags.push(tag);
   db.persist();
-  ui.toast(`התגית "${name}" נוצרה`);
+  ui.toast(`תגית "${name}" נוצרה ונוספה למערכת בהצלחה.`, "success", {
+    label: "למסך ניהול תגיות",
+    to: "/system/tags",
+  });
   pickTag(tag);
 }
 function removeTag(id) {

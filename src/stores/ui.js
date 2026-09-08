@@ -30,9 +30,10 @@ export const useUiStore = defineStore("ui", {
     },
   }),
   actions: {
-    toast(text, type = "success") {
+    /** action: optional { label, to } link rendered beside the message */
+    toast(text, type = "success", action = null) {
       const id = toastSeq++;
-      this.toasts.push({ id, text, type });
+      this.toasts.push({ id, text, type, action });
       setTimeout(() => {
         this.toasts = this.toasts.filter((t) => t.id !== id);
       }, 4000);
