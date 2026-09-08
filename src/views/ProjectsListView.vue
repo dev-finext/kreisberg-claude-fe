@@ -12,9 +12,41 @@ const router = useRouter();
 const db = useDbStore();
 const search = ref("");
 
+/* every column header carries a sort chevron in the design, so every column sorts */
+const COLUMNS = [
+  { key: "idx", label: "#", cls: "th-idx" },
+  { key: "name", label: "שם פרויקט" },
+  { key: "location", label: "כתובת" },
+  { key: "typeName", label: "סוג פרויקט", cls: "th-type" },
+  { key: "description", label: "תיאור הפרויקט" },
+  { key: "createdAt", label: "תאריך עדכון" },
+  { key: "status", label: "סטטוס" },
+];
+const sortKey = ref("idx");
+const sortDir = ref("asc");
+function sortBy(key) {
+  if (sortKey.value === key) sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+  else {
+    sortKey.value = key;
+    sortDir.value = "asc";
+  }
+}
+function sortValue(p, key) {
+  if (key === "status") return projectStatus(p);
+  if (key === "idx") return db.projects.indexOf(p);
+  return p[key] ?? "";
+}
+
 const projects = computed(() => {
   const t = search.value.trim();
-  return db.projects.filter((p) => !t || p.name.includes(t) || (p.location || "").includes(t));
+  const rows = db.projects.filter((p) => !t || p.name.includes(t) || (p.location || "").includes(t));
+  const dir = sortDir.value === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const x = sortValue(a, sortKey.value);
+    const y = sortValue(b, sortKey.value);
+    if (typeof x === "number" && typeof y === "number") return (x - y) * dir;
+    return String(x).localeCompare(String(y), "he") * dir;
+  });
 });
 
 /* ---- tiles data (order + colors per the Figma dashboard legend) ---- */
@@ -195,13 +227,22 @@ function projectStatus(p) {
       <table class="projects-table">
         <thead>
           <tr>
-            <th class="th-idx">#</th>
-            <th>שם פרויקט</th>
-            <th>כתובת</th>
-            <th>סוג פרויקט</th>
-            <th>תיאור הפרויקט</th>
-            <th>תאריך עדכון</th>
-            <th>סטטוס</th>
+            <th
+              v-for="c in COLUMNS"
+              :key="c.key"
+              :class="[c.cls, { sorted: sortKey === c.key }]"
+              @click="sortBy(c.key)"
+            >
+              <span class="th-inner">
+                <span>{{ c.label }}</span>
+                <AppIcon
+                  class="sort-chevron"
+                  :class="{ up: sortKey === c.key && sortDir === 'desc' }"
+                  name="chevron-down"
+                  :size="12"
+                />
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -209,7 +250,6 @@ function projectStatus(p) {
             v-for="(p, i) in projects"
             :key="p.id"
             class="project-row"
-            :class="{ zebra: i % 2 === 1 }"
             @click="router.push(`/projects/${p.id}/general`)"
           >
             <td class="td-idx num">{{ String(i + 1).padStart(2, "0") }}</td>
@@ -398,12 +438,15 @@ function projectStatus(p) {
   border-collapse: collapse;
 }
 .projects-table th {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 14px;
+  color: var(--text-primary);
   text-align: right;
   padding: 10px 14px;
   border-bottom: 1px solid var(--divider);
+  cursor: pointer;
+  user-select: none;
 }
 .projects-table td {
   font-size: 13px;
@@ -416,11 +459,27 @@ function projectStatus(p) {
 .project-row {
   cursor: pointer;
 }
-.project-row.zebra {
-  background: var(--surface-subtle);
-}
 .project-row:hover {
-  background: var(--brand-primary-soft);
+  background: var(--surface-muted);
+}
+/* sort affordance: the chevron every column header carries */
+.th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-direction: row-reverse;
+}
+.sort-chevron {
+  color: var(--text-secondary);
+  opacity: 0.55;
+  transition: transform 0.15s ease;
+}
+.sort-chevron.up {
+  transform: rotate(180deg);
+}
+.projects-table th.sorted .sort-chevron {
+  opacity: 1;
+  color: var(--brand-primary);
 }
 .th-idx,
 .td-idx {

@@ -218,8 +218,8 @@ function deleteChecked() {
         </div>
         <span v-if="boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT" class="v-divider" />
         <div class="open-rows-toggle">
-          <BaseToggle v-model="boq.openAllRows" />
           <span class="ort-label">תצוגת סעיפים פתוחים</span>
+          <BaseToggle v-model="boq.openAllRows" />
         </div>
         <span class="v-divider" />
         <SearchPill
