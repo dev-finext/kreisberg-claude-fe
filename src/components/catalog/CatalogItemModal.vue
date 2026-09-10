@@ -6,9 +6,9 @@ import { useUiStore } from "@/stores/ui";
 import { PRIORITY, PRIORITY_LABELS } from "@/constants";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import { useEscape } from "@/composables/useEscape";
-import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ItemPickerModal from "@/components/boq/ItemPickerModal.vue";
 import RichTextEditor from "@/components/shared/RichTextEditor.vue";
+import CatalogItemTree from "@/components/catalog/CatalogItemTree.vue";
 import { formatDateTime } from "@/utils/format";
 import { sanitizeHtml, stripHtml } from "@/utils/html";
 import { useFlash } from "@/composables/useFlash";
@@ -30,21 +30,32 @@ const ui = useUiStore();
 
 const UNITS = ['מ"ר', 'מ"ק', 'מ"א', "מטר", "יח'", "קומפ'", "נק'", 'ש"ע', "טון", 'ק"ג', "שעה"];
 const AMORT = [0, 3, 5, 8, 10, 12, 15, 20, 25, 30];
-/* right-to-left the tabs read פרטים · הערות · סעיפים קשורים · סעיפים חלופיים */
-const TABS = [
+/* right-to-left the tabs read פרטים · [תתי סעיפים] · הערות · סעיפים קשורים · סעיפים חלופיים.
+   "תתי סעיפים" appears right after פרטים and only while the section is composite. */
+const activeTab = ref("details");
+const TABS = computed(() => [
   { id: "details", label: "פרטים" },
+  ...(form.isComposite ? [{ id: "subitems", label: "תתי סעיפים" }] : []),
   { id: "notes", label: "הערות" },
   { id: "related", label: "סעיפים קשורים" },
   { id: "alternatives", label: "סעיפים חלופיים" },
-];
-const activeTab = ref("details");
+]);
 const chapter = computed(() => cat.chapter(props.subChapter.chapterId));
+
+/* the popup opens on the next free number inside the chosen sub-chapter */
+function nextCodeIn(sc) {
+  const base = sc.code.replace(/\.0000$/, "");
+  let max = 0;
+  for (const i of sc.items) {
+    const m = String(i.code || "").match(/(\d+)$/);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return `${base}.${String(max + 1).padStart(4, "0")}`;
+}
 
 const form = reactive({
   isComposite: (props.item?.type || props.initialType) === "composite",
-  code:
-    props.item?.code ||
-    `${props.subChapter.code.replace(/\.0000$/, "")}.${String(props.subChapter.items.length + 1).padStart(4, "0")}`,
+  code: props.item?.code || nextCodeIn(props.subChapter),
   name: props.item?.name || "",
   description: props.item?.description || "",
   unit: props.item?.unit || 'מ"ר',
@@ -59,7 +70,31 @@ const form = reactive({
   alternativeIds: [...(props.item?.alternativeIds || [])],
 });
 const picker = ref(null); // 'sub' | 'parent' | 'alt'
+const pickerTitle = computed(() => {
+  if (picker.value === "sub") return "בחירת תתי סעיפים";
+  if (picker.value === "alt") return `בחירת סעיפים חלופיים לסעיף ${form.code}`;
+  return "בחירת סעיף אב";
+});
 const flashSubItems = useFlash("subitem");
+
+/* סוג סעיף. A composite is always measured in קומפ׳, and carries no secondary
+   unit, no פחת and no משאב — those are locked here and set in pricing. */
+const COMPOSITE_UNIT = "קומפ'";
+const itemType = computed({
+  get: () => (form.isComposite ? "composite" : "regular"),
+  set(v) {
+    form.isComposite = v === "composite";
+    if (form.isComposite) {
+      form.unit = COMPOSITE_UNIT;
+      form.unit2 = "";
+      form.amortization = 0;
+      form.resourceId = null;
+    } else {
+      if (form.unit === COMPOSITE_UNIT) form.unit = 'מ"ר';
+      if (activeTab.value === "subitems") activeTab.value = "details";
+    }
+  },
+});
 
 const resources = computed(() =>
   form.resourceTypeId ? db.constructors.filter((c) => c.typeId === form.resourceTypeId) : db.constructors
@@ -67,12 +102,24 @@ const resources = computed(() =>
 const parentItem = computed(() => (form.parentId ? cat.item(form.parentId) : null));
 const childItems = computed(() => (props.item ? cat.childrenOf(props.item.id) : []));
 const alternatives = computed(() => form.alternativeIds.map((id) => cat.item(id)).filter(Boolean));
+/* parent and children read as one tree, the way the open row draws them */
+const relatedItems = computed(() => [...(parentItem.value ? [parentItem.value] : []), ...childItems.value]);
+/* the alternatives a section may point at: its own sub-chapter, plus any already linked */
+const altPool = computed(() => {
+  const siblings = (props.subChapter.items || []).filter((i) => !i.isNote && i.id !== props.item?.id);
+  const linked = alternatives.value.filter((a) => a.subChapterId !== props.subChapter.id);
+  return [...siblings, ...linked];
+});
 const subItemRows = computed(() =>
   form.subItems.map((s) => ({ ...s, item: cat.item(s.itemId) })).filter((s) => s.item)
 );
 const valid = computed(
   () => form.code.trim() && form.name.trim() && (!form.isComposite || form.subItems.length >= 2)
 );
+function setSubQty(itemId, value) {
+  const row = form.subItems.find((s) => s.itemId === itemId);
+  if (row) row.qty = Number(value) || 0;
+}
 
 /* ---------- tags: pick an existing one or type a new name (Figma "בחירת תגית קיימת") ---------- */
 const tagDraft = ref("");
@@ -252,9 +299,13 @@ function remove() {
           </div>
         </div>
 
-        <div class="composite-row">
-          <span class="composite-lbl">סעיף מורכב</span>
-          <BaseToggle v-model="form.isComposite" />
+        <!-- סוג סעיף is the first field, where the composite toggle used to be -->
+        <div class="type-row">
+          <label class="field-label">סוג סעיף</label>
+          <select v-model="itemType" class="select type-select">
+            <option value="regular">רגיל</option>
+            <option value="composite">מורכב</option>
+          </select>
         </div>
 
         <div class="cim-tabs">
@@ -303,14 +354,24 @@ function remove() {
               </div>
               <div class="field">
                 <label class="field-label">יחידת מידה משנית</label>
-                <select v-model="form.unit2" class="select">
+                <select
+                  v-model="form.unit2"
+                  class="select"
+                  :disabled="form.isComposite"
+                  :title="form.isComposite ? 'אין יחידת מידה משנית לסעיף מורכב' : ''"
+                >
                   <option value="">—</option>
                   <option v-for="u in UNITS" :key="u">{{ u }}</option>
                 </select>
               </div>
               <div class="field">
                 <label class="field-label">פחת</label>
-                <select v-model.number="form.amortization" class="select">
+                <select
+                  v-model.number="form.amortization"
+                  class="select"
+                  :disabled="form.isComposite"
+                  :title="form.isComposite ? 'אין פחת לסעיף מורכב' : ''"
+                >
                   <option v-for="a in AMORT" :key="a" :value="a">{{ a }}%</option>
                 </select>
               </div>
@@ -378,64 +439,69 @@ function remove() {
               <div class="res-col res-left">
                 <div class="field">
                   <label class="field-label">משאב</label>
-                  <select v-model="form.resourceId" class="select">
+                  <select
+                    v-model="form.resourceId"
+                    class="select"
+                    :disabled="form.isComposite"
+                    :title="form.isComposite ? 'המשאב של סעיף מורכב נקבע בתמחור' : ''"
+                  >
                     <option :value="null">בחר משאב</option>
                     <option v-for="r in resources" :key="r.id" :value="r.id">{{ r.name }}</option>
                   </select>
                 </div>
               </div>
             </div>
+          </template>
 
-            <!-- composite sub-items -->
-            <div v-if="form.isComposite" class="sub-section">
-              <div class="sub-head">
-                <h4 class="sub-title">תתי סעיפים ({{ form.subItems.length }})</h4>
-                <button class="btn-text add-sub" @click="picker = 'sub'">
-                  <span>הוספת תתי סעיפים</span>
-                  <AppIcon name="plus-circle" :size="24" />
-                </button>
-              </div>
-              <table v-if="subItemRows.length" class="nested">
-                <thead>
-                  <tr>
-                    <th>מס' סעיף</th>
-                    <th>שם סעיף</th>
-                    <th>יח' מידה</th>
-                    <th>כמות</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="s in subItemRows"
-                    :key="s.itemId"
-                    :class="{ 'flash-new': flashSubItems.isNew(s.itemId) }"
-                    :data-flash="flashSubItems.mark(s.itemId)"
-                  >
-                    <td>
-                      <span class="item-code">{{ s.item.code }}</span>
-                    </td>
-                    <td class="ellipsis">{{ s.item.name }}</td>
-                    <td>{{ s.item.unit }}</td>
-                    <td>
-                      <input
-                        v-model="s.qty"
-                        type="number"
-                        min="0"
-                        class="input qty num"
-                        @change="form.subItems.find((x) => x.itemId === s.itemId).qty = Number(s.qty)"
-                      />
-                    </td>
-                    <td>
-                      <button class="icon-btn danger" title="הסרה" @click="removeSubItem(s.itemId)">
-                        <AppIcon name="trash" :size="18" />
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <p v-else class="hint">סעיף מורכב חייב לכלול לפחות שני תתי סעיפים</p>
+          <!-- תתי סעיפים — the components of a composite section -->
+          <template v-else-if="activeTab === 'subitems'">
+            <div class="sub-head">
+              <h4 class="sub-title">תתי סעיפים ({{ form.subItems.length }})</h4>
+              <button class="btn-text add-sub" @click="picker = 'sub'">
+                <span>הוספת תתי סעיפים</span>
+                <AppIcon name="plus-circle" :size="24" />
+              </button>
             </div>
+            <table v-if="subItemRows.length" class="nested">
+              <thead>
+                <tr>
+                  <th>מס' סעיף</th>
+                  <th>שם סעיף</th>
+                  <th>יח' מידה</th>
+                  <th>כמות</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="s in subItemRows"
+                  :key="s.itemId"
+                  :class="{ 'flash-new': flashSubItems.isNew(s.itemId) }"
+                  :data-flash="flashSubItems.mark(s.itemId)"
+                >
+                  <td>
+                    <span class="item-code">{{ s.item.code }}</span>
+                  </td>
+                  <td class="ellipsis">{{ s.item.name }}</td>
+                  <td>{{ s.item.unit }}</td>
+                  <td>
+                    <input
+                      :value="s.qty"
+                      type="number"
+                      min="0"
+                      class="input qty num"
+                      @input="setSubQty(s.itemId, $event.target.value)"
+                    />
+                  </td>
+                  <td>
+                    <button class="icon-btn danger" title="הסרה" @click="removeSubItem(s.itemId)">
+                      <AppIcon name="trash" :size="18" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-else class="hint">סעיף מורכב חייב לכלול לפחות שני תתי סעיפים</p>
           </template>
 
           <!-- הערות -->
@@ -483,37 +549,26 @@ function remove() {
               </div>
             </div>
             <div class="field">
-              <label class="field-label">סעיפים בנים (להצגה בלבד)</label>
-              <div v-if="childItems.length" class="list">
-                <div v-for="c in childItems" :key="c.id" class="list-row">
-                  <span class="item-code">{{ c.code }}</span
-                  ><span class="ellipsis">{{ c.name }}</span>
-                </div>
-              </div>
-              <p v-else class="hint">אין סעיפים בנים</p>
+              <label class="field-label">הסעיפים הקשורים</label>
+              <CatalogItemTree :items="relatedItems" empty="אין סעיפים קשורים" />
             </div>
           </template>
 
           <!-- סעיפים חלופיים -->
           <template v-else>
-            <div v-if="alternatives.length" class="list">
-              <div v-for="a in alternatives" :key="a.id" class="list-row">
-                <span class="item-code">{{ a.code }}</span>
-                <span class="ellipsis">{{ a.name }}</span>
-                <button
-                  class="icon-btn danger"
-                  title="הסרה"
-                  @click="form.alternativeIds = form.alternativeIds.filter((x) => x !== a.id)"
-                >
-                  <AppIcon name="trash" :size="18" />
-                </button>
-              </div>
+            <div class="sub-head">
+              <h4 class="sub-title">סעיפים חלופיים ({{ form.alternativeIds.length }})</h4>
+              <button class="btn-text add-sub" @click="picker = 'alt'">
+                <span>סעיף מתת פרק אחר</span>
+                <AppIcon name="plus-circle" :size="24" />
+              </button>
             </div>
-            <p v-else class="hint">לא הוגדרו סעיפים חלופיים</p>
-            <button class="btn-text add-sub" @click="picker = 'alt'">
-              <span>הוספת סעיפים חלופיים</span>
-              <AppIcon name="plus-circle" :size="24" />
-            </button>
+            <CatalogItemTree
+              v-model="form.alternativeIds"
+              selectable
+              :items="altPool"
+              empty="לא הוגדרו סעיפים חלופיים"
+            />
           </template>
         </div>
 
@@ -532,6 +587,8 @@ function remove() {
     <ItemPickerModal
       v-if="picker"
       :mode="picker === 'parent' ? 'single' : 'multi'"
+      :exclude-composite="picker === 'sub'"
+      :title="pickerTitle"
       :catalog-name="catalogName"
       :already-selected="picker === 'sub' ? form.subItems.map((s) => s.itemId) : item ? [item.id] : []"
       @close="picker = null"
@@ -607,16 +664,17 @@ function remove() {
   color: var(--danger);
 }
 /* סעיף מורכב sits on the right edge, label then toggle */
-.composite-row {
+/* סוג סעיף — the first field, sitting where the composite toggle used to be */
+.type-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 24px;
 }
-.composite-lbl {
-  font-size: 14px;
-  line-height: 18px;
-  color: var(--text-primary);
+.type-row .field-label {
+  padding: 0;
+}
+.type-select {
+  width: 171px;
 }
 /* tabs: each carries its own 2px underline (gray-light, blue when active) */
 .cim-tabs {
@@ -786,13 +844,6 @@ function remove() {
   font-weight: 600;
 }
 /* composite sub-items */
-.sub-section {
-  border-top: 1px solid var(--divider);
-  padding-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .sub-head {
   display: flex;
   align-items: center;
