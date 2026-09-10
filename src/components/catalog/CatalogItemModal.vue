@@ -7,6 +7,7 @@ import { PRIORITY, PRIORITY_LABELS } from "@/constants";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import { useEscape } from "@/composables/useEscape";
 import ItemPickerModal from "@/components/boq/ItemPickerModal.vue";
+import BaseToggle from "@/components/shared/BaseToggle.vue";
 import RichTextEditor from "@/components/shared/RichTextEditor.vue";
 import CatalogItemTree from "@/components/catalog/CatalogItemTree.vue";
 import { formatDateTime } from "@/utils/format";
@@ -77,13 +78,13 @@ const pickerTitle = computed(() => {
 });
 const flashSubItems = useFlash("subitem");
 
-/* סוג סעיף. A composite is always measured in קומפ׳, and carries no secondary
+/* סעיף מורכב. A composite is always measured in קומפ׳, and carries no secondary
    unit, no פחת and no משאב — those are locked here and set in pricing. */
 const COMPOSITE_UNIT = "קומפ'";
-const itemType = computed({
-  get: () => (form.isComposite ? "composite" : "regular"),
+const isComposite = computed({
+  get: () => form.isComposite,
   set(v) {
-    form.isComposite = v === "composite";
+    form.isComposite = v;
     if (form.isComposite) {
       form.unit = COMPOSITE_UNIT;
       form.unit2 = "";
@@ -299,13 +300,9 @@ function remove() {
           </div>
         </div>
 
-        <!-- סוג סעיף is the first field, where the composite toggle used to be -->
-        <div class="type-row">
-          <label class="field-label">סוג סעיף</label>
-          <select v-model="itemType" class="select type-select">
-            <option value="regular">רגיל</option>
-            <option value="composite">מורכב</option>
-          </select>
+        <div class="composite-row">
+          <span class="composite-lbl">סעיף מורכב</span>
+          <BaseToggle v-model="isComposite" />
         </div>
 
         <div class="cim-tabs">
@@ -664,17 +661,16 @@ function remove() {
   color: var(--danger);
 }
 /* סעיף מורכב sits on the right edge, label then toggle */
-/* סוג סעיף — the first field, sitting where the composite toggle used to be */
-.type-row {
+.composite-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  height: 24px;
 }
-.type-row .field-label {
-  padding: 0;
-}
-.type-select {
-  width: 171px;
+.composite-lbl {
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--text-primary);
 }
 /* tabs: each carries its own 2px underline (gray-light, blue when active) */
 .cim-tabs {
