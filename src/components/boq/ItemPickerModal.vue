@@ -11,7 +11,11 @@ import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 const props = defineProps({
   mode: { type: String, default: "multi" }, // 'multi' | 'single'
   catalogName: { type: String, default: "" },
+  /** overrides the popup heading, e.g. בחירת סעיפים חלופיים לסעיף 02.80.001 */
+  title: { type: String, default: "בחירת סעיפים" },
   alreadySelected: { type: Array, default: () => [] },
+  /** a composite section cannot be a component of another one (spec: לא לאפשר כינון) */
+  excludeComposite: { type: Boolean, default: false },
 });
 const emit = defineEmits(["close", "picked"]);
 useEscape(() => emit("close"));
@@ -102,7 +106,11 @@ function escapeHtml(s) {
 
 /* selection */
 function isDisabled(item) {
-  return alreadySet.value.has(item.id);
+  return alreadySet.value.has(item.id) || (props.excludeComposite && item.type === "composite");
+}
+function disabledReason(item) {
+  if (props.excludeComposite && item.type === "composite") return "סעיף מורכב לא יכול להיות מרכיב";
+  return alreadySet.value.has(item.id) ? "כבר נבחר" : "";
 }
 function isChecked(item) {
   return selection.value.has(item.id) || isDisabled(item);
@@ -157,7 +165,7 @@ function confirm() {
             </button>
             <span class="ph-catalog">{{ catalogName }}</span>
           </div>
-          <h2 class="ph-title">בחירת סעיפים</h2>
+          <h2 class="ph-title">{{ title }}</h2>
         </div>
         <div class="picker-divider" />
 
@@ -297,7 +305,7 @@ function confirm() {
                         </td>
                         <td class="td-name">
                           <span class="r-name-text ellipsis" v-html="highlight(item.name)" />
-                          <span v-if="isDisabled(item)" class="already">כבר נבחר</span>
+                          <span v-if="isDisabled(item)" class="already">{{ disabledReason(item) }}</span>
                         </td>
                         <td class="td-unit">{{ item.unit }}</td>
                       </tr>

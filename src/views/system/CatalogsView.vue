@@ -1,5 +1,5 @@
 <script setup>
-import { ref, nextTick } from "vue";
+import { computed, ref, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import { useUiStore } from "@/stores/ui";
@@ -26,6 +26,32 @@ const newName = ref("");
 const newActive = ref(true);
 const newInput = ref(null);
 const flashNew = useFlash("catalog");
+
+/* every header in the "Catalog master table" carries a sort chevron, so it sorts */
+const COLUMNS = [
+  { key: "name", label: "שם קטלוג", cls: "col-name" },
+  { key: "active", label: "סטטוס", cls: "col-status" },
+  { key: "uploadedAt", label: "תאריך העלאה", cls: "col-uploaded" },
+  { key: "updatedAt", label: "תאריך עדכון אחרון", cls: "col-updated" },
+];
+const sortKey = ref("name");
+const sortDir = ref("asc");
+function sortBy(key) {
+  if (sortKey.value === key) sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+  else {
+    sortKey.value = key;
+    sortDir.value = "asc";
+  }
+}
+const rows = computed(() => {
+  const dir = sortDir.value === "asc" ? 1 : -1;
+  return [...db.catalogs].sort((a, b) => {
+    const x = a[sortKey.value] ?? "";
+    const y = b[sortKey.value] ?? "";
+    if (typeof x === "boolean") return (Number(x) - Number(y)) * dir;
+    return String(x).localeCompare(String(y), "he") * dir;
+  });
+});
 
 const MENU_ITEMS = [
   { key: "edit", label: "עריכה", icon: "pencil" },
@@ -122,10 +148,20 @@ function confirmDelete() {
       <table class="cat-table">
         <thead>
           <tr>
-            <th class="col-name">שם קטלוג <AppIcon name="chevron-down" :size="12" /></th>
-            <th class="col-status">סטטוס <AppIcon name="chevron-down" :size="12" /></th>
-            <th class="col-uploaded">תאריך העלאה <AppIcon name="chevron-down" :size="12" /></th>
-            <th class="col-updated">תאריך עדכון אחרון <AppIcon name="chevron-down" :size="12" /></th>
+            <th
+              v-for="c in COLUMNS"
+              :key="c.key"
+              :class="[c.cls, { sorted: sortKey === c.key }]"
+              @click="sortBy(c.key)"
+            >
+              {{ c.label }}
+              <AppIcon
+                class="sort-chevron"
+                :class="{ up: sortKey === c.key && sortDir === 'desc' }"
+                name="chevron-down"
+                :size="12"
+              />
+            </th>
             <th class="th-kebab"></th>
           </tr>
         </thead>
@@ -180,7 +216,7 @@ function confirmDelete() {
             </td>
           </tr>
           <tr
-            v-for="c in db.catalogs"
+            v-for="c in rows"
             :key="c.id"
             class="row"
             :class="{ 'flash-new': flashNew.isNew(c.id) }"
@@ -313,6 +349,23 @@ function confirmDelete() {
 }
 .row:hover {
   background: #f7f7f7;
+}
+.cat-table th {
+  cursor: pointer;
+  user-select: none;
+}
+.sort-chevron {
+  color: var(--text-secondary);
+  opacity: 0.55;
+  transition: transform 0.15s ease;
+  vertical-align: middle;
+}
+.sort-chevron.up {
+  transform: rotate(180deg);
+}
+.cat-table th.sorted .sort-chevron {
+  opacity: 1;
+  color: var(--brand-primary);
 }
 .row.adding {
   cursor: default;

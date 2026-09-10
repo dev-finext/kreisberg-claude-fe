@@ -20,6 +20,7 @@ import ChapterNotesModal from "@/components/boq/ChapterNotesModal.vue";
 import CatalogItemModal from "@/components/catalog/CatalogItemModal.vue";
 import ChapterModal from "@/components/catalog/ChapterModal.vue";
 import TagCreateModal from "@/components/catalog/TagCreateModal.vue";
+import CatalogItemTree from "@/components/catalog/CatalogItemTree.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 
 /* 5-second highlight on anything just created, so it stands out among the rest */
@@ -158,11 +159,32 @@ function itemHistory(item) {
 function itemAlts(item) {
   return (item.alternativeIds || []).map((id) => cat.item(id)).filter(Boolean);
 }
+/* the design lays related sections out as פרק › תת פרק › סעיף, parent and children together */
+function itemRelated(item) {
+  const parent = item.parentId ? cat.item(item.parentId) : null;
+  return [...(parent ? [parent] : []), ...cat.childrenOf(item.id)];
+}
+/* ticking a row in סעיפים חלופיים writes straight back to the section */
+function setAlts(item, ids) {
+  const live = cat.item(item.id);
+  if (!live) return;
+  live.alternativeIds = [...ids];
+  db.persist();
+}
 function fieldLabel(name) {
   return HISTORY_FIELD_LABELS[name] || name;
 }
 function valueLabel(v) {
   return HISTORY_VALUE_LABELS[v] ?? v;
+}
+
+/* alternatives are picked from the section's own sub-chapter, plus whatever is
+   already linked from elsewhere (design note on "בחירת סעיפים חלופיים") */
+function altPool(item) {
+  const sc = cat.subChapter(item.subChapterId);
+  const siblings = (sc?.items || []).filter((i) => !i.isNote && i.id !== item.id);
+  const linked = itemAlts(item).filter((a) => a.subChapterId !== item.subChapterId);
+  return [...siblings, ...linked];
 }
 
 /* the catalog is empty until the first section is added (Figma "קטלוג חדש") */
@@ -174,7 +196,6 @@ const totalItems = computed(() =>
 );
 
 /* ---------- modals ---------- */
-const addMenu = ref(null);
 const newMenu = ref(null);
 const itemModal = ref(null); // {item, subChapter, initialType}
 const chapterModal = ref(null); // {kind, parentChapter, initial}
@@ -183,10 +204,6 @@ const deleteIds = ref([]); // items pending deletion (toolbar selection or a sin
 const rowMenu = ref(null); // {item, x, y}
 const tagModal = ref(false);
 
-function openAddMenu(e) {
-  const rect = e.currentTarget.getBoundingClientRect();
-  addMenu.value = { x: rect.left - 120, y: rect.bottom + 4 };
-}
 function targetSubChapter() {
   const scId = checkedSubIds.value[0];
   return (
@@ -196,8 +213,8 @@ function targetSubChapter() {
     null
   );
 }
-function onAdd(kind) {
-  addMenu.value = null;
+/* the section type is chosen inside the popup, so the button opens it directly */
+function onAdd(kind = "regular") {
   const sc = targetSubChapter();
   if (!sc) {
     ui.toast("יש להוסיף פרק ותת פרק לפני הוספת סעיפים", "warning");
@@ -345,7 +362,7 @@ function setActive(v) {
           <BaseToggle :model-value="!!catalogMeta?.active" @update:model-value="setActive" />
         </div>
         <div class="sh-start">
-          <button class="tb-btn" @click="openAddMenu">
+          <button class="tb-btn" @click="onAdd()">
             <AppIcon name="plus-circle" :size="24" />
             <span>סעיף</span>
           </button>
@@ -559,23 +576,17 @@ function setActive(v) {
                           </template>
 
                           <template v-else-if="rowTab(item.id) === 'related'">
-                            <p v-if="item.parentId" class="dp-text">
-                              <span class="g-note-lbl">סעיף אב:</span>
-                              {{ parentCode(item) }} · {{ cat.item(item.parentId)?.name }}
-                            </p>
-                            <p v-for="c in cat.childrenOf(item.id)" :key="c.id" class="dp-text">
-                              <span class="g-note-lbl">סעיף בן:</span> {{ c.code }} · {{ c.name }}
-                            </p>
-                            <p v-if="!item.parentId && !cat.childrenOf(item.id).length" class="dp-empty">
-                              אין סעיפים קשורים
-                            </p>
+                            <CatalogItemTree :items="itemRelated(item)" empty="אין סעיפים קשורים" />
                           </template>
 
                           <template v-else-if="rowTab(item.id) === 'alts'">
-                            <p v-for="a in itemAlts(item)" :key="a.id" class="dp-text">
-                              {{ a.code }} · {{ a.name }}
-                            </p>
-                            <p v-if="!itemAlts(item).length" class="dp-empty">לא הוגדרו סעיפים חלופיים</p>
+                            <CatalogItemTree
+                              selectable
+                              :items="altPool(item)"
+                              :model-value="item.alternativeIds || []"
+                              empty="לא הוגדרו סעיפים חלופיים"
+                              @update:model-value="(ids) => setAlts(item, ids)"
+                            />
                           </template>
 
                           <template v-else>
@@ -614,17 +625,6 @@ function setActive(v) {
       </div>
     </div>
 
-    <ContextMenu
-      v-if="addMenu"
-      :items="[
-        { key: 'regular', label: 'סעיף רגיל', icon: 'plus-circle' },
-        { key: 'composite', label: 'סעיף מורכב', icon: 'copy' },
-      ]"
-      :x="addMenu.x"
-      :y="addMenu.y"
-      @select="onAdd"
-      @close="addMenu = null"
-    />
     <ContextMenu
       v-if="newMenu"
       :items="[
