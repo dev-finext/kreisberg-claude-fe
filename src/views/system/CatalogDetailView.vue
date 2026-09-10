@@ -45,6 +45,7 @@ const nameInput = ref(null);
 /* ---------- chapters tree (right panel) ---------- */
 const expandedChapterIds = ref(cat.chapters.slice(0, 1).map((c) => c.id));
 const checkedSubIds = ref(cat.chapters[0]?.subChapters.slice(0, 2).map((s) => s.id) || []);
+/* null means "הכל" is selected, i.e. no particular chapter */
 const selectedChapterId = ref(cat.chapters[0]?.id ?? null);
 
 function chapterChecked(ch) {
@@ -75,9 +76,10 @@ const groups = computed(() => {
   const t = search.value.trim();
   const out = [];
   for (const ch of cat.chapters) {
-    const subs = ch.subChapters.filter((sc) =>
-      checkedSubIds.value.length ? checkedSubIds.value.includes(sc.id) : ch.id === selectedChapterId.value
-    );
+    const subs = ch.subChapters.filter((sc) => {
+      if (checkedSubIds.value.length) return checkedSubIds.value.includes(sc.id);
+      return selectedChapterId.value === null || ch.id === selectedChapterId.value;
+    });
     const subGroups = [];
     for (const sc of subs) {
       const items = sc.items.filter(
@@ -125,7 +127,7 @@ function noteCount(scope, id) {
 /* chapter / sub-chapter headers carry an "הוספת הערה" pill and show the latest note inline */
 function noteLabel(scope, id) {
   const n = noteCount(scope, id);
-  return n ? `הערות (${n})` : "הוספת הערה";
+  return n === 1 ? "הערה אחת" : `${n} הערות`;
 }
 function latestNote(scope, id) {
   const list = db.comments.filter((c) => c.scope === scope && c.refId === id);
@@ -196,7 +198,6 @@ const totalItems = computed(() =>
 );
 
 /* ---------- modals ---------- */
-const newMenu = ref(null);
 const itemModal = ref(null); // {item, subChapter, initialType}
 const chapterModal = ref(null); // {kind, parentChapter, initial}
 const notesCtx = ref(null);
@@ -222,19 +223,14 @@ function onAdd(kind = "regular") {
   }
   itemModal.value = { item: null, subChapter: sc, initialType: kind };
 }
-function openNewMenu(e) {
-  const rect = e.currentTarget.getBoundingClientRect();
-  newMenu.value = { x: rect.left - 120, y: rect.bottom + 4 };
-}
-function onNew(kind) {
-  newMenu.value = null;
-  if (kind === "subChapter" && !selectedChapterId.value) {
-    ui.toast("בחר פרק תחילה", "warning");
-    return;
-  }
+/* "חדש" reads the selection: a chapter selected adds a sub-chapter under it,
+   "הכל" selected adds a chapter. Nothing to ask. */
+const newLabel = computed(() => (selectedChapterId.value ? "תת פרק חדש" : "פרק חדש"));
+function onNew() {
+  const parent = selectedChapterId.value ? cat.chapter(selectedChapterId.value) : null;
   chapterModal.value = {
-    kind,
-    parentChapter: kind === "subChapter" ? cat.chapter(selectedChapterId.value) : null,
+    kind: parent ? "subChapter" : "chapter",
+    parentChapter: parent,
     initial: null,
   };
 }
@@ -388,12 +384,18 @@ function setActive(v) {
         <!-- chapters panel -->
         <aside class="panel">
           <div class="panel-box">פרקים</div>
-          <button class="ghost-btn" @click="openNewMenu">
+          <button class="ghost-btn" :title="newLabel" @click="onNew">
             <span>חדש</span>
             <AppIcon name="plus-circle" :size="24" />
           </button>
           <div class="tree scroll-slim">
-            <div class="tree-root"><AppIcon name="chevron-down" :size="16" /><span>הכל</span></div>
+            <div
+              class="tree-root"
+              :class="{ selected: selectedChapterId === null }"
+              @click="selectedChapterId = null"
+            >
+              <AppIcon name="chevron-down" :size="16" /><span>הכל</span>
+            </div>
             <template v-for="ch in cat.chapters" :key="ch.id">
               <div
                 class="tree-row"
@@ -461,11 +463,22 @@ function setActive(v) {
                       <div class="g-lines">
                         <div class="g-title">
                           <span>פרק {{ g.chapter.num }}-{{ g.chapter.name }}</span>
+                          <!-- the glyph shows only when the chapter carries notes -->
                           <button
+                            v-if="noteCount('chapter', g.chapter.id)"
+                            class="note-glyph"
+                            :title="noteLabel('chapter', g.chapter.id)"
+                            @click="notesCtx = { scope: 'chapter', target: g.chapter }"
+                          >
+                            <AppIcon name="note" :size="20" />
+                            <span class="note-count num">{{ noteCount("chapter", g.chapter.id) }}</span>
+                          </button>
+                          <button
+                            v-else
                             class="note-pill"
                             @click="notesCtx = { scope: 'chapter', target: g.chapter }"
                           >
-                            {{ noteLabel("chapter", g.chapter.id) }}
+                            הוספת הערה
                           </button>
                         </div>
                         <!-- latest note, inline under the chapter title (Figma "Note") -->
@@ -480,10 +493,22 @@ function setActive(v) {
                         <div class="g-sub">
                           <span>תת פרק {{ sg.subChapter.num }}-{{ sg.subChapter.name }}</span>
                           <button
+                            v-if="noteCount('subChapter', sg.subChapter.id)"
+                            class="note-glyph"
+                            :title="noteLabel('subChapter', sg.subChapter.id)"
+                            @click="notesCtx = { scope: 'subChapter', target: sg.subChapter }"
+                          >
+                            <AppIcon name="note" :size="20" />
+                            <span class="note-count num">{{
+                              noteCount("subChapter", sg.subChapter.id)
+                            }}</span>
+                          </button>
+                          <button
+                            v-else
                             class="note-pill"
                             @click="notesCtx = { scope: 'subChapter', target: sg.subChapter }"
                           >
-                            {{ noteLabel("subChapter", sg.subChapter.id) }}
+                            הוספת הערה
                           </button>
                         </div>
                         <p
@@ -625,17 +650,6 @@ function setActive(v) {
       </div>
     </div>
 
-    <ContextMenu
-      v-if="newMenu"
-      :items="[
-        { key: 'chapter', label: 'פרק חדש', icon: 'plus-circle' },
-        { key: 'subChapter', label: 'תת פרק חדש', icon: 'plus-circle' },
-      ]"
-      :x="newMenu.x"
-      :y="newMenu.y"
-      @select="onNew"
-      @close="newMenu = null"
-    />
     <CatalogItemModal
       v-if="itemModal"
       :item="itemModal.item"
@@ -825,6 +839,11 @@ function setActive(v) {
   height: 32px;
   padding: 0 4px 0 28px;
   font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.tree-root.selected {
+  background: var(--brand-primary-soft);
 }
 .tree-row {
   display: flex;
@@ -914,6 +933,27 @@ function setActive(v) {
 }
 .g-title {
   font-weight: 600;
+}
+/* notes glyph with its count, shown only when the chapter carries notes */
+.note-glyph {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--brand-primary);
+}
+.note-count {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 100px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
 }
 /* "הוספת הערה" pill next to a chapter / sub-chapter title */
 .note-pill {
