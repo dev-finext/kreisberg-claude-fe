@@ -230,59 +230,61 @@ function saveAll() {
         <!-- items -->
         <section class="main">
           <h3 class="tag-title">{{ selectedTag?.name || "בחר תגית" }}</h3>
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th class="th-check">
-                  <BaseCheckbox :model-value="allTagged" @update:model-value="setAllTag" />
-                </th>
-                <th>מס' סעיף</th>
-                <th>שם סעיף</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-for="g in groups" :key="g.chapter.id">
-                <tr class="group-row">
-                  <td colspan="3">
-                    <div class="group-inner">
-                      <span class="g-title">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</span>
-                      <AppIcon name="note" :size="16" class="note-ico" />
-                    </div>
-                  </td>
+          <div class="items-scroll scroll-slim">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th class="th-check">
+                    <BaseCheckbox :model-value="allTagged" @update:model-value="setAllTag" />
+                  </th>
+                  <th>מס' סעיף</th>
+                  <th>שם סעיף</th>
                 </tr>
-                <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
-                  <tr class="group-row sub">
+              </thead>
+              <tbody>
+                <template v-for="g in groups" :key="g.chapter.id">
+                  <tr class="group-row">
                     <td colspan="3">
                       <div class="group-inner">
-                        <span class="g-sub">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</span>
+                        <span class="g-title">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</span>
                         <AppIcon name="note" :size="16" class="note-ico" />
                       </div>
                     </td>
                   </tr>
-                  <tr
-                    v-for="item in sg.items"
-                    :key="item.id"
-                    class="item-row"
-                    :class="{ tagged: hasTag(item) }"
-                  >
-                    <td class="td-check">
-                      <BaseCheckbox
-                        :model-value="hasTag(item)"
-                        @update:model-value="(v) => setTag(item, v)"
-                      />
-                    </td>
-                    <td>
-                      <span class="item-code">{{ item.code }}</span>
-                    </td>
-                    <td class="ellipsis">{{ item.name }}</td>
-                  </tr>
+                  <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
+                    <tr class="group-row sub">
+                      <td colspan="3">
+                        <div class="group-inner">
+                          <span class="g-sub">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</span>
+                          <AppIcon name="note" :size="16" class="note-ico" />
+                        </div>
+                      </td>
+                    </tr>
+                    <tr
+                      v-for="item in sg.items"
+                      :key="item.id"
+                      class="item-row"
+                      :class="{ tagged: hasTag(item) }"
+                    >
+                      <td class="td-check">
+                        <BaseCheckbox
+                          :model-value="hasTag(item)"
+                          @update:model-value="(v) => setTag(item, v)"
+                        />
+                      </td>
+                      <td>
+                        <span class="item-code">{{ item.code }}</span>
+                      </td>
+                      <td class="ellipsis">{{ item.name }}</td>
+                    </tr>
+                  </template>
                 </template>
-              </template>
-              <tr v-if="!groups.length">
-                <td colspan="3" class="empty">אין סעיפים בתגית זו — חפש סעיף כדי לשייך אותו לתגית</td>
-              </tr>
-            </tbody>
-          </table>
+                <tr v-if="!groups.length">
+                  <td colspan="3" class="empty">אין סעיפים בתגית זו — חפש סעיף כדי לשייך אותו לתגית</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </div>
@@ -318,13 +320,16 @@ function saveAll() {
 </template>
 
 <style scoped>
+/* bounded to the viewport like the קטלוג card: the tag list and the items
+   table each scroll on their own instead of growing the page */
 .card {
   background: var(--surface);
   border-radius: var(--radius-card);
-  min-height: calc(100vh - 128px);
+  height: calc(100vh - 108px);
   padding: 16px 24px 24px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .sub-header {
   display: flex;
@@ -403,6 +408,7 @@ function saveAll() {
   gap: 8px;
 }
 .panel-box {
+  flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -426,11 +432,14 @@ function saveAll() {
   font-weight: 600;
   align-self: flex-end;
   height: 32px;
+  flex-shrink: 0;
 }
 .tag-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 .tag-row {
@@ -477,12 +486,22 @@ function saveAll() {
   flex: 1;
   min-width: 0;
   padding: 0 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .tag-title {
   font-size: 16px;
   font-weight: 700;
   text-align: right;
   margin: 4px 8px 10px;
+  flex-shrink: 0;
+}
+/* the chosen tag stays in view while its sections scroll under it */
+.items-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 .items-table {
   width: 100%;
