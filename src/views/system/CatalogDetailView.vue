@@ -166,13 +166,6 @@ function itemRelated(item) {
   const parent = item.parentId ? cat.item(item.parentId) : null;
   return [...(parent ? [parent] : []), ...cat.childrenOf(item.id)];
 }
-/* ticking a row in סעיפים חלופיים writes straight back to the section */
-function setAlts(item, ids) {
-  const live = cat.item(item.id);
-  if (!live) return;
-  live.alternativeIds = [...ids];
-  db.persist();
-}
 function fieldLabel(name) {
   return HISTORY_FIELD_LABELS[name] || name;
 }
@@ -182,12 +175,6 @@ function valueLabel(v) {
 
 /* alternatives are picked from the section's own sub-chapter, plus whatever is
    already linked from elsewhere (design note on "בחירת סעיפים חלופיים") */
-function altPool(item) {
-  const sc = cat.subChapter(item.subChapterId);
-  const siblings = (sc?.items || []).filter((i) => !i.isNote && i.id !== item.id);
-  const linked = itemAlts(item).filter((a) => a.subChapterId !== item.subChapterId);
-  return [...siblings, ...linked];
-}
 
 /* the catalog is empty until the first section is added (Figma "קטלוג חדש") */
 const totalItems = computed(() =>
@@ -605,13 +592,7 @@ function setActive(v) {
                           </template>
 
                           <template v-else-if="rowTab(item.id) === 'alts'">
-                            <CatalogItemTree
-                              selectable
-                              :items="altPool(item)"
-                              :model-value="item.alternativeIds || []"
-                              empty="לא הוגדרו סעיפים חלופיים"
-                              @update:model-value="(ids) => setAlts(item, ids)"
-                            />
+                            <CatalogItemTree :items="itemAlts(item)" empty="לא הוגדרו סעיפים חלופיים" />
                           </template>
 
                           <template v-else>
