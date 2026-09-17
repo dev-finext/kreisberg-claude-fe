@@ -69,19 +69,24 @@ const form = reactive({
   tagIds: [...(props.item?.tags || [])],
   subItems: JSON.parse(JSON.stringify(props.item?.subItems || [])),
   parentId: props.item?.parentId ?? null,
+  /* children are a field on the OTHER sections; held here and written on save */
+  childIds: props.item ? cat.childrenOf(props.item.id).map((i) => i.id) : [],
   alternativeIds: [...(props.item?.alternativeIds || [])],
 });
-const picker = ref(null); // 'sub' | 'parent' | 'alt'
+const picker = ref(null); // 'sub' | 'parent' | 'alt' | 'related'
 /* nothing already on the section can be picked again, nor the section itself */
 const pickerTaken = computed(() => {
   const self = props.item ? [props.item.id] : [];
   if (picker.value === "sub") return form.subItems.map((s) => s.itemId);
   if (picker.value === "alt") return [...self, ...form.alternativeIds];
+  if (picker.value === "related")
+    return [...self, ...form.childIds, ...(form.parentId ? [form.parentId] : [])];
   return self;
 });
 const pickerTitle = computed(() => {
   if (picker.value === "sub") return "בחירת תתי סעיפים";
   if (picker.value === "alt") return `בחירת סעיפים חלופיים לסעיף ${form.code}`;
+  if (picker.value === "related") return `בחירת סעיפים קשורים לסעיף ${form.code}`;
   return "בחירת סעיף אב";
 });
 const flashSubItems = useFlash("subitem");
@@ -109,7 +114,7 @@ const resources = computed(() =>
   form.resourceTypeId ? db.constructors.filter((c) => c.typeId === form.resourceTypeId) : db.constructors
 );
 const parentItem = computed(() => (form.parentId ? cat.item(form.parentId) : null));
-const childItems = computed(() => (props.item ? cat.childrenOf(props.item.id) : []));
+const childItems = computed(() => form.childIds.map((id) => cat.item(id)).filter(Boolean));
 const alternatives = computed(() => form.alternativeIds.map((id) => cat.item(id)).filter(Boolean));
 /* parent and children read as one tree, the way the open row draws them */
 const relatedItems = computed(() => [...(parentItem.value ? [parentItem.value] : []), ...childItems.value]);
@@ -198,6 +203,10 @@ function onPicked(ids) {
   } else if (picker.value === "alt") {
     for (const id of ids)
       if (id !== props.item?.id && !form.alternativeIds.includes(id)) form.alternativeIds.push(id);
+  } else if (picker.value === "related") {
+    for (const id of ids)
+      if (id !== props.item?.id && id !== form.parentId && !form.childIds.includes(id))
+        form.childIds.push(id);
   }
   picker.value = null;
 }
@@ -206,6 +215,12 @@ function removeSubItem(itemId) {
 }
 function removeAlternative(itemId) {
   form.alternativeIds = form.alternativeIds.filter((id) => id !== itemId);
+}
+/* the list holds the סעיף אב as well as the children, and either way removing
+   the row is removing the link */
+function removeRelated(itemId) {
+  if (form.parentId === itemId) form.parentId = null;
+  form.childIds = form.childIds.filter((id) => id !== itemId);
 }
 
 /* ---------- notes tab ---------- */
@@ -234,6 +249,15 @@ function removeNote(id) {
   ui.toast("ההערה נמחקה");
 }
 
+/* a child is a section pointing back at this one, so the סעיפים קשורים tab
+   writes onto those sections — once, here, and only when the popup is saved */
+function applyChildren(itemId) {
+  for (const other of db.allItems) {
+    if (other.id === itemId) continue;
+    if (form.childIds.includes(other.id)) other.parentId = itemId;
+    else if (other.parentId === itemId) other.parentId = null;
+  }
+}
 function save() {
   if (!valid.value) return;
   const payload = {
@@ -258,6 +282,7 @@ function save() {
   if (props.item) {
     const liveItem = cat.item(props.item.id);
     Object.assign(liveItem, payload);
+    applyChildren(liveItem.id);
     db.persist();
     ui.toast("הסעיף עודכן בהצלחה");
     emit("saved", liveItem);
@@ -272,6 +297,7 @@ function save() {
       ...payload,
     };
     liveSubChapter.items.push(item);
+    applyChildren(item.id);
     db.persist();
     ui.toast("הסעיף נוסף לקטלוג");
     emit("saved", item);
@@ -290,6 +316,14 @@ function askRemoveSubItem(s) {
     message: `האם להסיר את "${s.item.name}" מהסעיף המורכב?`,
     confirmLabel: "הסרה",
     run: () => removeSubItem(s.itemId),
+  };
+}
+function askRemoveRelated(it) {
+  confirmDelete.value = {
+    title: "הסרת סעיף קשור",
+    message: `האם להסיר את "${it.name}" מרשימת הסעיפים הקשורים?`,
+    confirmLabel: "הסרה",
+    run: () => removeRelated(it.id),
   };
 }
 function askRemoveAlternative(it) {
@@ -589,10 +623,19 @@ function remove() {
                 </button>
               </div>
             </div>
-            <div class="field">
-              <label class="field-label">הסעיפים הקשורים</label>
-              <CatalogItemTree :items="relatedItems" empty="אין סעיפים קשורים" />
+            <div class="sub-head">
+              <h4 class="sub-title">הסעיפים הקשורים ({{ relatedItems.length }})</h4>
+              <button class="btn-text add-sub" @click="picker = 'related'">
+                <span>הוספת סעיף קשור</span>
+                <AppIcon name="plus-circle" :size="24" />
+              </button>
             </div>
+            <CatalogItemTree
+              :items="relatedItems"
+              removable
+              empty="אין סעיפים קשורים"
+              @remove="askRemoveRelated"
+            />
           </template>
 
           <!-- סעיפים חלופיים -->
