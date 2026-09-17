@@ -706,13 +706,16 @@ function setActive(v) {
 </template>
 
 <style scoped>
+/* bounded to the viewport like the כתב כמויות card: the chapters tree and the
+   items table each scroll on their own instead of growing the page */
 .card {
   background: var(--surface);
   border-radius: var(--radius-card);
-  min-height: calc(100vh - 128px);
+  height: calc(100vh - 108px);
   padding: 16px 24px 24px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .sub-header {
   display: flex;
@@ -802,6 +805,7 @@ function setActive(v) {
 }
 /* the single "פרקים" tab in the BoQ side-menu tabs shell */
 .panel-box {
+  flex-shrink: 0;
   border: 1px solid var(--page-bg);
   border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -825,11 +829,14 @@ function setActive(v) {
   font-weight: 600;
   align-self: flex-end;
   height: 32px;
+  flex-shrink: 0;
 }
 .tree {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 .tree-root {
