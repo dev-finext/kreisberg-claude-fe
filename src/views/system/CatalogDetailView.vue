@@ -607,6 +607,7 @@ function setActive(v) {
                           <template v-else-if="rowTab(item.id) === 'alts'">
                             <CatalogItemTree
                               selectable
+                              flat
                               :items="altPool(item)"
                               :model-value="item.alternativeIds || []"
                               empty="לא הוגדרו סעיפים חלופיים"
