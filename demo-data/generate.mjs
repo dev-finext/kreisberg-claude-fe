@@ -152,17 +152,27 @@ for (const ch of raw) {
 
 const allItems = () => chapters.flatMap((c) => c.subChapters.flatMap((s) => s.items));
 const realItems = () => allItems().filter((i) => !i.isNote);
-const findByCode = (code) => allItems().find((i) => i.code === code);
 
 /* ---------------- composite worked example (design brief §7.7) ---------------- */
-function ensureItem(chNum, fields) {
-  const existing = findByCode(fields.code);
-  if (existing) return existing;
-  const chapter = chapters.find((c) => c.num === chNum) || chapters[0];
-  const sub = chapter.subChapters[0];
+/* Placed by פרק / תת פרק, with the code read off that placement. Naming a
+   chapter this catalog does not hold used to drop the item into whatever
+   sub-chapter came first, so ticking that תת פרק listed sections whose code
+   pointed somewhere else entirely. */
+function nextCodeIn(chapter, sub) {
+  let max = 0;
+  for (const i of sub.items) {
+    const m = String(i.code || "").match(/(\d+)$/);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return `${chapter.num}.${sub.num}.${String(max + 10).padStart(4, "0")}`;
+}
+function ensureItem(chNum, subNum, fields) {
+  const chapter = chapters.find((c) => c.num === chNum);
+  const sub = chapter?.subChapters.find((s) => s.num === subNum);
+  if (!sub) throw new Error(`worked example: פרק ${chNum} / תת פרק ${subNum} is not in this catalog`);
   const item = {
     id: itemAutoId++,
-    key: `${fields.code}|${fields.name}`,
+    code: nextCodeIn(chapter, sub),
     subChapterId: sub.id,
     chapterId: chapter.id,
     unit2: "",
@@ -177,34 +187,32 @@ function ensureItem(chNum, fields) {
     description: fields.name,
     ...fields,
   };
+  item.key = `${item.code}|${item.name}`;
   sub.items.push(item);
   return item;
 }
 
-const subA = ensureItem("02", {
-  code: "02.050.0100",
+/* בטון, טפסנות וברזל — all of פרק 02, the rebar under its own תת פרק */
+const subA = ensureItem("02", "010", {
   name: "יציקת בטון ב-30 לעמודים",
   description:
     'יציקת בטון ב-30 לעמודים בשטחי חתך 0.05-0.20 מ"ר\nפריסת כמויות ע"פ קומות:\n* קומת מרתף בשטח כ-100 מ"ר.\n* קומת קרקע בשטח כ-120 מ"ר.\n* קומה ראשונה בשטח כ-80 מ"ר.',
   unit: 'מ"ק',
   priority: "mandatory",
 });
-const subB = ensureItem("06", {
-  code: "06.950.0100",
+const subB = ensureItem("02", "010", {
   name: "יצירת מערכת טפסנות עבור עמודים",
   description: "יצירת מערכת טפסנות עבור עמודים",
   unit: 'מ"ר',
   priority: "recommended",
 });
-const subC = ensureItem("23", {
-  code: "23.045.0100",
+const subC = ensureItem("02", "040", {
   name: "פריסת ברזלים עבור עמודי בטון",
   description: "פריסת ברזלים עבור עמודי בטון",
   unit: 'מ"ק',
   priority: "recommended",
 });
-const composite = ensureItem("10", {
-  code: "10.03.0010",
+const composite = ensureItem("02", "010", {
   name: "יציקת עמודי בטון בשטחי חתך 20/40",
   description: "יציקת עמודי בטון בשטחי חתך 20/40 — סעיף מורכב הכולל בטון, טפסנות וברזל.",
   unit: "קומפ'",
@@ -218,6 +226,10 @@ composite.subItems = [
 ];
 
 /* ---------------- alternatives + related ---------------- */
+/* סעיף אב is scattered over the catalog below, but never onto the worked
+   example — it would hand the composite a parent that is one of its own
+   components. Alternatives are fine: a composite is not a candidate anyway. */
+const workedExample = new Set([subA.id, subB.id, subC.id, composite.id]);
 let altGroups = 0;
 for (const ch of chapters) {
   for (const sub of ch.subChapters) {
@@ -234,7 +246,9 @@ for (const ch of chapters) {
 let relCount = 0;
 for (const ch of chapters) {
   for (const sub of ch.subChapters) {
-    const candidates = sub.items.filter((i) => !i.isNote && !i.alternativeIds.length);
+    const candidates = sub.items.filter(
+      (i) => !i.isNote && !i.alternativeIds.length && !workedExample.has(i.id)
+    );
     if (candidates.length >= 2 && relCount < 15) {
       candidates[1].parentId = candidates[0].id;
       if (candidates.length >= 3) candidates[2].parentId = candidates[0].id;
@@ -652,6 +666,38 @@ const comments = [
   },
 ];
 
+/* Sample notes on the פרקים and תתי פרקים the catalog opens with, so the notes
+   glyph has something to show. boqId null: they hang on the catalog chapter
+   itself and read the same from every כתב כמויות. פרק 08 is deliberately
+   left without any, so the "הוספת הערה" state stays visible beside them. */
+const chapterByNum = (num) => chapters.find((c) => c.num === num);
+const subByNum = (chNum, subNum) => chapterByNum(chNum)?.subChapters.find((s) => s.num === subNum);
+for (const [chNum, subNum, author, ts, text] of [
+  ["02", null, "דני קרייסברג", "2026-08-11T08:40:00", "כל יציקה מחייבת אישור מהנדס באתר לפני תחילת העבודה."],
+  ["02", null, "מתי קרייסברג", "2026-08-12T14:05:00", "בדיקות כובד ובדיקות חוזק יבוצעו על חשבון הקבלן."],
+  ["02", "010", "אביחי גל-אור", "2026-08-12T16:20:00", "סוג הבטון ב-30 אלא אם צוין אחרת בתכנית הקונסטרוקציה."],
+  ["02", "015", "דני קרייסברג", "2026-08-13T09:15:00", "מידות הפיר לפי הנחיות ספק המעלית בלבד."],
+  ["02", "015", "מתי קרייסברג", "2026-08-13T11:02:00", "לתאם עם יועץ המעליות לפני יציקת רצפת הבור."],
+  ["02", "015", "אביחי גל-אור", "2026-08-14T07:50:00", "איטום בור המעלית כלול במחיר ואינו נמדד בנפרד."],
+  ["05", null, "מתי קרייסברג", "2026-08-15T10:30:00", "כל עבודות האיטום באחריות קבלן איטום מוסמך בלבד."],
+  ["05", "010", "דני קרייסברג", "2026-08-15T12:10:00", "בדיקת הצפה 48 שעות לפני ריצוף, בנוכחות המפקח."],
+  ["05", "010", "אביחי גל-אור", "2026-08-16T08:05:00", "רולקות בפינות כלולות במחיר תכולת העבודה."],
+  ["07", null, "דני קרייסברג", "2026-08-17T13:25:00", "מיקום נקודות אינסטלציה ייקבע בסיור אתר עם האדריכל."],
+  ["07", "030", "מתי קרייסברג", "2026-08-17T15:40:00", "חציבות ותיקונים כלולים במחיר ואינם נמדדים בנפרד."],
+]) {
+  const ref = subNum ? subByNum(chNum, subNum) : chapterByNum(chNum);
+  if (!ref) throw new Error(`catalog note: פרק ${chNum}${subNum ? ` / תת פרק ${subNum}` : ""} is not in this catalog`);
+  comments.push({
+    id: comments.length + 1,
+    scope: subNum ? "subChapter" : "chapter",
+    refId: ref.id,
+    boqId: null,
+    author,
+    ts,
+    text,
+  });
+}
+
 const history = [
   {
     id: 1,
@@ -694,7 +740,7 @@ const tenders = [
 
 /* ---------------- emit ---------------- */
 const db = {
-  generatedAt: "2026-09-02-v3",
+  generatedAt: "2026-09-17-v5",
   currentUserId,
   catalog: { ...catalogMeta, chapters },
   catalogs,

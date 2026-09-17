@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-10-v4",
+ "generatedAt": "2026-09-17-v5",
  "currentUserId": 1,
  "catalog": {
   "id": 3,
@@ -88,7 +88,7 @@
        },
        {
         "id": 359,
-        "key": "02.050.0100|יציקת בטון ב-30 לעמודים",
+        "code": "02.010.0030",
         "subChapterId": 1,
         "chapterId": 1,
         "unit2": "",
@@ -104,14 +104,14 @@
         ],
         "subItems": [],
         "description": "יציקת בטון ב-30 לעמודים בשטחי חתך 0.05-0.20 מ\"ר\nפריסת כמויות ע\"פ קומות:\n* קומת מרתף בשטח כ-100 מ\"ר.\n* קומת קרקע בשטח כ-120 מ\"ר.\n* קומה ראשונה בשטח כ-80 מ\"ר.",
-        "code": "02.050.0100",
         "name": "יציקת בטון ב-30 לעמודים",
         "unit": "מ\"ק",
-        "priority": "mandatory"
+        "priority": "mandatory",
+        "key": "02.010.0030|יציקת בטון ב-30 לעמודים"
        },
        {
         "id": 360,
-        "key": "06.950.0100|יצירת מערכת טפסנות עבור עמודים",
+        "code": "02.010.0040",
         "subChapterId": 1,
         "chapterId": 1,
         "unit2": "",
@@ -124,30 +124,43 @@
         "alternativeIds": [],
         "subItems": [],
         "description": "יצירת מערכת טפסנות עבור עמודים",
-        "code": "06.950.0100",
         "name": "יצירת מערכת טפסנות עבור עמודים",
         "unit": "מ\"ר",
-        "priority": "recommended"
+        "priority": "recommended",
+        "key": "02.010.0040|יצירת מערכת טפסנות עבור עמודים"
        },
        {
-        "id": 361,
-        "key": "23.045.0100|פריסת ברזלים עבור עמודי בטון",
+        "id": 362,
+        "code": "02.010.0050",
         "subChapterId": 1,
         "chapterId": 1,
         "unit2": "",
         "isNote": false,
-        "type": "regular",
+        "type": "composite",
         "tags": [],
         "resourceTypeId": 1,
         "amortization": 0,
-        "parentId": 360,
+        "parentId": null,
         "alternativeIds": [],
-        "subItems": [],
-        "description": "פריסת ברזלים עבור עמודי בטון",
-        "code": "23.045.0100",
-        "name": "פריסת ברזלים עבור עמודי בטון",
-        "unit": "מ\"ק",
-        "priority": "recommended"
+        "subItems": [
+         {
+          "itemId": 359,
+          "qty": 300
+         },
+         {
+          "itemId": 360,
+          "qty": 300
+         },
+         {
+          "itemId": 361,
+          "qty": 300
+         }
+        ],
+        "description": "יציקת עמודי בטון בשטחי חתך 20/40 — סעיף מורכב הכולל בטון, טפסנות וברזל.",
+        "name": "יציקת עמודי בטון בשטחי חתך 20/40",
+        "unit": "קומפ'",
+        "priority": "mandatory",
+        "key": "02.010.0050|יציקת עמודי בטון בשטחי חתך 20/40"
        }
       ]
      },
@@ -398,6 +411,26 @@
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
+       },
+       {
+        "id": 361,
+        "code": "02.040.0020",
+        "subChapterId": 7,
+        "chapterId": 1,
+        "unit2": "",
+        "isNote": false,
+        "type": "regular",
+        "tags": [],
+        "resourceTypeId": 1,
+        "amortization": 0,
+        "parentId": null,
+        "alternativeIds": [],
+        "subItems": [],
+        "description": "פריסת ברזלים עבור עמודי בטון",
+        "name": "פריסת ברזלים עבור עמודי בטון",
+        "unit": "מ\"ק",
+        "priority": "recommended",
+        "key": "02.040.0020|פריסת ברזלים עבור עמודי בטון"
        }
       ]
      },
@@ -3039,7 +3072,7 @@
         "resourceTypeId": 1,
         "priority": "optional",
         "amortization": 0,
-        "parentId": null,
+        "parentId": 117,
         "alternativeIds": [],
         "subItems": []
        },
@@ -3059,7 +3092,7 @@
         "resourceTypeId": 1,
         "priority": "recommended",
         "amortization": 0,
-        "parentId": null,
+        "parentId": 117,
         "alternativeIds": [],
         "subItems": []
        }
@@ -4515,39 +4548,6 @@
         "parentId": null,
         "alternativeIds": [],
         "subItems": []
-       },
-       {
-        "id": 362,
-        "key": "10.03.0010|יציקת עמודי בטון בשטחי חתך 20/40",
-        "subChapterId": 65,
-        "chapterId": 6,
-        "unit2": "",
-        "isNote": false,
-        "type": "composite",
-        "tags": [],
-        "resourceTypeId": 1,
-        "amortization": 0,
-        "parentId": null,
-        "alternativeIds": [],
-        "subItems": [
-         {
-          "itemId": 359,
-          "qty": 300
-         },
-         {
-          "itemId": 360,
-          "qty": 300
-         },
-         {
-          "itemId": 361,
-          "qty": 300
-         }
-        ],
-        "description": "יציקת עמודי בטון בשטחי חתך 20/40 — סעיף מורכב הכולל בטון, טפסנות וברזל.",
-        "code": "10.03.0010",
-        "name": "יציקת עמודי בטון בשטחי חתך 20/40",
-        "unit": "קומפ'",
-        "priority": "mandatory"
        }
       ]
      },
@@ -10455,14 +10455,14 @@
    "id": 46,
    "boqId": 5,
    "elementId": 10,
-   "itemId": 4,
+   "itemId": 360,
    "qty": 43
   },
   {
    "id": 47,
    "boqId": 5,
    "elementId": 10,
-   "itemId": 5,
+   "itemId": 4,
    "qty": 46
   },
   {
@@ -10954,6 +10954,19 @@
   {
    "id": 28,
    "boqId": 5,
+   "itemId": 360,
+   "priority": "recommended",
+   "forSummary": true,
+   "amortization": 0,
+   "resourceTypeId": 1,
+   "resourceId": null,
+   "description": "יצירת מערכת טפסנות עבור עמודים",
+   "chosenAlternativeId": null,
+   "parentId": null
+  },
+  {
+   "id": 29,
+   "boqId": 5,
    "itemId": 4,
    "priority": "recommended",
    "forSummary": true,
@@ -10961,19 +10974,6 @@
    "resourceTypeId": 1,
    "resourceId": null,
    "description": "ריצפת פיר מעלית: ריצפת בטון בעובי 20 ס\"מ כולל שכבת בטון רזה בעובי 5 ס\"מ, ע\"פ \"חתך טיפוסי לפיר מעלית\" של מהנדס הקונסטרוקציה.",
-   "chosenAlternativeId": null,
-   "parentId": null
-  },
-  {
-   "id": 29,
-   "boqId": 5,
-   "itemId": 5,
-   "priority": "mandatory",
-   "forSummary": true,
-   "amortization": 15,
-   "resourceTypeId": 2,
-   "resourceId": null,
-   "description": "דפנות פיר מעלית: קירות בטון בעובי 20 ס\"מ, ע\"פ \"חתך טיפוסי לפיר מעלית\" של מהנדס הקונסטרוקציה",
    "chosenAlternativeId": null,
    "parentId": null
   },
@@ -11060,7 +11060,7 @@
    "boqId": 5,
    "itemId": 200,
    "priority": "recommended",
-   "forSummary": true,
+   "forSummary": false,
    "amortization": 15,
    "resourceTypeId": 1,
    "resourceId": null,
