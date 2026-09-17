@@ -10,6 +10,7 @@ import ItemPickerModal from "@/components/boq/ItemPickerModal.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import RichTextEditor from "@/components/shared/RichTextEditor.vue";
 import CatalogItemTree from "@/components/catalog/CatalogItemTree.vue";
+import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { formatDateTime } from "@/utils/format";
 import { sanitizeHtml, stripHtml } from "@/utils/html";
 import { useFlash } from "@/composables/useFlash";
@@ -271,6 +272,36 @@ function save() {
     emit("saved", item);
   }
 }
+/* ---------- every trash in this popup asks first ---------- */
+const confirmDelete = ref(null); // { title, message, confirmLabel, run }
+function runDelete() {
+  const c = confirmDelete.value;
+  confirmDelete.value = null;
+  c?.run();
+}
+function askRemoveSubItem(s) {
+  confirmDelete.value = {
+    title: "הסרת תת סעיף",
+    message: `האם להסיר את "${s.item.name}" מהסעיף המורכב?`,
+    confirmLabel: "הסרה",
+    run: () => removeSubItem(s.itemId),
+  };
+}
+function askRemoveNote(n) {
+  confirmDelete.value = {
+    title: "מחיקת הערה",
+    message: "האם אתה בטוח שברצונך למחוק את ההערה?",
+    run: () => removeNote(n.id),
+  };
+}
+function askRemoveItem() {
+  confirmDelete.value = {
+    title: "מחיקת סעיף",
+    message: `האם אתה בטוח שברצונך למחוק את "${props.item.name}" מהקטלוג?`,
+    detail: "הסעיף יוסר מהקטלוג ללא אפשרות שחזור",
+    run: remove,
+  };
+}
 function remove() {
   if (!props.item) return;
   const liveSubChapter = cat.subChapter(props.subChapter.id);
@@ -491,7 +522,7 @@ function remove() {
                     />
                   </td>
                   <td>
-                    <button class="icon-btn danger" title="הסרה" @click="removeSubItem(s.itemId)">
+                    <button class="icon-btn danger" title="הסרה" @click="askRemoveSubItem(s)">
                       <AppIcon name="trash" :size="18" />
                     </button>
                   </td>
@@ -519,7 +550,7 @@ function remove() {
             <div v-for="n in notes" :key="n.id" class="note-card">
               <div class="note-head">
                 <span class="author">{{ n.author }} · {{ formatDateTime(n.ts) }}</span>
-                <button class="icon-btn danger" title="מחיקה" @click="removeNote(n.id)">
+                <button class="icon-btn danger" title="מחיקה" @click="askRemoveNote(n)">
                   <AppIcon name="trash" :size="18" />
                 </button>
               </div>
@@ -574,7 +605,7 @@ function remove() {
             <button class="btn btn-primary" :disabled="!valid" @click="save">שמירה</button>
             <button class="btn btn-secondary" @click="emit('close')">ביטול</button>
           </div>
-          <button v-if="item" class="del-btn" @click="remove">
+          <button v-if="item" class="del-btn" @click="askRemoveItem">
             <span>מחיקת סעיף</span>
             <AppIcon name="trash" :size="24" />
           </button>
@@ -590,6 +621,15 @@ function remove() {
       :already-selected="picker === 'sub' ? form.subItems.map((s) => s.itemId) : item ? [item.id] : []"
       @close="picker = null"
       @picked="onPicked"
+    />
+    <DeleteConfirmModal
+      v-if="confirmDelete"
+      :title="confirmDelete.title"
+      :message="confirmDelete.message"
+      :detail="confirmDelete.detail || ''"
+      :confirm-label="confirmDelete.confirmLabel || 'מחיקה'"
+      @close="confirmDelete = null"
+      @confirm="runDelete"
     />
   </Teleport>
 </template>

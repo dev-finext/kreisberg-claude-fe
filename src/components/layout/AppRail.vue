@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -17,6 +18,14 @@ const expanded = computed({
 const systemOpen = ref(true);
 
 const disabledMsg = () => ui.toast("מסך זה אינו זמין בדמו", "warning");
+
+/* the reset throws away every change made in the demo, so it asks first */
+const confirmReset = ref(false);
+function resetDemo() {
+  confirmReset.value = false;
+  db.resetDemo();
+  ui.toast("נתוני הדמו אופסו");
+}
 
 const isProjects = computed(() => route.path.startsWith("/projects"));
 const isSystem = computed(() => route.path.startsWith("/system"));
@@ -140,7 +149,7 @@ function toggleSystem() {
       <button
         class="rail-user"
         :title="db.currentUser.name + ' — לחיצה כפולה לאיפוס נתוני הדמו'"
-        @dblclick="db.resetDemo()"
+        @dblclick="confirmReset = true"
       >
         <span v-if="expanded" class="ru-meta">
           <span class="ru-name">{{ db.currentUser.name }}</span>
@@ -149,6 +158,15 @@ function toggleSystem() {
         <span class="rail-avatar">{{ db.currentUser.name.slice(0, 1) }}</span>
       </button>
     </div>
+    <DeleteConfirmModal
+      v-if="confirmReset"
+      title="איפוס נתוני הדמו"
+      message="האם לאפס את נתוני הדמו?"
+      detail="כל השינויים שבוצעו בדמו יימחקו והנתונים יוחזרו למצבם ההתחלתי"
+      confirm-label="איפוס"
+      @close="confirmReset = false"
+      @confirm="resetDemo"
+    />
   </nav>
 </template>
 

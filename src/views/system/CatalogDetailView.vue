@@ -414,7 +414,7 @@ function setActive(v) {
                   :model-value="chapterChecked(ch)"
                   @update:model-value="(v) => setChapter(ch, v)"
                 />
-                <span class="lbl ellipsis">פרק {{ ch.num }}-{{ ch.name }}</span>
+                <span v-full-title class="lbl ellipsis">פרק {{ ch.num }}-{{ ch.name }}</span>
               </div>
               <template v-if="expandedChapterIds.includes(ch.id)">
                 <div
@@ -429,7 +429,7 @@ function setActive(v) {
                     :model-value="checkedSubIds.includes(sc.id)"
                     @update:model-value="(v) => setSub(sc, v)"
                   />
-                  <span class="lbl ellipsis">תת פרק {{ sc.num }} - {{ sc.name }}</span>
+                  <span v-full-title class="lbl ellipsis">תת פרק {{ sc.num }} - {{ sc.name }}</span>
                 </div>
               </template>
             </template>
@@ -547,7 +547,7 @@ function setActive(v) {
                       <td>
                         <span class="item-code">{{ item.code }}</span>
                       </td>
-                      <td class="td-name ellipsis">{{ item.name }}</td>
+                      <td v-full-title class="td-name ellipsis">{{ item.name }}</td>
                       <td class="td-desc ellipsis">{{ stripHtml(item.description) }}</td>
                       <td>{{ item.unit }}</td>
                       <td>{{ resourceTypeName(item) }}</td>

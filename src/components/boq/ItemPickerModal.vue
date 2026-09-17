@@ -229,7 +229,9 @@ function confirm() {
                   @click="scrollToGroup('c' + g.chapter.id)"
                 >
                   <AppIcon name="chevron-down" :size="16" />
-                  <span class="tp-label ellipsis">{{ g.chapter.num }}: {{ g.chapter.name }}</span>
+                  <span v-full-title class="tp-label ellipsis"
+                    >{{ g.chapter.num }}: {{ g.chapter.name }}</span
+                  >
                   <span class="tp-count num"
                     >({{ g.subGroups.reduce((n, s) => n + s.items.length, 0) }})</span
                   >
@@ -242,7 +244,9 @@ function confirm() {
                   @click="scrollToGroup('s' + sg.subChapter.id)"
                 >
                   <AppIcon name="chevron-left" :size="16" />
-                  <span class="tp-label ellipsis">{{ sg.subChapter.num }} - {{ sg.subChapter.name }}</span>
+                  <span v-full-title class="tp-label ellipsis"
+                    >{{ sg.subChapter.num }} - {{ sg.subChapter.name }}</span
+                  >
                   <span class="tp-count num">({{ sg.items.length }})</span>
                 </button>
               </template>

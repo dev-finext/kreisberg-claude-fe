@@ -15,6 +15,7 @@ const emit = defineEmits(["close", "confirm"]);
     :title="title"
     width="420px"
     :confirm-label="confirmLabel"
+    elevated
     @close="emit('close')"
     @confirm="emit('confirm')"
   >
