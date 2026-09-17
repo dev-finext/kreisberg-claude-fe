@@ -116,8 +116,12 @@ function setTag(item, v) {
 function setAllTag(v) {
   for (const i of visibleItems.value) setTag(i, v);
 }
+/* clearing the tag off every visible item is not undoable, so it asks first */
+const confirmClearTag = ref(false);
+const taggedVisible = computed(() => visibleItems.value.filter(hasTag));
 function removeCheckedFromTag() {
-  const tagged = visibleItems.value.filter(hasTag);
+  confirmClearTag.value = false;
+  const tagged = taggedVisible.value;
   for (const i of tagged) setTag(i, false);
   ui.toast(`${tagged.length} סעיפים הוסרו מהתגית`);
 }
@@ -161,8 +165,8 @@ function saveAll() {
           </button>
           <button
             class="tb-btn"
-            :disabled="!selectedTag || !visibleItems.some(hasTag)"
-            @click="removeCheckedFromTag"
+            :disabled="!selectedTag || !taggedVisible.length"
+            @click="confirmClearTag = true"
           >
             <AppIcon name="trash" :size="18" />
             <span>מחק</span>
@@ -301,6 +305,14 @@ function saveAll() {
       detail="התגית תוסר מכל הסעיפים המשויכים לה"
       @close="deleteTag = null"
       @confirm="confirmDeleteTag"
+    />
+    <DeleteConfirmModal
+      v-if="confirmClearTag"
+      title="הסרת תגית מסעיפים"
+      :message="`האם להסיר את התגית &quot;${selectedTag?.name}&quot; מ-${taggedVisible.length} סעיפים?`"
+      confirm-label="הסרה"
+      @close="confirmClearTag = false"
+      @confirm="removeCheckedFromTag"
     />
   </div>
 </template>

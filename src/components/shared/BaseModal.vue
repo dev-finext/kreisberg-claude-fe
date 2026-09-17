@@ -9,6 +9,8 @@ defineProps({
   cancelLabel: { type: String, default: "ביטול" },
   confirmDisabled: { type: Boolean, default: false },
   hideFooter: { type: Boolean, default: false },
+  /* sits above any dialog it was opened from — for confirmations */
+  elevated: { type: Boolean, default: false },
 });
 const emit = defineEmits(["close", "confirm"]);
 useEscape(() => emit("close"));
@@ -16,7 +18,7 @@ useEscape(() => emit("close"));
 
 <template>
   <Teleport to="body">
-    <div class="modal-overlay" @mousedown.self="emit('close')">
+    <div class="modal-overlay" :class="{ elevated }" @mousedown.self="emit('close')">
       <div class="modal" :style="{ width }">
         <div class="modal-header">
           <button class="modal-close" @click="emit('close')">
@@ -56,6 +58,9 @@ useEscape(() => emit("close"));
   align-items: center;
   justify-content: center;
   z-index: 60;
+}
+.modal-overlay.elevated {
+  z-index: 90;
 }
 .modal {
   background: var(--surface);

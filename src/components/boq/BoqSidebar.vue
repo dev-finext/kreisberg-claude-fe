@@ -195,7 +195,7 @@ function toggleChapterExpand(chId) {
               :model-value="chapterChecked(g)"
               @update:model-value="(v) => setChapter(g, v)"
             />
-            <span class="chapter-label ellipsis">{{ g.chapter.num }}: {{ g.chapter.name }}</span>
+            <span v-full-title class="chapter-label ellipsis">{{ g.chapter.num }}: {{ g.chapter.name }}</span>
           </div>
           <template v-if="boq.expandedChapterIds.includes(g.chapter.id)">
             <div
@@ -209,7 +209,7 @@ function toggleChapterExpand(chId) {
                 :model-value="subChecked(sc)"
                 @update:model-value="(v) => setSub(g, sc, v)"
               />
-              <span class="sub-label ellipsis">{{ sc.num }}-{{ sc.name }}</span>
+              <span v-full-title class="sub-label ellipsis">{{ sc.num }}-{{ sc.name }}</span>
             </div>
           </template>
         </div>

@@ -10,6 +10,7 @@ import { sanitizeHtml } from "@/utils/html";
 import RichTextEditor from "@/components/shared/RichTextEditor.vue";
 import PriorityControl from "./PriorityControl.vue";
 import ItemPickerModal from "./ItemPickerModal.vue";
+import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { formatDate } from "@/utils/format";
 
 const props = defineProps({
@@ -100,7 +101,10 @@ function save() {
   ui.toast("הסעיף עודכן בהצלחה");
   emit("close");
 }
+/* removing the item from the כתב כמויות is not undoable, so it asks first */
+const confirmDelete = ref(false);
 function deleteFromBoq() {
+  confirmDelete.value = false;
   boq.deleteSeis(props.row.seiIds);
   ui.toast("הסעיף הוסר מכתב הכמויות");
   emit("close");
@@ -267,7 +271,7 @@ function deleteFromBoq() {
             <button class="btn btn-primary" @click="save">אישור</button>
             <button class="btn btn-secondary" @click="emit('close')">ביטול</button>
           </div>
-          <button class="btn-danger-text" @click="deleteFromBoq">
+          <button class="btn-danger-text" @click="confirmDelete = true">
             <AppIcon name="trash" :size="16" />
             <span>מחיקת סעיף</span>
           </button>
@@ -281,6 +285,14 @@ function deleteFromBoq() {
       :already-selected="picker === 'alternatives' ? [] : [item.id]"
       @close="picker = null"
       @picked="onPicked"
+    />
+    <DeleteConfirmModal
+      v-if="confirmDelete"
+      title="מחיקת סעיף"
+      :message="`האם אתה בטוח שברצונך להסיר את &quot;${row.name}&quot; מכתב הכמויות?`"
+      confirm-label="הסרה"
+      @close="confirmDelete = false"
+      @confirm="deleteFromBoq"
     />
   </Teleport>
 </template>

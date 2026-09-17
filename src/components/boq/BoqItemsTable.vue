@@ -11,6 +11,7 @@ import PriorityControl from "./PriorityControl.vue";
 import ItemRowPanel from "./ItemRowPanel.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { formatQty } from "@/utils/format";
 import { stripHtml } from "@/utils/html";
 import { PRIORITY, SIDEBAR_MODE } from "@/constants";
@@ -241,7 +242,11 @@ function summaryLocked(r) {
 }
 
 /* ---------------- row actions ---------------- */
-function deleteRow(r) {
+/* removing a row is not undoable, so it asks first */
+const deleteRow = ref(null);
+function confirmDeleteRow() {
+  const r = deleteRow.value;
+  deleteRow.value = null;
   boq.deleteSeis(r.seiIds);
   ui.toast("הסעיף הוסר");
 }
@@ -322,7 +327,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
             <td class="td-code">
               <span class="item-code">{{ r.code }}</span>
             </td>
-            <td class="td-name ellipsis">{{ r.name }}</td>
+            <td v-full-title class="td-name ellipsis">{{ r.name }}</td>
             <td class="td-rt">{{ db.resourceTypes.find((t) => t.id === r.resourceTypeId)?.name || "--" }}</td>
             <td class="td-unit">{{ r.unit || "--" }}</td>
             <td class="td-qty">
@@ -353,7 +358,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
               />
             </td>
             <td class="td-actions">
-              <button v-if="r.sei" class="row-trash" title="הסרת סעיף" @click="deleteRow(r)">
+              <button v-if="r.sei" class="row-trash" title="הסרת סעיף" @click="deleteRow = r">
                 <AppIcon name="trash" :size="17" />
               </button>
               <button class="row-kebab" @click="openRowMenu(r, $event)">
@@ -373,7 +378,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
             <td class="td-code">
               <span class="item-code">{{ sr.code }}</span>
             </td>
-            <td class="td-name ellipsis">{{ sr.name }}</td>
+            <td v-full-title class="td-name ellipsis">{{ sr.name }}</td>
             <td class="td-rt">
               {{ db.resourceTypes.find((t) => t.id === sr.resourceTypeId)?.name || "--" }}
             </td>
@@ -487,7 +492,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                 <td class="td-code">
                   <span class="item-code">{{ r.code }}</span>
                 </td>
-                <td class="td-name ellipsis" :title="r.name">{{ r.name }}</td>
+                <td v-full-title class="td-name ellipsis">{{ r.name }}</td>
                 <td class="td-rt">
                   {{ db.resourceTypes.find((t) => t.id === r.resourceTypeId)?.name || "--" }}
                 </td>
@@ -532,7 +537,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                     <td class="td-code">
                       <span class="item-code">{{ sr.code }}</span>
                     </td>
-                    <td class="td-name ellipsis" :title="sr.name">{{ sr.name }}</td>
+                    <td v-full-title class="td-name ellipsis">{{ sr.name }}</td>
                     <td class="td-rt">
                       {{ db.resourceTypes.find((t) => t.id === sr.resourceTypeId)?.name || "--" }}
                     </td>
@@ -600,6 +605,14 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
       :y="rowMenu.y"
       @select="onRowMenu"
       @close="rowMenu = null"
+    />
+    <DeleteConfirmModal
+      v-if="deleteRow"
+      title="הסרת סעיף"
+      :message="`האם אתה בטוח שברצונך להסיר את &quot;${deleteRow.name}&quot; מכתב הכמויות?`"
+      confirm-label="הסרה"
+      @close="deleteRow = null"
+      @confirm="confirmDeleteRow"
     />
   </div>
 </template>
