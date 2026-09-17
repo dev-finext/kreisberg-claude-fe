@@ -72,6 +72,13 @@ const form = reactive({
   alternativeIds: [...(props.item?.alternativeIds || [])],
 });
 const picker = ref(null); // 'sub' | 'parent' | 'alt'
+/* nothing already on the section can be picked again, nor the section itself */
+const pickerTaken = computed(() => {
+  const self = props.item ? [props.item.id] : [];
+  if (picker.value === "sub") return form.subItems.map((s) => s.itemId);
+  if (picker.value === "alt") return [...self, ...form.alternativeIds];
+  return self;
+});
 const pickerTitle = computed(() => {
   if (picker.value === "sub") return "בחירת תתי סעיפים";
   if (picker.value === "alt") return `בחירת סעיפים חלופיים לסעיף ${form.code}`;
@@ -106,12 +113,6 @@ const childItems = computed(() => (props.item ? cat.childrenOf(props.item.id) : 
 const alternatives = computed(() => form.alternativeIds.map((id) => cat.item(id)).filter(Boolean));
 /* parent and children read as one tree, the way the open row draws them */
 const relatedItems = computed(() => [...(parentItem.value ? [parentItem.value] : []), ...childItems.value]);
-/* the alternatives a section may point at: its own sub-chapter, plus any already linked */
-const altPool = computed(() => {
-  const siblings = (props.subChapter.items || []).filter((i) => !i.isNote && i.id !== props.item?.id);
-  const linked = alternatives.value.filter((a) => a.subChapterId !== props.subChapter.id);
-  return [...siblings, ...linked];
-});
 const subItemRows = computed(() =>
   form.subItems.map((s) => ({ ...s, item: cat.item(s.itemId) })).filter((s) => s.item)
 );
@@ -195,12 +196,16 @@ function onPicked(ids) {
   } else if (picker.value === "parent") {
     form.parentId = ids[0] || null;
   } else if (picker.value === "alt") {
-    form.alternativeIds = ids.filter((id) => id !== props.item?.id);
+    for (const id of ids)
+      if (id !== props.item?.id && !form.alternativeIds.includes(id)) form.alternativeIds.push(id);
   }
   picker.value = null;
 }
 function removeSubItem(itemId) {
   form.subItems = form.subItems.filter((s) => s.itemId !== itemId);
+}
+function removeAlternative(itemId) {
+  form.alternativeIds = form.alternativeIds.filter((id) => id !== itemId);
 }
 
 /* ---------- notes tab ---------- */
@@ -285,6 +290,14 @@ function askRemoveSubItem(s) {
     message: `האם להסיר את "${s.item.name}" מהסעיף המורכב?`,
     confirmLabel: "הסרה",
     run: () => removeSubItem(s.itemId),
+  };
+}
+function askRemoveAlternative(it) {
+  confirmDelete.value = {
+    title: "הסרת סעיף חלופי",
+    message: `האם להסיר את "${it.name}" מרשימת הסעיפים החלופיים?`,
+    confirmLabel: "הסרה",
+    run: () => removeAlternative(it.id),
   };
 }
 function askRemoveNote(n) {
@@ -585,17 +598,17 @@ function remove() {
           <!-- סעיפים חלופיים -->
           <template v-else>
             <div class="sub-head">
-              <h4 class="sub-title">סעיפים חלופיים ({{ form.alternativeIds.length }})</h4>
+              <h4 class="sub-title">סעיפים חלופיים ({{ alternatives.length }})</h4>
               <button class="btn-text add-sub" @click="picker = 'alt'">
-                <span>סעיף מתת פרק אחר</span>
+                <span>הוספת סעיף חלופי</span>
                 <AppIcon name="plus-circle" :size="24" />
               </button>
             </div>
             <CatalogItemTree
-              v-model="form.alternativeIds"
-              selectable
-              :items="altPool"
+              :items="alternatives"
+              removable
               empty="לא הוגדרו סעיפים חלופיים"
+              @remove="askRemoveAlternative"
             />
           </template>
         </div>
@@ -618,7 +631,7 @@ function remove() {
       :exclude-composite="picker === 'sub'"
       :title="pickerTitle"
       :catalog-name="catalogName"
-      :already-selected="picker === 'sub' ? form.subItems.map((s) => s.itemId) : item ? [item.id] : []"
+      :already-selected="pickerTaken"
       @close="picker = null"
       @picked="onPicked"
     />
