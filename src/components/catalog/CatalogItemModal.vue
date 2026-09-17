@@ -594,6 +594,7 @@ function remove() {
             <CatalogItemTree
               v-model="form.alternativeIds"
               selectable
+              flat
               :items="altPool"
               empty="לא הוגדרו סעיפים חלופיים"
             />

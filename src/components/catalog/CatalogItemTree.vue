@@ -8,6 +8,9 @@ import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
  * Catalog sections grouped the way the design draws them in the open row:
  * פרק › תת פרק › סעיף, with the section line reading name, code and unit.
  * Alternatives are pickable, so those rows carry a checkbox.
+ *
+ * `flat` drops the פרק / תת פרק heading lines and their indent, leaving the
+ * sections alone as one plain list.
  */
 const props = defineProps({
   /** catalog item objects to lay out */
@@ -17,6 +20,8 @@ const props = defineProps({
   /** ids ticked, when selectable */
   modelValue: { type: Array, default: () => [] },
   empty: { type: String, default: "אין סעיפים להצגה" },
+  /** one plain list of sections, without the פרק / תת פרק heading lines */
+  flat: { type: Boolean, default: false },
 });
 const emit = defineEmits(["update:modelValue", "pick"]);
 
@@ -39,7 +44,8 @@ const groups = computed(() => {
 });
 
 function isOpen(key) {
-  return !collapsed.value.includes(key);
+  /* nothing collapses in a flat list — there are no headings to collapse under */
+  return props.flat || !collapsed.value.includes(key);
 }
 function toggle(key) {
   const i = collapsed.value.indexOf(key);
@@ -66,7 +72,7 @@ function allChecked(ids) {
 <template>
   <div class="cit">
     <template v-for="g in groups" :key="g.chapter.id">
-      <div class="cit-row chapter">
+      <div v-if="!flat" class="cit-row chapter">
         <span class="chev" @click="toggle(`c${g.chapter.id}`)">
           <AppIcon :name="isOpen(`c${g.chapter.id}`) ? 'chevron-down' : 'chevron-left'" :size="16" />
         </span>
@@ -81,7 +87,7 @@ function allChecked(ids) {
 
       <template v-if="isOpen(`c${g.chapter.id}`)">
         <template v-for="s in g.subs" :key="s.sub.id">
-          <div class="cit-row sub">
+          <div v-if="!flat" class="cit-row sub">
             <span class="chev" @click="toggle(`s${s.sub.id}`)">
               <AppIcon :name="isOpen(`s${s.sub.id}`) ? 'chevron-down' : 'chevron-left'" :size="16" />
             </span>
@@ -104,6 +110,7 @@ function allChecked(ids) {
             v-for="it in isOpen(`s${s.sub.id}`) ? s.items : []"
             :key="it.id"
             class="cit-row item"
+            :class="{ flat }"
             @click="emit('pick', it)"
           >
             <BaseCheckbox
@@ -112,7 +119,7 @@ function allChecked(ids) {
               :model-value="checked(it.id)"
               @update:model-value="(v) => setChecked([it.id], v)"
             />
-            <span class="cit-label ellipsis">{{ it.name }}</span>
+            <span v-full-title class="cit-label ellipsis">{{ it.name }}</span>
             <span class="cit-code num">{{ it.code }}</span>
             <span class="cit-unit">({{ it.unit }})</span>
           </div>
@@ -142,6 +149,10 @@ function allChecked(ids) {
 }
 .cit-row.item {
   padding-right: 40px;
+}
+/* no headings above it, so nothing to indent under */
+.cit-row.item.flat {
+  padding-right: 0;
 }
 .chev {
   display: inline-flex;
