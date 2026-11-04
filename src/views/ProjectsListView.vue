@@ -5,6 +5,7 @@ import { useDbStore } from "@/stores/db";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
+import FilterRow from "@/components/shared/FilterRow.vue";
 import SlaDonut from "@/components/boq/SlaDonut.vue";
 import { formatDate } from "@/utils/format";
 
@@ -37,9 +38,64 @@ function sortValue(p, key) {
   return p[key] ?? "";
 }
 
+/* ---------------- filters ----------------
+   Everything the list shows a project by is filterable, with the options read
+   off the projects themselves so no filter can offer an empty result. */
+const filters = ref({});
+const cityOf = (p) => (p.location || "").split(",").pop().trim();
+const uniq = (list) => [...new Set(list.filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+const filterDefs = computed(() => {
+  const all = db.projects;
+  const opt = (v) => ({ value: v, label: v });
+  return [
+    { key: "status", label: "סטטוס", options: uniq(all.map(projectStatus)).map(opt) },
+    {
+      key: "typeId",
+      label: "סוג פרויקט",
+      options: db.projectTypes
+        .filter((t) => all.some((p) => p.typeId === t.id))
+        .map((t) => ({ value: String(t.id), label: t.name })),
+    },
+    { key: "city", label: "יישוב", options: uniq(all.map(cityOf)).map(opt) },
+    { key: "author", label: "אחראי", options: uniq(all.map((x) => x.author)).map(opt) },
+    {
+      key: "year",
+      label: "שנת פתיחה",
+      options: uniq(all.map((x) => String(x.createdAt || "").slice(0, 4)))
+        .sort((a, b) => b.localeCompare(a))
+        .map(opt),
+    },
+    {
+      key: "active",
+      label: "מצב",
+      options: [
+        { value: "true", label: "פעיל" },
+        { value: "false", label: "לא פעיל" },
+      ],
+    },
+  ];
+});
+const FILTER_VALUE = {
+  status: projectStatus,
+  typeId: (p) => String(p.typeId),
+  city: cityOf,
+  author: (p) => p.author,
+  year: (p) => String(p.createdAt || "").slice(0, 4),
+  active: (p) => String(!!p.active),
+};
+const activeFilterCount = computed(
+  () => Object.values(filters.value).filter((sel) => sel && sel.length).length
+);
+
 const projects = computed(() => {
   const t = search.value.trim();
-  const rows = db.projects.filter((p) => !t || p.name.includes(t) || (p.location || "").includes(t));
+  const rows = db.projects.filter((p) => {
+    if (t && !(p.name.includes(t) || (p.location || "").includes(t))) return false;
+    for (const [key, sel] of Object.entries(filters.value)) {
+      if (sel && sel.length && !sel.includes(FILTER_VALUE[key] && FILTER_VALUE[key](p))) return false;
+    }
+    return true;
+  });
   const dir = sortDir.value === "asc" ? 1 : -1;
   return [...rows].sort((a, b) => {
     const x = sortValue(a, sortKey.value);
@@ -220,9 +276,13 @@ function projectStatus(p) {
 
       <!-- table header row -->
       <div class="list-toolbar">
-        <span class="active-count">{{ totalProjects }} פרויקטים פעילים</span>
+        <span class="active-count">
+          {{ projects.length }} מתוך {{ totalProjects }} פרויקטים
+          <span v-if="activeFilterCount" class="filtered-note">(מסונן)</span>
+        </span>
         <SearchPill v-model="search" placeholder="חיפוש" />
       </div>
+      <FilterRow v-model="filters" :defs="filterDefs" @clear="search = ''" />
 
       <table class="projects-table">
         <thead>
@@ -263,6 +323,9 @@ function projectStatus(p) {
             <td>
               <span class="pill pill-info">{{ projectStatus(p) }}</span>
             </td>
+          </tr>
+          <tr v-if="!projects.length">
+            <td :colspan="COLUMNS.length" class="empty-row">אין פרויקטים התואמים לסינון</td>
           </tr>
         </tbody>
       </table>
@@ -421,6 +484,15 @@ function projectStatus(p) {
   background: var(--surface);
 }
 /* list */
+.filtered-note {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.empty-row {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 24px 0;
+}
 .list-toolbar {
   display: flex;
   align-items: center;

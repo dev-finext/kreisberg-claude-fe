@@ -128,7 +128,7 @@ function confirmDelete() {
                 ref="firstInput"
                 v-model="draft[c.key]"
                 class="cell-input"
-                :class="{ num: c.align === 'num' }"
+                :class="c.align"
                 @keyup.enter="save"
                 @keyup.esc="cancel"
               />
@@ -150,7 +150,7 @@ function confirmDelete() {
                   ref="firstInput"
                   v-model="draft[c.key]"
                   class="cell-input"
-                  :class="{ num: c.align === 'num' }"
+                  :class="c.align"
                   @keyup.enter="save"
                   @keyup.esc="cancel"
                 />
@@ -162,7 +162,7 @@ function confirmDelete() {
               <td class="td-act"></td>
             </tr>
             <tr v-else class="row">
-              <td v-for="c in columns" :key="c.key" :class="{ num: c.align === 'num' }">
+              <td v-for="c in columns" :key="c.key" :class="c.align">
                 {{ displayValue(row, c) }}
               </td>
               <td class="td-act">
@@ -193,6 +193,12 @@ function confirmDelete() {
 </template>
 
 <style scoped>
+/* email and other latin values read left-to-right inside the RTL table */
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: right;
+}
 .card {
   background: var(--surface);
   border-radius: var(--radius-card);
