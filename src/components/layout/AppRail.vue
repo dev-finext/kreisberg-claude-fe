@@ -133,7 +133,12 @@ function toggleSystem() {
 
     <div class="rail-bottom">
       <!-- הגדרות -->
-      <button class="rail-item settings" title="הגדרות — לא זמין בדמו" @click="disabledMsg">
+      <button
+        class="rail-item settings"
+        :class="{ active: route.path === '/profile' }"
+        title="הגדרות והעדפות אישיות"
+        @click="router.push('/profile')"
+      >
         <span v-if="expanded" class="ri-label">הגדרות</span>
         <span class="ri-icon"><AppIcon name="menu-settings" :size="20" /></span>
       </button>

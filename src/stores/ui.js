@@ -30,6 +30,36 @@ export const SUPPRESSIBLE_PROMPTS = [
   },
 ];
 
+/** What the system can notify about, and how often it may be summarised. */
+export const NOTIFICATION_EVENTS = [
+  {
+    key: "notifyQty",
+    label: "עדכון כמויות בכתב כמויות",
+    detail: "כאשר מישהו משנה כמות בכתב כמויות שאתה רשום עליו.",
+  },
+  {
+    key: "notifyComments",
+    label: "הערות חדשות",
+    detail: "הערה שנוספה לפרק, לתת פרק או לסעיף בפרויקט שלך.",
+  },
+  {
+    key: "notifyTender",
+    label: "מכרזים ותשובות ספקים",
+    detail: "יציאה למכרז, תזכורת מועד הגשה והצעה שהתקבלה.",
+  },
+  {
+    key: "notifyProjectStatus",
+    label: "שינוי סטטוס פרויקט",
+    detail: "מעבר של פרויקט בין שלבים — כתב כמויות, מכרז, תומחר, חוזה.",
+  },
+];
+
+export const DIGEST_OPTIONS = [
+  { value: "none", label: "ללא" },
+  { value: "daily", label: "יומי" },
+  { value: "weekly", label: "שבועי" },
+];
+
 /* the line every one of those checkboxes carries, so the choice never feels final */
 export const SUPPRESS_HINT = "ניתן להפעיל את ההודעה מחדש בכל עת בעמוד הפרופיל, תחת “הודעות ואישורים”.";
 
@@ -42,6 +72,11 @@ export const useUiStore = defineStore("ui", {
       skipLinkedQtyPrompt: false,
       // Figma shows the navy rail open with its labels by default
       railExpanded: true,
+      notifyQty: true,
+      notifyComments: true,
+      notifyTender: true,
+      notifyProjectStatus: false,
+      digest: "weekly",
       ...loadPrefs(),
     },
     // clipboard for copy/paste of items between structure elements

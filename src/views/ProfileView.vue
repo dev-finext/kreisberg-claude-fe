@@ -2,7 +2,8 @@
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useDbStore } from "@/stores/db";
-import { useUiStore, SUPPRESSIBLE_PROMPTS } from "@/stores/ui";
+import { useBoqStore } from "@/stores/boq";
+import { useUiStore, SUPPRESSIBLE_PROMPTS, NOTIFICATION_EVENTS, DIGEST_OPTIONS } from "@/stores/ui";
 import PageHeader from "@/components/layout/PageHeader.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
@@ -13,6 +14,7 @@ import { stripHtml } from "@/utils/html";
 const router = useRouter();
 const db = useDbStore();
 const ui = useUiStore();
+const boq = useBoqStore();
 
 const user = computed(() => db.currentUser);
 
@@ -101,6 +103,56 @@ function noteScope(c) {
   if (c.scope === "chapter") return "פרק";
   if (c.scope === "subChapter") return "תת פרק";
   return "סעיף";
+}
+
+/* ---------- אבטחה וגישה ---------- */
+const MIN_PASSWORD = 8;
+const changingPassword = ref(false);
+const pw = reactive({ current: "", next: "", confirm: "" });
+const pwError = computed(() => {
+  if (!pw.current) return "יש להזין את הסיסמה הנוכחית";
+  if (pw.next.length < MIN_PASSWORD) return `הסיסמה החדשה צריכה להכיל לפחות ${MIN_PASSWORD} תווים`;
+  if (pw.next === pw.current) return "הסיסמה החדשה זהה לנוכחית";
+  if (pw.next !== pw.confirm) return "אימות הסיסמה אינו תואם";
+  return "";
+});
+function openPasswordForm() {
+  Object.assign(pw, { current: "", next: "", confirm: "" });
+  changingPassword.value = true;
+}
+function savePassword() {
+  if (pwError.value) {
+    ui.toast(pwError.value, "error");
+    return;
+  }
+  const live = db.db.users.find((u) => u.id === user.value.id);
+  live.passwordUpdatedAt = new Date().toISOString();
+  db.persist();
+  Object.assign(pw, { current: "", next: "", confirm: "" });
+  changingPassword.value = false;
+  ui.toast("הסיסמה עודכנה בהצלחה");
+}
+
+const confirmLogout = ref(false);
+function logout() {
+  confirmLogout.value = false;
+  /* the demo has no login screen, so signing out drops what belongs to the
+     session — the clipboard, the selections and the filters — and starts over */
+  ui.clearClipboard();
+  boq.$reset();
+  ui.toast("התנתקת מהמערכת");
+  router.push("/projects");
+}
+
+/* ---------- התראות ודוא"ל ---------- */
+const notificationEvents = NOTIFICATION_EVENTS;
+const digestOptions = DIGEST_OPTIONS;
+const digest = computed({
+  get: () => ui.prefs.digest,
+  set: (v) => ui.setPref("digest", v),
+});
+function setNotify(key, v) {
+  ui.setPref(key, v);
 }
 
 /* ---------- נתוני הדמו ---------- */
@@ -277,6 +329,82 @@ function resetDemo() {
         </div>
       </section>
 
+      <!-- ===== אבטחה וגישה ===== -->
+      <section class="card">
+        <header class="sec-head"><h3 class="sec-title">אבטחה וגישה</h3></header>
+
+        <div v-if="!changingPassword" class="pref-line first">
+          <div class="pref-text">
+            <span class="pref-label">סיסמה</span>
+            <span class="pref-detail">
+              {{
+                user.passwordUpdatedAt
+                  ? `עודכנה לאחרונה ב-${formatDateTime(user.passwordUpdatedAt)}`
+                  : "לא עודכנה מאז יצירת החשבון"
+              }}
+            </span>
+          </div>
+          <button class="btn btn-secondary" @click="openPasswordForm">החלפת סיסמה</button>
+        </div>
+
+        <form v-else class="pw-form" @submit.prevent="savePassword">
+          <label class="field-line">
+            <span class="lbl">סיסמה נוכחית</span>
+            <input v-model="pw.current" type="password" autocomplete="current-password" class="input" />
+          </label>
+          <label class="field-line">
+            <span class="lbl">סיסמה חדשה</span>
+            <input v-model="pw.next" type="password" autocomplete="new-password" class="input" />
+          </label>
+          <label class="field-line">
+            <span class="lbl">אימות סיסמה</span>
+            <input v-model="pw.confirm" type="password" autocomplete="new-password" class="input" />
+          </label>
+          <p class="pw-hint" :class="{ error: pwError && pw.current }">
+            {{ pwError && pw.current ? pwError : `לפחות ${MIN_PASSWORD} תווים, ושונה מהסיסמה הנוכחית` }}
+          </p>
+          <div class="pw-actions">
+            <button class="btn btn-primary" type="submit" :disabled="!!pwError">עדכון סיסמה</button>
+            <button class="btn btn-secondary" type="button" @click="changingPassword = false">ביטול</button>
+          </div>
+        </form>
+
+        <div class="pref-line">
+          <div class="pref-text">
+            <span class="pref-label">התנתקות</span>
+            <span class="pref-detail">
+              סגירת הסשן הנוכחי. הבחירות הפתוחות בכתבי הכמויות והלוח הזמני ייסגרו; הנתונים עצמם נשמרים.
+            </span>
+          </div>
+          <button class="btn btn-secondary" @click="confirmLogout = true">התנתקות</button>
+        </div>
+      </section>
+
+      <!-- ===== התראות ודוא"ל ===== -->
+      <section class="card">
+        <header class="sec-head"><h3 class="sec-title">התראות ודוא"ל</h3></header>
+        <p class="sec-note">
+          ההתראות נשלחות ל-<span class="ltr">{{ user.email || "—" }}</span
+          >. בגרסת הדמו ההעדפות נשמרות אך לא נשלח דואר בפועל.
+        </p>
+        <div v-for="e in notificationEvents" :key="e.key" class="pref-line">
+          <div class="pref-text">
+            <span class="pref-label">{{ e.label }}</span>
+            <span class="pref-detail">{{ e.detail }}</span>
+          </div>
+          <BaseToggle :model-value="ui.prefs[e.key]" @update:model-value="(v) => setNotify(e.key, v)" />
+        </div>
+        <div class="pref-line">
+          <div class="pref-text">
+            <span class="pref-label">סיכום מרוכז</span>
+            <span class="pref-detail">במקום הודעה על כל אירוע, דואר אחד מרוכז בתדירות שתיבחר.</span>
+          </div>
+          <select v-model="digest" class="select digest-select">
+            <option v-for="o in digestOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+          </select>
+        </div>
+      </section>
+
       <!-- ===== נתוני הדמו ===== -->
       <section class="card wide danger-card">
         <header class="sec-head"><h3 class="sec-title">נתוני הדמו</h3></header>
@@ -292,6 +420,15 @@ function resetDemo() {
       </section>
     </div>
 
+    <DeleteConfirmModal
+      v-if="confirmLogout"
+      title="התנתקות"
+      message="להתנתק מהמערכת?"
+      detail="הסשן ייסגר ותוחזר למסך הפתיחה. הנתונים שלך נשמרים."
+      confirm-label="התנתקות"
+      @close="confirmLogout = false"
+      @confirm="logout"
+    />
     <DeleteConfirmModal
       v-if="confirmReset"
       title="איפוס נתוני הדמו"
@@ -512,6 +649,36 @@ function resetDemo() {
   font-size: 13px;
   color: var(--text-muted);
   padding: 6px 8px;
+}
+/* ---- security ---- */
+.pref-line.first {
+  border-top: none;
+  padding-top: 0;
+}
+.pw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 12px;
+}
+.pw-hint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
+  padding: 2px 0 8px;
+}
+.pw-hint.error {
+  color: var(--danger);
+}
+.pw-actions {
+  display: flex;
+  gap: 10px;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+.digest-select {
+  width: 140px;
+  flex-shrink: 0;
 }
 /* ---- demo data ---- */
 .danger-card .pref-line {
