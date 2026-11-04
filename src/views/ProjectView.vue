@@ -18,15 +18,15 @@ const isNew = computed(() => route.params.id === "new");
 const project = computed(() => db.projects.find((p) => p.id === Number(route.params.id)) || null);
 const title = computed(() => (isNew.value ? "פרויקט חדש" : project.value?.name || ""));
 
-/* Demo preview: "מרוכזת" drops the page header and moves the project's identity
-   down onto the tab strip, so the screen keeps the ~70px the header was using.
-   Each tab then carries its own save; the toggle is here so the two layouts can
-   be compared side by side, and it is not meant to ship. */
+/* Demo preview. "תצוגה מרוכזת" folds the page header into the card: the trail
+   ends in the project's name instead of repeating it under itself, the tabs sit
+   on the gutter the content below already uses, and one rule runs under the lot.
+   Each tab then carries its own save. Off by default; not meant to ship. */
 const compact = computed({
   get: () => ui.prefs.compactProjectHeader,
   set: (v) => ui.setPref("compactProjectHeader", v),
 });
-const CRUMBS = ["שם-לקוח", "מחלקה", "תת מחלקה", "פרויקטים"];
+const TRAIL = ["שם-לקוח", "מחלקה", "תת מחלקה"];
 
 const tabs = [
   { id: "general", label: "כללי", enabled: true },
@@ -78,19 +78,21 @@ function save() {
     </PageHeader>
 
     <div class="card" :class="{ compact }">
-      <nav class="tab-strip" :class="{ compact }">
-        <!-- compact: the project's name and trail live on the strip -->
-        <div v-if="compact" class="strip-side identity">
-          <div class="crumbs">
-            <template v-for="(c, i) in CRUMBS" :key="i">
-              <span class="crumb">{{ c }}</span>
-              <span class="crumb-sep"><AppIcon name="chevron-left" :size="12" /></span>
-            </template>
-            <span class="crumb crumb-current">{{ title }}</span>
-          </div>
-          <h1 v-full-title class="strip-title ellipsis">{{ title }}</h1>
-        </div>
+      <!-- compact: the trail ends in the project's name, so the name is said once -->
+      <nav v-if="compact" class="trail">
+        <button class="trail-back" title="חזרה לרשימת הפרויקטים" @click="router.push('/projects')">
+          <AppIcon name="chevron-right" :size="16" />
+        </button>
+        <template v-for="c in TRAIL" :key="c">
+          <span class="trail-step">{{ c }}</span>
+          <AppIcon class="trail-sep" name="chevron-left" :size="12" />
+        </template>
+        <button class="trail-step link" @click="router.push('/projects')">פרויקטים</button>
+        <AppIcon class="trail-sep" name="chevron-left" :size="12" />
+        <h1 v-full-title class="trail-current ellipsis">{{ title }}</h1>
+      </nav>
 
+      <nav class="tab-row" :class="{ compact }">
         <div class="tabs">
           <button
             v-for="t in tabs"
@@ -103,20 +105,13 @@ function save() {
             {{ t.label }}
           </button>
         </div>
-
-        <div v-if="!compact" class="tab-filler" />
-
-        <!-- demo-only preview switch -->
-        <div class="strip-side density">
-          <label
-            class="density-switch"
-            title="תצוגה לבדיקה: מרוכזת מסירה את הכותרת העליונה ומעבירה את שם הפרויקט לשורת הלשוניות"
-          >
-            <span class="density-label">תצוגה מרוכזת</span>
-            <BaseToggle v-model="compact" />
-          </label>
-        </div>
+        <!-- demo-only preview switch, kept quiet at the far end -->
+        <label class="density" title="תצוגה לבדיקה: מרוכזת מקפלת את הכותרת העליונה אל תוך הכרטיס">
+          <span class="density-label">תצוגה מרוכזת</span>
+          <BaseToggle v-model="compact" />
+        </label>
       </nav>
+
       <div class="tab-content">
         <router-view :project="project" />
       </div>
@@ -138,21 +133,88 @@ function save() {
 .card.compact {
   height: calc(100vh - 36px);
 }
-.tab-strip {
+
+/* ---------- the trail, which is also the title ---------- */
+.trail {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 34px;
+  padding: 10px 24px 0;
+  flex-shrink: 0;
+}
+.trail-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.trail-back:hover {
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+}
+.trail-step {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+.trail-step.link {
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.trail-step.link:hover {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+.trail-sep {
+  color: var(--text-disabled);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+.trail-current {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+/* ---------- tabs: one gutter, one rule ---------- */
+.tab-row {
   display: flex;
   align-items: flex-end;
-  padding: 20px 24px 0;
-}
-/* three columns: identity on the right, tabs dead centre, the switch on the left */
-.tab-strip.compact {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  justify-content: space-between;
   gap: 16px;
-  padding: 10px 24px 0;
+  padding: 20px 24px 0;
+  flex-shrink: 0;
+}
+.tab-row.compact {
+  padding: 6px 24px 0;
+  /* a single hairline under the whole row — the active tab's accent sits on it */
+  border-bottom: 1px solid var(--divider);
 }
 .tabs {
   display: flex;
   align-items: flex-end;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 .tab {
   background: none;
@@ -173,62 +235,43 @@ function save() {
   color: var(--text-disabled);
   cursor: not-allowed;
 }
-.tab-filler {
+/* compact: the row owns the rule, so a tab only draws its own accent */
+.tab-row.compact .tab {
+  border-bottom-color: transparent;
+  margin-bottom: -1px;
+  padding: 9px 18px;
+}
+.tab-row.compact .tab:hover:not(.disabled):not(.active) {
+  color: var(--text-primary);
+}
+.tab-row.compact .tab.active {
+  border-bottom-color: var(--brand-primary);
+}
+.tab-row:not(.compact) .tabs {
   flex: 1;
-  border-bottom: 2px solid var(--divider);
+}
+/* classic keeps its filler rule to the end of the row */
+.tab-row:not(.compact)::after {
+  content: "";
+  flex: 1;
   align-self: stretch;
-}
-/* the strip's two edges carry the same rule the tabs sit on */
-.strip-side {
-  display: flex;
-  align-items: flex-end;
-  min-width: 0;
   border-bottom: 2px solid var(--divider);
-  padding-bottom: 6px;
-}
-.identity {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  justify-content: flex-end;
-}
-.crumbs {
-  display: flex;
-  align-items: center;
-  font-size: 11px;
-  line-height: 14px;
-  color: var(--text-secondary);
-}
-.crumb-sep {
-  display: inline-flex;
-  margin: 0 1px;
-}
-.crumb-current {
-  font-weight: 700;
-  color: var(--text-primary);
-}
-.strip-title {
-  max-width: 100%;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 22px;
-  color: var(--text-primary);
-  text-align: right;
+  order: 1;
 }
 .density {
-  justify-content: flex-end;
-}
-.tab-strip:not(.compact) .density {
-  padding-bottom: 8px;
-}
-.density-switch {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+  padding-bottom: 8px;
   cursor: pointer;
+  order: 2;
+}
+.tab-row.compact .density {
+  padding-bottom: 6px;
 }
 .density-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
 }
