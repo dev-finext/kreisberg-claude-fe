@@ -113,7 +113,7 @@ function send() {
 
 <template>
   <Teleport to="body">
-    <div class="tender-overlay" @mousedown.self="emit('close')">
+    <div class="tender-overlay">
       <div class="tender-modal">
         <!-- header -->
         <div class="tm-header">

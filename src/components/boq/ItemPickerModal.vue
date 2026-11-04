@@ -7,6 +7,7 @@ import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import PickerCombo from "./PickerCombo.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
+import { stripHtml } from "@/utils/html";
 
 const props = defineProps({
   mode: { type: String, default: "multi" }, // 'multi' | 'single'
@@ -87,6 +88,12 @@ function clearAll() {
   chapterCombo.value?.focus();
 }
 
+/* the row shows a name and a code; the whole תיאור סעיף is one hover away */
+function descriptionOf(item) {
+  const text = stripHtml(item.description || "").trim();
+  return text && text !== item.name ? text : item.name;
+}
+
 function highlight(name) {
   const t = applied.value?.term || "";
   if (!t) return escapeHtml(name);
@@ -155,7 +162,7 @@ function confirm() {
 
 <template>
   <Teleport to="body">
-    <div class="picker-overlay" @mousedown.self="emit('close')">
+    <div class="picker-overlay">
       <div class="picker">
         <!-- header -->
         <div class="picker-header">
@@ -304,10 +311,10 @@ function confirm() {
                             @update:model-value="() => toggleItem(item)"
                           />
                         </td>
-                        <td class="td-code">
+                        <td class="td-code" :title="descriptionOf(item)">
                           <span class="item-code num">{{ item.code }}</span>
                         </td>
-                        <td class="td-name">
+                        <td class="td-name" :title="descriptionOf(item)">
                           <span class="r-name-text ellipsis" v-html="highlight(item.name)" />
                           <span v-if="isDisabled(item)" class="already">{{ disabledReason(item) }}</span>
                         </td>

@@ -18,7 +18,7 @@ useEscape(() => emit("close"));
 
 <template>
   <Teleport to="body">
-    <div class="modal-overlay" :class="{ elevated }" @mousedown.self="emit('close')">
+    <div class="modal-overlay" :class="{ elevated }">
       <div class="modal" :style="{ width }">
         <div class="modal-header">
           <button class="modal-close" @click="emit('close')">

@@ -177,6 +177,13 @@ defineProps({
       <path d="M7 3.5h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1Z" />
       <path d="M14 3.5V8h4.5M9 12.5h6M9 16h6" />
     </template>
+    <!-- printer: paper out the top, body, tray out the bottom -->
+    <template v-else-if="name === 'printer'">
+      <path d="M7 8.5V4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 .5.5v4.5" />
+      <path d="M5.5 8.5h13a2 2 0 0 1 2 2v5a1 1 0 0 1-1 1H17m-10 0H4.5a1 1 0 0 1-1-1v-5a2 2 0 0 1 2-2Z" />
+      <path d="M7 13.5h10V20a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 7 20v-6.5Z" />
+      <circle cx="17.5" cy="11" r=".9" fill="currentColor" stroke="none" />
+    </template>
     <!-- tag -->
     <template v-else-if="name === 'tag'">
       <path d="M3.5 12.5V5a1.5 1.5 0 0 1 1.5-1.5h7.5l8 8-8.5 8.5-8.5-8.5Z" />

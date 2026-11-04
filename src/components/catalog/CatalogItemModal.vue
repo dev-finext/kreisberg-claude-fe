@@ -362,7 +362,7 @@ function remove() {
 
 <template>
   <Teleport to="body">
-    <div class="cim-overlay" @mousedown.self="emit('close')">
+    <div class="cim-overlay">
       <!-- Figma "Popup branches-catalog" / "Popup section edit": 822 wide, 758 content -->
       <div class="cim">
         <div class="cim-header">

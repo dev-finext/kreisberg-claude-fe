@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 import { useDbStore } from "./db";
 
+/* a numeric run matches with or without its leading zeros, so "7" finds פרק 07 */
+const stripZeros = (s) => String(s || "").replace(/(^|\D)0+(\d)/g, "$1$2");
+
 /**
  * Catalog domain: lookups + the picker's cascading query logic
  * (chapter → sub-chapter → tag → free text), per Matty's spec and the
@@ -97,13 +100,30 @@ export const useCatalogStore = defineStore("catalog", {
       let items = this.itemsInScope({ chapterId, subChapterId }).filter((i) => !i.isNote);
       if (tagId) items = items.filter((i) => i.tags.includes(tagId));
       if (t) {
-        items = items.filter(
-          (i) =>
-            i.code.toLowerCase().includes(t) ||
-            (i.name || "").toLowerCase().includes(t) ||
-            (i.description || "").toLowerCase().includes(t) ||
-            (i.unit || "").toLowerCase().includes(t)
-        );
+        /* the term reaches the פרק and the תת פרק too, by number as well as by name,
+           and a numeric run matches with or without its leading zeros — "8" finds פרק 08 */
+        const tz = stripZeros(t);
+        const hit = (v) =>
+          String(v || "")
+            .toLowerCase()
+            .includes(t);
+        /* a פרק / תת פרק number matches whole, so "8" pulls up פרק 08 itself
+           rather than every code that happens to contain an 8 somewhere */
+        const sameNum = (v) => !!v && stripZeros(String(v).toLowerCase()) === tz;
+        items = items.filter((i) => {
+          const ch = this.chapterById.get(i.chapterId);
+          const sc = this.subChapterById.get(i.subChapterId);
+          return (
+            hit(i.code) ||
+            hit(i.name) ||
+            hit(i.description) ||
+            hit(i.unit) ||
+            hit(ch?.name) ||
+            hit(sc?.name) ||
+            sameNum(ch?.num) ||
+            sameNum(sc?.num)
+          );
+        });
       }
       // group by chapter → sub-chapter (in catalog order)
       const groups = [];

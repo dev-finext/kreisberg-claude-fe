@@ -23,7 +23,8 @@ const resourceType = computed(
 );
 const resource = computed(() => db.constructors.find((c) => c.id === header.value?.resourceId)?.name || "");
 
-/** aggregate every structure-element item of this BOQ, grouped chapter → sub-chapter */
+/** the printed document carries the לסיכום sections only, grouped פרק → תת פרק
+    and ordered by chapter number, with the quantities summed over the structure */
 const groups = computed(() => {
   const seis = db.structureElementItems.filter((s) => s.boqId === props.boqId);
   const byItem = new Map();
@@ -55,22 +56,24 @@ const groups = computed(() => {
       g.bySub.set(item.subChapterId, sg);
       g.subGroups.push(sg);
     }
+    if (!row.forSummary) continue; // only לסיכום sections are printed
     g.bySub.get(item.subChapterId).rows.push(row);
   }
   for (const g of out) delete g.bySub;
-  return out;
+  /* by מספר פרק, not by the order the sections reached the כתב כמויות */
+  const byNum = (a, b) => String(a.num).localeCompare(String(b.num), "he", { numeric: true });
+  for (const g of out) {
+    g.subGroups = g.subGroups
+      .filter((sg) => sg.rows.length)
+      .sort((a, b) => byNum(a.subChapter, b.subChapter));
+  }
+  return out.filter((g) => g.subGroups.length).sort((a, b) => byNum(a.chapter, b.chapter));
 });
 
 const totals = computed(() => {
-  let items = 0;
   let summary = 0;
-  for (const g of groups.value)
-    for (const sg of g.subGroups)
-      for (const r of sg.rows) {
-        items++;
-        if (r.forSummary) summary++;
-      }
-  return { items, summary };
+  for (const g of groups.value) for (const sg of g.subGroups) summary += sg.rows.length;
+  return { summary };
 });
 
 function resourceTypeName(id) {
@@ -88,12 +91,12 @@ function print() {
       <div class="export-toolbar no-print">
         <div class="tb-left">
           <button class="btn btn-primary" @click="print">
-            <AppIcon name="file" :size="16" />
+            <AppIcon name="printer" :size="17" />
             <span>הדפסה / ייצוא PDF</span>
           </button>
           <button class="btn btn-secondary" @click="emit('close')">סגירה</button>
         </div>
-        <span class="tb-hint">תצוגת מסמך להדפסה — בחלון ההדפסה ניתן לשמור כ-PDF</span>
+        <span class="tb-hint">המסמך כולל את הסעיפים לסיכום בלבד — בחלון ההדפסה ניתן לשמור כ-PDF</span>
       </div>
 
       <!-- printable document -->
@@ -141,17 +144,16 @@ function print() {
               <th class="c-unit">יח' מידה</th>
               <th class="c-qty">כמות</th>
               <th class="c-prio">עדיפות</th>
-              <th class="c-sum">לסיכום</th>
             </tr>
           </thead>
           <tbody>
             <template v-for="g in groups" :key="g.chapter.id">
               <tr class="g-chapter">
-                <td colspan="7">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</td>
+                <td colspan="6">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</td>
               </tr>
               <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
                 <tr class="g-sub">
-                  <td colspan="7">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</td>
+                  <td colspan="6">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</td>
                 </tr>
                 <tr v-for="r in sg.rows" :key="r.item.id">
                   <td class="num">{{ r.item.code }}</td>
@@ -160,22 +162,18 @@ function print() {
                   <td>{{ r.item.unit }}</td>
                   <td class="num">{{ Number(r.qty).toFixed(2) }}</td>
                   <td>{{ PRIORITY_LABELS[r.priority] }}</td>
-                  <td>{{ r.forSummary ? "✓" : "" }}</td>
                 </tr>
               </template>
             </template>
             <tr v-if="!groups.length">
-              <td colspan="7" class="empty">אין סעיפים בכתב כמויות זה</td>
+              <td colspan="6" class="empty">אין סעיפים לסיכום בכתב כמויות זה</td>
             </tr>
           </tbody>
         </table>
 
         <footer class="doc-foot">
           <span
-            >סה"כ סעיפים: <span class="num">{{ totals.items }}</span></span
-          >
-          <span
-            >סעיפים לסיכום: <span class="num">{{ totals.summary }}</span></span
+            >סה"כ סעיפים לסיכום: <span class="num">{{ totals.summary }}</span></span
           >
           <span class="foot-note">הופק ממערכת "חישובים בראש טוב"</span>
         </footer>

@@ -113,7 +113,7 @@ function deleteFromBoq() {
 
 <template>
   <Teleport to="body">
-    <div class="iem-overlay" @mousedown.self="emit('close')">
+    <div class="iem-overlay">
       <div class="iem">
         <!-- sticky header: chapter > sub-chapter only (item name removed per design ruling) -->
         <div class="iem-header">
