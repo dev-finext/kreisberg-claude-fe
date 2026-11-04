@@ -73,12 +73,11 @@ const checkedItemIds = computed(() => {
   return [...ids];
 });
 
-/* toolbar enablement */
-const selectedIsLeaf = computed(
-  () => boq.selectedElementId !== null && boq.selectedElementId !== 0 && boq.isLeaf(boq.selectedElementId)
-);
+/* toolbar enablement — sections hang on any level of the structure, so every
+   element can take them, not only the ends of the tree */
+const elementSelected = computed(() => boq.selectedElementId !== null && boq.selectedElementId !== 0);
 const addItemEnabled = computed(() =>
-  boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT ? selectedIsLeaf.value : false
+  boq.sidebarMode === SIDEBAR_MODE.ASSIGNMENT ? elementSelected.value : false
 );
 const hasChecked = computed(() => boq.checkedSeiIds.length > 0);
 const pasteEnabled = computed(
@@ -86,8 +85,7 @@ const pasteEnabled = computed(
     ui.clipboard.seiIds.length > 0 &&
     boq.selectedElementId !== null &&
     boq.selectedElementId !== 0 &&
-    boq.selectedElementId !== ui.clipboard.sourceElementId &&
-    selectedIsLeaf.value
+    boq.selectedElementId !== ui.clipboard.sourceElementId
 );
 
 function openPicker() {
@@ -189,7 +187,7 @@ function deleteChecked() {
           <button
             class="tb-btn"
             :disabled="!addItemEnabled"
-            :title="addItemEnabled ? '' : 'ניתן להוסיף סעיפים רק לאלמנט קצה'"
+            :title="addItemEnabled ? '' : 'בחר מבנה מהרשימה כדי להוסיף סעיפים'"
             @click="openPicker"
           >
             <AppIcon name="plus-circle" :size="20" />

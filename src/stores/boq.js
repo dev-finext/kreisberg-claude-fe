@@ -93,33 +93,28 @@ export const useBoqStore = defineStore("boq", {
      *  - branch/root: aggregated read-only sums over descendant leaves
      */
     assignmentRows() {
-      if (this.selectedElementId === null) return { editable: false, rows: [] };
+      if (this.selectedElementId === null) return { editable: false, rows: [], belowRows: [] };
       const isRootAll = this.selectedElementId === 0;
-      const leaf = !isRootAll && this.isLeaf(this.selectedElementId);
-      const leafIds = isRootAll ? this.allLeafIds() : this.leafIdsUnder(this.selectedElementId);
-      const seis = this.db.structureElementItems.filter(
-        (s) => s.boqId === this.activeBoqId && leafIds.includes(s.elementId)
-      );
-      if (leaf) {
-        return {
-          editable: true,
-          rows: seis.map((s) => this.rowFromSei(s)).sort(byCatalogOrder(this.catalog)),
-        };
-      }
-      // aggregate by item
+      const mine = isRootAll ? [] : this.seisOfElements([this.selectedElementId]);
+      const belowIds = isRootAll
+        ? this.elementsOfBoq.map((e) => e.id)
+        : this.descendantIds(this.selectedElementId);
+      const below = this.seisOfElements(belowIds);
+
+      /* the element's own sections are editable here; what sits in the structures
+         under it is shown summed and read-only, edited where it was attached */
+      const rows = mine.map((s) => this.rowFromSei(s)).sort(byCatalogOrder(this.catalog));
       const byItem = new Map();
-      for (const s of seis) {
+      for (const s of below) {
         if (!byItem.has(s.itemId)) byItem.set(s.itemId, { itemId: s.itemId, qty: 0, seiIds: [] });
         const agg = byItem.get(s.itemId);
         agg.qty += s.qty;
         agg.seiIds.push(s.id);
       }
-      return {
-        editable: false,
-        rows: [...byItem.values()]
-          .map((agg) => this.rowFromAggregate(agg))
-          .sort(byCatalogOrder(this.catalog)),
-      };
+      const belowRows = [...byItem.values()]
+        .map((agg) => ({ ...this.rowFromAggregate(agg), below: true }))
+        .sort(byCatalogOrder(this.catalog));
+      return { editable: !isRootAll, rows, belowRows };
     },
     /**
      * פרקים mode: aggregated rows across ALL elements, grouped by chapter →
@@ -194,6 +189,12 @@ export const useBoqStore = defineStore("boq", {
     isLeaf(elementId) {
       if (!elementId) return false; // 0 = the synthetic "הכל" root
       return !this.elementsOfBoq.some((e) => e.parentId === elementId);
+    },
+    seisOfElements(elementIds) {
+      const ids = new Set(elementIds);
+      return this.db.structureElementItems.filter(
+        (s) => s.boqId === this.activeBoqId && ids.has(s.elementId)
+      );
     },
     descendantIds(elementId) {
       const out = [];
@@ -400,11 +401,14 @@ export const useBoqStore = defineStore("boq", {
       return [...rel].map((id) => this.catalog.item(id)).filter(Boolean);
     },
     addItems(itemIds, { toAllElements = false, elementIds = null } = {}) {
+      /* sections hang on any level of the structure, not only on its ends.
+         "לכל המבנים" still means the ends, so a section is not counted twice
+         once on a floor and again in each of its rooms. */
       const targets = elementIds || (toAllElements ? this.allLeafIds() : [this.selectedElementId]);
       let added = 0;
       const addedItemIds = new Set();
       for (const elId of targets) {
-        if (!elId || !this.isLeaf(elId)) continue;
+        if (!elId) continue;
         for (const itemId of itemIds) {
           const exists = this.db.structureElementItems.some(
             (s) => s.boqId === this.activeBoqId && s.elementId === elId && s.itemId === itemId

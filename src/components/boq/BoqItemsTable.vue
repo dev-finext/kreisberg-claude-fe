@@ -102,8 +102,8 @@ function applyFilters(rows) {
 }
 
 const assignment = computed(() => {
-  const { editable, rows } = boq.assignmentRows;
-  return { editable, rows: applyFilters(rows) };
+  const { editable, rows, belowRows } = boq.assignmentRows;
+  return { editable, rows: applyFilters(rows), belowRows: applyFilters(belowRows) };
 });
 const chapterGroups = computed(() => {
   const groups = boq.chaptersRows;
@@ -281,6 +281,9 @@ function subChapterNoteCount(scId) {
 }
 
 const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8));
+const belowLabel = computed(() =>
+  boq.selectedElementId === 0 ? "כל הסעיפים בכתב הכמויות" : "סעיפים במבנים שמתחת"
+);
 </script>
 
 <template>
@@ -339,7 +342,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
             <td class="td-unit">{{ r.unit || "--" }}</td>
             <td class="td-qty">
               <input
-                v-if="assignment.editable"
+                v-if="assignment.editable && r.editable"
                 type="text"
                 inputmode="decimal"
                 class="qty-input num"
@@ -405,7 +408,41 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
             </td>
           </tr>
         </template>
-        <tr v-if="!assignment.rows.length">
+
+        <!-- sections attached further down the structure, summed and read-only:
+             they are edited where they hang, not from here -->
+        <template v-if="assignment.belowRows.length">
+          <tr class="group-row">
+            <td :colspan="colCount">
+              <div class="group-inner">
+                <span class="group-label strong">{{ belowLabel }}</span>
+              </div>
+            </td>
+          </tr>
+          <tr v-for="r in assignment.belowRows" :key="r.key" class="item-row below-row">
+            <td class="td-check">
+              <BaseCheckbox :model-value="false" disabled />
+            </td>
+            <td class="td-code">
+              <span class="item-code">{{ r.code }}</span>
+            </td>
+            <td v-full-title class="td-name ellipsis">{{ r.name }}</td>
+            <td class="td-rt">{{ db.resourceTypes.find((t) => t.id === r.resourceTypeId)?.name || "--" }}</td>
+            <td class="td-unit">{{ r.unit || "--" }}</td>
+            <td class="td-qty">
+              <span class="qty-text num">{{ formatQty(r.qty) }}</span>
+            </td>
+            <td class="td-prio">
+              <PriorityControl :model-value="r.priority" disabled />
+            </td>
+            <td class="td-summary">
+              <BaseToggle :model-value="r.forSummary" disabled />
+            </td>
+            <td class="td-actions"></td>
+          </tr>
+        </template>
+
+        <tr v-if="!assignment.rows.length && !assignment.belowRows.length">
           <td :colspan="colCount">
             <div class="table-empty">
               <EmptyClipboard />
@@ -418,11 +455,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
                 }}
               </p>
               <button
-                v-if="
-                  boq.selectedElementId !== null &&
-                  boq.selectedElementId !== 0 &&
-                  boq.isLeaf(boq.selectedElementId)
-                "
+                v-if="boq.selectedElementId !== null && boq.selectedElementId !== 0"
                 class="btn btn-primary empty-cta"
                 @click="emit('add-items')"
               >
@@ -798,6 +831,10 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
   pointer-events: none;
 }
 /* group rows */
+/* a summed line from somewhere else in the structure: readable, not editable */
+.below-row td {
+  color: var(--text-secondary);
+}
 .group-row td {
   background: var(--surface-subtle);
   height: 38px;
