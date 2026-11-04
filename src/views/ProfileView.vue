@@ -1,0 +1,525 @@
+<script setup>
+import { computed, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useDbStore } from "@/stores/db";
+import { useUiStore, SUPPRESSIBLE_PROMPTS } from "@/stores/ui";
+import PageHeader from "@/components/layout/PageHeader.vue";
+import AppIcon from "@/components/shared/AppIcon.vue";
+import BaseToggle from "@/components/shared/BaseToggle.vue";
+import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
+import { formatDate, formatDateTime } from "@/utils/format";
+import { stripHtml } from "@/utils/html";
+
+const router = useRouter();
+const db = useDbStore();
+const ui = useUiStore();
+
+const user = computed(() => db.currentUser);
+
+/* ---------- פרטים אישיים ---------- */
+const editing = ref(false);
+const draft = reactive({ name: "", title: "", role: "", email: "", phone: "" });
+function startEdit() {
+  Object.assign(draft, {
+    name: user.value.name || "",
+    title: user.value.title || "",
+    role: user.value.role || "",
+    email: user.value.email || "",
+    phone: user.value.phone || "",
+  });
+  editing.value = true;
+}
+function saveDetails() {
+  if (!draft.name.trim()) {
+    ui.toast("שם המשתמש לא יכול להיות ריק", "error");
+    return;
+  }
+  const live = db.db.users.find((u) => u.id === user.value.id);
+  Object.assign(live, {
+    name: draft.name.trim(),
+    title: draft.title.trim(),
+    role: draft.role.trim(),
+    email: draft.email.trim(),
+    phone: draft.phone.trim(),
+  });
+  db.persist();
+  editing.value = false;
+  ui.toast("הפרטים עודכנו בהצלחה");
+}
+
+const initials = computed(() =>
+  (user.value.name || "")
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+);
+
+/* ---------- החלפת משתמש ---------- */
+function switchTo(id) {
+  if (id === db.db.currentUserId) return;
+  db.db.currentUserId = id;
+  db.persist();
+  ui.toast(`התחברת כ${db.currentUser.name}`);
+}
+
+/* ---------- הודעות ואישורים ---------- */
+const prompts = SUPPRESSIBLE_PROMPTS;
+const silencedCount = computed(() => prompts.filter((p) => ui.prefs[p.key]).length);
+function setPrompt(key, shown) {
+  ui.setPref(key, !shown);
+  ui.toast(shown ? "ההודעה תוצג שוב" : "ההודעה לא תוצג יותר");
+}
+function restoreAllPrompts() {
+  for (const p of prompts) ui.setPref(p.key, false);
+  ui.toast("כל ההודעות יוצגו שוב");
+}
+
+/* ---------- העדפות תצוגה ---------- */
+const railExpanded = computed({
+  get: () => ui.prefs.railExpanded,
+  set: (v) => ui.setPref("railExpanded", v),
+});
+
+/* ---------- הפעילות שלי ---------- */
+const myProjects = computed(() => db.projects.filter((p) => p.author === user.value.name));
+const myNotes = computed(() =>
+  db.comments
+    .filter((c) => c.author === user.value.name)
+    .slice()
+    .sort((a, b) => String(b.ts).localeCompare(String(a.ts)))
+    .slice(0, 6)
+);
+const myHistory = computed(() =>
+  db.db.history
+    .filter((h) => h.user === user.value.name)
+    .slice()
+    .sort((a, b) => String(b.ts).localeCompare(String(a.ts)))
+    .slice(0, 6)
+);
+function noteScope(c) {
+  if (c.scope === "chapter") return "פרק";
+  if (c.scope === "subChapter") return "תת פרק";
+  return "סעיף";
+}
+
+/* ---------- נתוני הדמו ---------- */
+const confirmReset = ref(false);
+function resetDemo() {
+  confirmReset.value = false;
+  db.resetDemo();
+  ui.toast("נתוני הדמו אופסו");
+  router.push("/projects");
+}
+</script>
+
+<template>
+  <div>
+    <PageHeader title="הפרופיל שלי" :crumbs="['משתמש']">
+      <template #actions>
+        <button v-if="!editing" class="btn btn-secondary" @click="startEdit">עריכת פרטים</button>
+        <template v-else>
+          <button class="btn btn-primary" @click="saveDetails">שמירה</button>
+          <button class="btn btn-secondary" @click="editing = false">ביטול</button>
+        </template>
+      </template>
+    </PageHeader>
+
+    <div class="profile-grid">
+      <!-- ===== פרטים אישיים ===== -->
+      <section class="card identity">
+        <div class="id-head">
+          <span class="avatar">{{ initials }}</span>
+          <div class="id-main">
+            <h2 class="id-name">{{ user.name }}</h2>
+            <p class="id-title">{{ user.title || user.role }}</p>
+            <span class="pill pill-info">{{ user.role }}</span>
+          </div>
+        </div>
+
+        <dl v-if="!editing" class="fields">
+          <div class="field-line">
+            <dt>שם מלא</dt>
+            <dd>{{ user.name }}</dd>
+          </div>
+          <div class="field-line">
+            <dt>תפקיד</dt>
+            <dd>{{ user.title || "—" }}</dd>
+          </div>
+          <div class="field-line">
+            <dt>הרשאה</dt>
+            <dd>{{ user.role }}</dd>
+          </div>
+          <div class="field-line">
+            <dt>דוא"ל</dt>
+            <dd class="ltr">{{ user.email || "—" }}</dd>
+          </div>
+          <div class="field-line">
+            <dt>טלפון</dt>
+            <dd class="num">{{ user.phone || "—" }}</dd>
+          </div>
+          <div class="field-line">
+            <dt>הצטרף בתאריך</dt>
+            <dd class="num">{{ user.joinedAt ? formatDate(user.joinedAt) : "—" }}</dd>
+          </div>
+        </dl>
+
+        <div v-else class="fields">
+          <label class="field-line">
+            <span class="lbl">שם מלא</span>
+            <input v-model="draft.name" class="input" />
+          </label>
+          <label class="field-line">
+            <span class="lbl">תפקיד</span>
+            <input v-model="draft.title" class="input" />
+          </label>
+          <label class="field-line">
+            <span class="lbl">הרשאה</span>
+            <input v-model="draft.role" class="input" />
+          </label>
+          <label class="field-line">
+            <span class="lbl">דוא"ל</span>
+            <input v-model="draft.email" class="input ltr" />
+          </label>
+          <label class="field-line">
+            <span class="lbl">טלפון</span>
+            <input v-model="draft.phone" class="input num" />
+          </label>
+        </div>
+      </section>
+
+      <!-- ===== הודעות ואישורים ===== -->
+      <section class="card">
+        <header class="sec-head">
+          <h3 class="sec-title">הודעות ואישורים</h3>
+          <button v-if="silencedCount" class="btn-text" @click="restoreAllPrompts">הפעלת הכל</button>
+        </header>
+        <p class="sec-note">
+          חלק מהפעולות מציגות הודעת אישור לפני ביצוען. אם סימנת בהודעה “אל תציג הודעה זו שוב”, היא הפסיקה
+          להופיע — וניתן להחזיר אותה לכאן בכל עת. הבחירה הפיכה לחלוטין ואינה משפיעה על הנתונים.
+        </p>
+        <div v-for="p in prompts" :key="p.key" class="pref-line">
+          <div class="pref-text">
+            <span class="pref-label">{{ p.label }}</span>
+            <span class="pref-detail">{{ p.detail }}</span>
+          </div>
+          <BaseToggle :model-value="!ui.prefs[p.key]" @update:model-value="(v) => setPrompt(p.key, v)" />
+        </div>
+      </section>
+
+      <!-- ===== העדפות תצוגה ===== -->
+      <section class="card">
+        <header class="sec-head"><h3 class="sec-title">העדפות תצוגה</h3></header>
+        <div class="pref-line">
+          <div class="pref-text">
+            <span class="pref-label">תפריט צד פתוח</span>
+            <span class="pref-detail">תפריט הניווט נפתח עם שמות המסכים ולא רק עם האייקונים.</span>
+          </div>
+          <BaseToggle v-model="railExpanded" />
+        </div>
+      </section>
+
+      <!-- ===== החלפת משתמש ===== -->
+      <section class="card">
+        <header class="sec-head"><h3 class="sec-title">משתמשי הדמו</h3></header>
+        <p class="sec-note">הדמו כולל שלושה משתמשים. המשתמש הפעיל הוא זה שנרשם כמחבר על כל פעולה.</p>
+        <button
+          v-for="u in db.db.users"
+          :key="u.id"
+          class="user-line"
+          :class="{ active: u.id === db.db.currentUserId }"
+          @click="switchTo(u.id)"
+        >
+          <span class="avatar small">{{ (u.name || "").slice(0, 1) }}</span>
+          <span class="u-main">
+            <span class="u-name">{{ u.name }}</span>
+            <span class="u-role">{{ u.title || u.role }}</span>
+          </span>
+          <AppIcon v-if="u.id === db.db.currentUserId" name="check-circle" :size="18" />
+        </button>
+      </section>
+
+      <!-- ===== הפעילות שלי ===== -->
+      <section class="card wide">
+        <header class="sec-head"><h3 class="sec-title">הפעילות שלי</h3></header>
+        <div class="activity">
+          <div class="act-col">
+            <h4 class="act-title">פרויקטים באחריותי ({{ myProjects.length }})</h4>
+            <button
+              v-for="p in myProjects.slice(0, 6)"
+              :key="p.id"
+              class="act-line"
+              @click="router.push(`/projects/${p.id}`)"
+            >
+              <span class="act-main">{{ p.name }}</span>
+              <span class="act-meta">{{ p.location }}</span>
+            </button>
+            <p v-if="!myProjects.length" class="act-empty">אין פרויקטים רשומים על שמך</p>
+          </div>
+
+          <div class="act-col">
+            <h4 class="act-title">ההערות האחרונות שלי</h4>
+            <div v-for="c in myNotes" :key="c.id" class="act-line static">
+              <span class="act-main">{{ stripHtml(c.text) }}</span>
+              <span class="act-meta">{{ noteScope(c) }} · {{ formatDateTime(c.ts) }}</span>
+            </div>
+            <p v-if="!myNotes.length" class="act-empty">עדיין לא כתבת הערות</p>
+          </div>
+
+          <div class="act-col">
+            <h4 class="act-title">שינויים אחרונים</h4>
+            <div v-for="h in myHistory" :key="h.id" class="act-line static">
+              <span class="act-main">{{ h.changes.length }} שדות עודכנו</span>
+              <span class="act-meta">{{ formatDateTime(h.ts) }}</span>
+            </div>
+            <p v-if="!myHistory.length" class="act-empty">אין שינויים רשומים</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== נתוני הדמו ===== -->
+      <section class="card wide danger-card">
+        <header class="sec-head"><h3 class="sec-title">נתוני הדמו</h3></header>
+        <div class="pref-line">
+          <div class="pref-text">
+            <span class="pref-label">איפוס נתוני הדמו</span>
+            <span class="pref-detail">
+              כל הפרויקטים, כתבי הכמויות, הקטלוג וההעדפות יחזרו למצבם ההתחלתי. הפעולה אינה הפיכה.
+            </span>
+          </div>
+          <button class="btn btn-secondary danger-btn" @click="confirmReset = true">איפוס</button>
+        </div>
+      </section>
+    </div>
+
+    <DeleteConfirmModal
+      v-if="confirmReset"
+      title="איפוס נתוני הדמו"
+      message="האם לאפס את נתוני הדמו?"
+      detail="כל השינויים שבוצעו בדמו יימחקו והנתונים יוחזרו למצבם ההתחלתי"
+      confirm-label="איפוס"
+      @close="confirmReset = false"
+      @confirm="resetDemo"
+    />
+  </div>
+</template>
+
+<style scoped>
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 20px 24px;
+}
+.wide {
+  grid-column: 1 / -1;
+}
+/* ---- identity ---- */
+.id-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--divider);
+}
+.avatar {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatar.small {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+.id-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.id-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.id-title {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 12px;
+}
+.field-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  font-size: 14px;
+}
+.field-line dt,
+.field-line .lbl {
+  width: 110px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.field-line dd {
+  color: var(--text-primary);
+}
+.field-line .input {
+  flex: 1;
+  min-width: 0;
+}
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: right;
+}
+/* ---- sections ---- */
+.sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.sec-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.sec-note {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.pref-line {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--divider);
+}
+.pref-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pref-label {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.pref-detail {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-secondary);
+}
+/* ---- users ---- */
+.user-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--brand-primary);
+  text-align: right;
+  cursor: pointer;
+}
+.user-line:hover {
+  background: var(--surface-subtle);
+}
+.user-line.active {
+  background: var(--brand-primary-soft);
+}
+.u-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.u-name {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.u-role {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+/* ---- activity ---- */
+.activity {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+.act-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.act-line {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  text-align: right;
+  cursor: pointer;
+}
+.act-line.static {
+  cursor: default;
+}
+.act-line:not(.static):hover {
+  background: var(--surface-subtle);
+}
+.act-main {
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.act-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.act-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 6px 8px;
+}
+/* ---- demo data ---- */
+.danger-card .pref-line {
+  border-top: none;
+  padding: 0;
+}
+.danger-btn {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+</style>

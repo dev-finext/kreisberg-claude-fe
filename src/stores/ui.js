@@ -12,14 +12,36 @@ function loadPrefs() {
 
 let toastSeq = 1;
 
+/**
+ * The dialogs a user can silence with "אל תציג הודעה זו שוב". Every one of them
+ * is listed on the profile page so it can be turned back on, which is why each
+ * carries the wording shown there.
+ */
+export const SUPPRESSIBLE_PROMPTS = [
+  {
+    key: "skipAddToAllStructuresPrompt",
+    label: "הוספת סעיפים לכל המבנים",
+    detail: "נשאלת אם להוסיף את הסעיפים לכל המבנים או רק למבנה הנוכחי.",
+  },
+  {
+    key: "skipLinkedQtyPrompt",
+    label: "עדכון כמות של סעיפים קשורים",
+    detail: "נשאלת אם לעדכן גם את הכמות של הסעיפים הקשורים בעלי אותה יחידת מידה.",
+  },
+];
+
+/* the line every one of those checkboxes carries, so the choice never feels final */
+export const SUPPRESS_HINT = "ניתן להפעיל את ההודעה מחדש בכל עת בעמוד הפרופיל, תחת “הודעות ואישורים”.";
+
 export const useUiStore = defineStore("ui", {
   state: () => ({
     toasts: [],
-    railExpanded: true, // Figma shows the navy rail open with its labels by default
-    // user preferences ("אל תציג הודעה זו שוב")
+    // user preferences, kept in localStorage and editable on the profile page
     prefs: {
       skipAddToAllStructuresPrompt: false,
       skipLinkedQtyPrompt: false,
+      // Figma shows the navy rail open with its labels by default
+      railExpanded: true,
       ...loadPrefs(),
     },
     // clipboard for copy/paste of items between structure elements

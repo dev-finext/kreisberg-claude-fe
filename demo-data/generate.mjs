@@ -260,10 +260,35 @@ for (const ch of chapters) {
 }
 
 /* ---------------- users / people ---------------- */
+/* a user carries what the profile page shows about them */
 const users = [
-  { id: 1, name: "דני קרייסברג", role: "מפקח" },
-  { id: 2, name: "מתי קרייסברג", role: "מפקח" },
-  { id: 3, name: "אביחי גל-אור", role: "מנהל מערכת" },
+  {
+    id: 1,
+    name: "דני קרייסברג",
+    role: "מפקח",
+    email: "dani@kreisberg.co.il",
+    phone: "052-4410078",
+    title: "מנהל פרויקטים",
+    joinedAt: "2024-03-11",
+  },
+  {
+    id: 2,
+    name: "מתי קרייסברג",
+    role: "מפקח",
+    email: "matty@kreisberg.co.il",
+    phone: "054-7733190",
+    title: "מנהלת תפעול",
+    joinedAt: "2024-06-02",
+  },
+  {
+    id: 3,
+    name: "אביחי גל-אור",
+    role: "מנהל מערכת",
+    email: "avichai@finext.co.il",
+    phone: "050-6612204",
+    title: "מנהל מערכת",
+    joinedAt: "2025-01-19",
+  },
 ];
 const currentUserId = 1;
 
@@ -742,7 +767,7 @@ const tenders = [
 
 /* ---------------- emit ---------------- */
 const db = {
-  generatedAt: "2026-11-04-v6",
+  generatedAt: "2026-11-04-v7",
   currentUserId,
   catalog: { ...catalogMeta, chapters },
   catalogs,
