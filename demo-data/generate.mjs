@@ -68,22 +68,24 @@ const RESOURCE_TYPES = [
   { id: 5, name: "קבלן שיפוצים" },
 ];
 
+/* A resource carries the same contact details as anyone else in the system:
+   who to call, where to write, the ח.פ and the address. */
 const CONSTRUCTORS = [
-  { id: 1, name: "ירון צמח", typeId: 2 },
-  { id: 2, name: 'בני בטון בע"מ', typeId: 1 },
-  { id: 3, name: "אינסטלציית הצפון", typeId: 3 },
-  { id: 4, name: "י.ד חשמל", typeId: 4 },
-  { id: 5, name: 'מולי קבלנות ויזמות בע"מ', typeId: 1 },
-  { id: 6, name: "פאי ניהול וביצוע פרויקטים", typeId: 1 },
-  { id: 7, name: 'רני הנדסה בע"מ', typeId: 1 },
-  { id: 8, name: 'אלכסנדר סטייל סטון בע"מ', typeId: 5 },
-  { id: 9, name: 'זד קונקריט בע"מ', typeId: 1 },
-  { id: 10, name: 'ציון בריגה ובניו חברה לבניה ופיתוח בע"מ', typeId: 1 },
-  { id: 11, name: 'א.י נבו בנתניה חברה קבלנית לבנין בע"מ', typeId: 1 },
-  { id: 12, name: 'נחום משה חב\' להשקעות ובניה בע"מ', typeId: 1 },
-  { id: 13, name: 'קטש יזמות ובניה בע"מ', typeId: 1 },
-  { id: 14, name: 'בנימין זיגדון נדל"ן ובניה בע"מ', typeId: 5 },
-  { id: 15, name: 'א.ד אדריכלים בע"מ תל אביב', typeId: 2 },
+  { id: 1, name: "ירון צמח", typeId: 2, contactName: "ירון צמח", phone: "054-8123390", email: "yaron@tzemach-arch.co.il", hp: "034561208", address: "הרצל 24, תל אביב-יפו" },
+  { id: 2, name: 'בני בטון בע"מ', typeId: 1, contactName: "בני אברגל", phone: "03-6721140", email: "office@benibeton.co.il", hp: "512447803", address: "העמל 7, פתח תקווה" },
+  { id: 3, name: "אינסטלציית הצפון", typeId: 3, contactName: "אילן דהן", phone: "04-9912655", email: "service@zafon-plumbing.co.il", hp: "513998210", address: "הארז 3, כרמיאל" },
+  { id: 4, name: "י.ד חשמל", typeId: 4, contactName: "יוסף דיין", phone: "052-7704418", email: "yd.electric@gmail.com", hp: "036612947", address: "זאב זבוטינסקי 19, בני ברק" },
+  { id: 5, name: 'מולי קבלנות ויזמות בע"מ', typeId: 1, contactName: "מולי בן חמו", phone: "03-5588120", email: "info@mouli-group.co.il", hp: "514220671", address: "החרושת 12, חולון" },
+  { id: 6, name: "פאי ניהול וביצוע פרויקטים", typeId: 1, contactName: "פנינה אילוז", phone: "073-2410900", email: "pm@pie-projects.co.il", hp: "515110338", address: "הסדנאים 20, הרצליה" },
+  { id: 7, name: 'רני הנדסה בע"מ', typeId: 1, contactName: "רני שרעבי", phone: "09-7651201", email: "rani@rani-eng.co.il", hp: "512880476", address: "גיבורי ישראל 5, נתניה" },
+  { id: 8, name: 'אלכסנדר סטייל סטון בע"מ', typeId: 5, contactName: "אלכסנדר פוליקוב", phone: "08-9440213", email: "sales@alexstone.co.il", hp: "516004592", address: "האומן 14, ירושלים" },
+  { id: 9, name: 'זד קונקריט בע"מ', typeId: 1, contactName: "זאב כץ", phone: "03-9013377", email: "office@zconcrete.co.il", hp: "513770118", address: "המלאכה 9, ראשון לציון" },
+  { id: 10, name: 'ציון בריגה ובניו חברה לבניה ופיתוח בע"מ', typeId: 1, contactName: "ציון בריגה", phone: "04-8622490", email: "info@briga-build.co.il", hp: "511209643", address: "הנמל 42, חיפה" },
+  { id: 11, name: 'א.י נבו בנתניה חברה קבלנית לבנין בע"מ', typeId: 1, contactName: "אביאל נבו", phone: "09-8331705", email: "nevo@nevo-netanya.co.il", hp: "512667281", address: "שמואל הנציב 8, נתניה" },
+  { id: 12, name: 'נחום משה חב\' להשקעות ובניה בע"מ', typeId: 1, contactName: "משה נחום", phone: "02-6253388", email: "office@nahum-moshe.co.il", hp: "510443926", address: "יפו 101, ירושלים" },
+  { id: 13, name: 'קטש יזמות ובניה בע"מ', typeId: 1, contactName: "איתי קטש", phone: "08-9775512", email: "katash@katash-build.co.il", hp: "514881774", address: "העצמאות 31, מודיעין" },
+  { id: 14, name: 'בנימין זיגדון נדל"ן ובניה בע"מ', typeId: 5, contactName: "בנימין זיגדון", phone: "04-9815560", email: "zigdon@zigdon-nadlan.co.il", hp: "515773119", address: "הגפן 2, עכו" },
+  { id: 15, name: 'א.ד אדריכלים בע"מ תל אביב', typeId: 2, contactName: "דנה אברמוביץ", phone: "03-5100624", email: "studio@ad-architects.co.il", hp: "513004419", address: "אחד העם 54, תל אביב-יפו" },
 ];
 
 let itemAutoId = 1;
@@ -740,7 +742,7 @@ const tenders = [
 
 /* ---------------- emit ---------------- */
 const db = {
-  generatedAt: "2026-09-17-v5",
+  generatedAt: "2026-11-04-v6",
   currentUserId,
   catalog: { ...catalogMeta, chapters },
   catalogs,

@@ -7,15 +7,58 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import AttachContactsModal from "@/components/project/AttachContactsModal.vue";
+import FilterRow from "@/components/shared/FilterRow.vue";
+import SearchPill from "@/components/shared/SearchPill.vue";
 
 const route = useRoute();
 const db = useDbStore();
 const ui = useUiStore();
 
 const project = computed(() => db.projects.find((p) => p.id === Number(route.params.id)) || null);
-const contacts = computed(() => {
+const attached = computed(() => {
   const ids = project.value?.contactIds || [];
   return ids.map((id) => db.contacts.find((c) => c.id === id)).filter(Boolean);
+});
+
+/* ---------------- filters ----------------
+   The options are read off the contacts actually attached to this project, so
+   no filter offers a value that would come back empty. */
+const search = ref("");
+const filters = ref({});
+const cityOf = (c) => (c.address || "").split(",").pop().trim();
+const uniq = (list) => [...new Set(list.filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+const filterDefs = computed(() => {
+  const all = attached.value;
+  const opt = (v) => ({ value: v, label: v });
+  return [
+    { key: "role", label: "מקצוע", options: uniq(all.map((c) => c.role)).map(opt) },
+    {
+      key: "resourceTypeId",
+      label: "סוג משאב",
+      options: db.resourceTypes
+        .filter((t) => all.some((c) => c.resourceTypeId === t.id))
+        .map((t) => ({ value: String(t.id), label: t.name })),
+    },
+    { key: "business", label: "משאב", options: uniq(all.map((c) => c.business)).map(opt) },
+    { key: "city", label: "יישוב", options: uniq(all.map(cityOf)).map(opt) },
+  ];
+});
+const FILTER_VALUE = {
+  role: (c) => c.role,
+  resourceTypeId: (c) => String(c.resourceTypeId),
+  business: (c) => c.business,
+  city: cityOf,
+};
+const contacts = computed(() => {
+  const t = search.value.trim();
+  return attached.value.filter((c) => {
+    if (t && !`${c.firstName} ${c.lastName} ${c.role} ${c.phone} ${c.email} ${c.business}`.includes(t))
+      return false;
+    for (const [key, sel] of Object.entries(filters.value)) {
+      if (sel && sel.length && !sel.includes(FILTER_VALUE[key] && FILTER_VALUE[key](c))) return false;
+    }
+    return true;
+  });
 });
 
 const checked = ref([]);
@@ -63,8 +106,17 @@ const removeMessage = computed(() =>
         <span class="plus-disc"><AppIcon name="plus" :size="12" /></span>
         <span>צרף איש קשר</span>
       </button>
-      <h3 class="title">אנשי קשר מצורפים לפרויקט</h3>
+      <h3 class="title">
+        אנשי קשר מצורפים לפרויקט
+        <span class="count">({{ contacts.length }} מתוך {{ attached.length }})</span>
+      </h3>
     </div>
+
+    <FilterRow v-model="filters" :defs="filterDefs" @clear="search = ''">
+      <template #actions>
+        <SearchPill v-model="search" placeholder="חיפוש איש קשר" width="240px" />
+      </template>
+    </FilterRow>
 
     <table class="contacts-table">
       <thead>
@@ -113,7 +165,11 @@ const removeMessage = computed(() =>
         </tr>
         <tr v-if="!contacts.length">
           <td colspan="9">
-            <div class="empty">
+            <div v-if="attached.length" class="empty">
+              <p class="empty-title">אין אנשי קשר התואמים לסינון</p>
+              <p class="empty-sub">נקה את הסינון כדי לראות את כל אנשי הקשר של הפרויקט</p>
+            </div>
+            <div v-else class="empty">
               <p class="empty-title">עדיין אין אנשי קשר מצורפים</p>
               <p class="empty-sub">צרף אנשי קשר מהמאגר כדי לשייך אותם לפרויקט</p>
               <button class="btn btn-primary" @click="showAttach = true">צרף איש קשר</button>
@@ -149,6 +205,11 @@ const removeMessage = computed(() =>
   justify-content: space-between;
   flex-direction: row-reverse;
   margin-bottom: 22px;
+}
+.count {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 .title {
   font-size: 16px;
