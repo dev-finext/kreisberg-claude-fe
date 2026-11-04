@@ -38,7 +38,7 @@ function goToMapping() {
       @change="onFile"
       @cancel="emit('close')"
     />
-    <div v-if="fileName" class="overlay" @mousedown.self="emit('close')">
+    <div v-if="fileName" class="overlay">
       <div class="dialog">
         <button class="close" @click="emit('close')"><AppIcon name="cancel" :size="20" /></button>
         <h3 class="title">נדרש מיפוי לקובץ</h3>

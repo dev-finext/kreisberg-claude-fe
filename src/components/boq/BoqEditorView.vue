@@ -180,7 +180,7 @@ function deleteChecked() {
           <AppIcon name="megaphone" :size="16" />
         </button>
         <button class="tender-btn" title="הדפסה / ייצוא כתב הכמויות" @click="showExport = true">
-          <AppIcon name="file" :size="16" />
+          <AppIcon name="printer" :size="17" />
         </button>
       </div>
       <div class="doc-start">

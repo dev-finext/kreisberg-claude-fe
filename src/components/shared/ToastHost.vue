@@ -6,6 +6,8 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 const ui = useUiStore();
 const router = useRouter();
 
+const GLYPH = { success: "check", warning: "alert", error: "alert", info: "info" };
+
 function follow(t) {
   ui.dismissToast(t.id);
   if (t.action?.to) router.push(t.action.to);
@@ -13,17 +15,17 @@ function follow(t) {
 </script>
 
 <template>
-  <!-- Figma "Toast message": 627x72 on #F6F9FD, centred over the page, 67px up -->
-  <div class="toast-host" :style="{ marginRight: ui.railExpanded ? '240px' : 'var(--rail-w)' }">
+  <!-- top-left of the window, out of the way of the RTL content and the rail -->
+  <div class="toast-host">
     <transition-group name="toast">
       <div v-for="t in ui.toasts" :key="t.id" class="toast" :class="'toast-' + t.type">
         <span class="toast-icon">
-          <AppIcon :name="t.type === 'success' ? 'check' : 'alert'" :size="14" />
+          <AppIcon :name="GLYPH[t.type] || 'info'" :size="12" />
         </span>
         <span class="toast-text">{{ t.text }}</span>
         <button v-if="t.action" class="toast-action" @click="follow(t)">{{ t.action.label }}</button>
         <button class="toast-close" title="סגירה" @click="ui.dismissToast(t.id)">
-          <AppIcon name="cancel" :size="24" />
+          <AppIcon name="cancel" :size="14" />
         </button>
       </div>
     </transition-group>
@@ -33,51 +35,56 @@ function follow(t) {
 <style scoped>
 .toast-host {
   position: fixed;
-  bottom: 67px;
-  left: 0;
-  right: 0;
+  top: 16px;
+  left: 20px;
   z-index: 100;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  /* RTL: flex-end is the left edge, so the stack lines up under the first one */
+  align-items: flex-end;
+  gap: 8px;
   pointer-events: none;
 }
 .toast {
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 16px;
-  width: 627px;
-  max-width: calc(100vw - 48px);
-  min-height: 72px;
-  background: var(--brand-primary-soft);
-  border-radius: 6px;
-  box-shadow: 0 2px 4.6px rgba(0, 0, 0, 0.36);
-  padding: 24px 32px;
+  gap: 8px;
+  min-height: 40px;
+  max-width: 360px;
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(11, 27, 54, 0.18);
+  padding: 8px 10px 8px 8px;
+  /* the status colour reads off the leading (right, in RTL) edge */
+  border-right: 3px solid var(--toast-accent);
+  --toast-accent: var(--brand-primary);
+}
+.toast-success {
+  --toast-accent: #3e841e;
+}
+.toast-warning,
+.toast-error {
+  --toast-accent: var(--danger);
 }
 /* filled status dot with a white glyph */
 .toast-icon {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: #3e841e;
-}
-.toast-warning .toast-icon,
-.toast-error .toast-icon {
-  background: var(--danger);
+  background: var(--toast-accent);
 }
 .toast-text {
   flex: 1;
   min-width: 0;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 17px;
   color: var(--text-primary);
   text-align: right;
 }
@@ -87,8 +94,9 @@ function follow(t) {
   border: none;
   padding: 0;
   font-family: inherit;
-  font-size: 14px;
-  line-height: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
   color: var(--brand-primary);
 }
 .toast-action:hover {
@@ -98,17 +106,20 @@ function follow(t) {
   flex-shrink: 0;
   background: none;
   border: none;
-  color: var(--text-primary);
-  padding: 0;
+  color: var(--text-muted);
+  padding: 2px;
   display: inline-flex;
+}
+.toast-close:hover {
+  color: var(--text-primary);
 }
 .toast-enter-active,
 .toast-leave-active {
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 .toast-enter-from,
 .toast-leave-to {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateX(-10px);
 }
 </style>

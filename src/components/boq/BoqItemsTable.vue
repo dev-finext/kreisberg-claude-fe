@@ -160,7 +160,7 @@ function toggleOpen(r) {
 /* ---------------- quantity editing ----------------
    The qty cell is a plain always-on input: "0" is only a placeholder (so typing "5"
    gives 5, not 50), an existing value is selected on focus so typing replaces it,
-   Tab / Shift+Tab hop straight to the next / previous row's qty. */
+   Tab / Shift+Tab and Enter / Shift+Enter hop straight to the next / previous row's qty. */
 const tableWrap = ref(null);
 function qtyInputs() {
   return [...(tableWrap.value?.querySelectorAll("input.qty-input") || [])];
@@ -172,16 +172,13 @@ function onQtyFocus(r, e) {
   nextTick(() => e.target.select());
 }
 function onQtyKeydown(e, r) {
-  if (e.key === "Tab") {
+  if (e.key === "Tab" || e.key === "Enter") {
     e.preventDefault();
     commitQty(r);
     const list = qtyInputs();
-    list[list.indexOf(e.target) + (e.shiftKey ? -1 : 1)]?.focus();
-    return;
-  }
-  if (e.key === "Enter") {
-    e.preventDefault();
-    e.target.blur(); // blur commits
+    const next = list[list.indexOf(e.target) + (e.shiftKey ? -1 : 1)];
+    if (next) next.focus();
+    else e.target.blur();
     return;
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -224,6 +221,16 @@ function confirmCascade(cascade) {
   ui.toast("הכמות עודכנה בהצלחה");
   pendingCascade.value = null;
 }
+
+/* the linked sections the cascade dialog is about to touch, named rather than counted */
+const cascadeItems = computed(() =>
+  (pendingCascade.value?.childSeis || [])
+    .map((cs) => {
+      const item = cat.item(cs.itemId);
+      return item && { ...item, qty: cs.qty };
+    })
+    .filter(Boolean)
+);
 
 /* ---------------- priority / summary ---------------- */
 function onPriority(r, v) {
@@ -581,11 +588,25 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
     <Teleport to="body">
       <div v-if="pendingCascade" class="cascade-overlay">
         <div class="cascade-modal">
-          <h3 class="c-title">עדכון סעיפים מקושרים</h3>
+          <h3 class="c-title">עדכון סעיפים קשורים</h3>
           <p class="c-msg">
-            לסעיף זה קיימים {{ pendingCascade.childSeis.length }} סעיפים מקושרים עם אותה יחידת מידה. לעדכן גם
-            את הכמות שלהם?
+            לסעיף זה
+            {{
+              cascadeItems.length === 1 ? "קיים סעיף קשור אחד" : `קיימים ${cascadeItems.length} סעיפים קשורים`
+            }}
+            עם אותה יחידת מידה. לעדכן גם את הכמות שלהם ל-{{ formatQty(pendingCascade.newQty) }}?
           </p>
+          <!-- which sections, by name, so the choice is made on the sections and not on a number -->
+          <ul class="c-list scroll-slim">
+            <li v-for="it in cascadeItems" :key="it.id" class="c-item">
+              <div class="c-item-head">
+                <span class="c-item-name">{{ it.name }}</span>
+                <span class="c-item-code num">{{ it.code }}</span>
+                <span class="c-item-unit">({{ it.unit }})</span>
+              </div>
+              <p v-if="stripHtml(it.description)" class="c-item-desc">{{ stripHtml(it.description) }}</p>
+            </li>
+          </ul>
           <label class="c-dontask">
             <BaseCheckbox v-model="dontAskAgain" size="small" />
             <span>אל תציג הודעה זו שוב</span>
@@ -863,7 +884,46 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
 }
 .c-msg {
   font-size: 14px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+}
+.c-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  background: var(--surface-subtle);
+  border-radius: 6px;
+}
+.c-item + .c-item {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--divider);
+}
+.c-item-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+.c-item-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.c-item-code,
+.c-item-unit {
+  color: var(--text-secondary);
+}
+.c-item-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-secondary);
+  /* two lines is enough to recognise the section; the rest is in its own popup */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .c-dontask {
   display: flex;

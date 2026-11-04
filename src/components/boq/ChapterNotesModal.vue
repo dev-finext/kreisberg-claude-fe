@@ -22,7 +22,14 @@ const adding = ref(false); // editor card at the top for a new note
 const editingId = ref(null); // note being edited in place
 const draft = ref("");
 const draftEl = ref(null);
-const confirmDeleteId = ref(null);
+/* the popover hangs below its card, and the notes stack clips — with a single
+   note there is nothing to scroll and it was cut off entirely. It is teleported
+   out and pinned to the trash it was opened from, so it is never clipped. */
+const confirmDelete = ref(null); // { id, x, y }
+function askDelete(note, e) {
+  const r = e.currentTarget.getBoundingClientRect();
+  confirmDelete.value = { id: note.id, x: r.left - 88, y: r.bottom + 8 };
+}
 
 const title = computed(() =>
   props.scope === "chapter"
@@ -84,7 +91,7 @@ function commitEdit() {
 }
 function removeNote(id) {
   boq.deleteComment(id);
-  confirmDeleteId.value = null;
+  confirmDelete.value = null;
   ui.toast("ההערה נמחקה");
 }
 </script>
@@ -157,23 +164,29 @@ function removeNote(id) {
             <button class="icon-btn" title="עריכה" @click="startEdit(r.note)">
               <AppIcon name="pencil" :size="24" />
             </button>
-            <button class="icon-btn" title="מחיקה" @click="confirmDeleteId = r.note.id">
+            <button class="icon-btn" title="מחיקה" @click="askDelete(r.note, $event)">
               <AppIcon name="trash" :size="24" />
             </button>
-          </div>
-          <!-- Figma "למחוק את הערה?" popover -->
-          <div v-if="confirmDeleteId === r.note.id" class="confirm-pop" @click.stop>
-            <p>למחוק את הערה?</p>
-            <div class="confirm-actions">
-              <button class="mini-btn primary" @click="removeNote(r.note.id)">מחיקה</button>
-              <button class="mini-btn" @click="confirmDeleteId = null">ביטול</button>
-            </div>
           </div>
         </div>
       </template>
       <p v-if="!rows.length" class="empty">אין הערות עדיין</p>
     </div>
   </BaseModal>
+  <!-- Figma "למחוק את הערה?" popover, pinned to the trash it came from -->
+  <Teleport to="body">
+    <div
+      v-if="confirmDelete"
+      class="confirm-pop"
+      :style="{ left: confirmDelete.x + 'px', top: confirmDelete.y + 'px' }"
+    >
+      <p>למחוק את הערה?</p>
+      <div class="confirm-actions">
+        <button class="mini-btn primary" @click="removeNote(confirmDelete.id)">מחיקה</button>
+        <button class="mini-btn" @click="confirmDelete = null">ביטול</button>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -306,12 +319,10 @@ function removeNote(id) {
   display: inline-flex;
   line-height: 0;
 }
-/* delete confirmation popover */
+/* delete confirmation popover — fixed, so the notes stack cannot clip it */
 .confirm-pop {
-  position: absolute;
-  left: 16px;
-  top: calc(100% - 8px);
-  z-index: 5;
+  position: fixed;
+  z-index: 95;
   width: 200px;
   background: var(--surface);
   border-radius: 6px;

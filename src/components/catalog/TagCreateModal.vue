@@ -159,7 +159,7 @@ onMounted(() => {
 
 <template>
   <Teleport to="body">
-    <div class="tc-overlay" @mousedown.self="emit('close')">
+    <div class="tc-overlay">
       <!-- Figma "BoQ popup adding sections": 904 × 587 -->
       <div class="tc">
         <div class="tc-head">

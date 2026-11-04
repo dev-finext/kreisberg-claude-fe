@@ -6,6 +6,22 @@ import { useUiStore } from "./ui";
 import { PRIORITY, SIDEBAR_MODE } from "@/constants";
 import { revealFlashed } from "@/composables/useFlash";
 
+/* Sections read in catalog order — מספר פרק, then תת פרק, then מספר סעיף —
+   never in the order they happened to reach the כתב כמויות. */
+const collate = (a, b) => String(a ?? "").localeCompare(String(b ?? ""), "he", { numeric: true });
+function byCatalogOrder(catalog) {
+  return (ra, rb) => {
+    const a = ra.item;
+    const b = rb.item;
+    if (!a || !b) return 0;
+    return (
+      collate(catalog.chapter(a.chapterId)?.num, catalog.chapter(b.chapterId)?.num) ||
+      collate(catalog.subChapter(a.subChapterId)?.num, catalog.subChapter(b.subChapterId)?.num) ||
+      collate(a.code, b.code)
+    );
+  };
+}
+
 /**
  * BOQ domain logic. Encodes the business rules from Matty's spec (v5),
  * the legacy frontend and the design briefs:
@@ -85,7 +101,10 @@ export const useBoqStore = defineStore("boq", {
         (s) => s.boqId === this.activeBoqId && leafIds.includes(s.elementId)
       );
       if (leaf) {
-        return { editable: true, rows: seis.map((s) => this.rowFromSei(s)) };
+        return {
+          editable: true,
+          rows: seis.map((s) => this.rowFromSei(s)).sort(byCatalogOrder(this.catalog)),
+        };
       }
       // aggregate by item
       const byItem = new Map();
@@ -97,7 +116,9 @@ export const useBoqStore = defineStore("boq", {
       }
       return {
         editable: false,
-        rows: [...byItem.values()].map((agg) => this.rowFromAggregate(agg)),
+        rows: [...byItem.values()]
+          .map((agg) => this.rowFromAggregate(agg))
+          .sort(byCatalogOrder(this.catalog)),
       };
     },
     /**
@@ -137,7 +158,12 @@ export const useBoqStore = defineStore("boq", {
         }
         g.bySub.get(scId).rows.push(r);
       }
-      for (const g of groups) delete g.bySub;
+      for (const g of groups) {
+        delete g.bySub;
+        for (const sg of g.subGroups) sg.rows.sort(byCatalogOrder(this.catalog));
+        g.subGroups.sort((x, y) => collate(x.subChapter?.num, y.subChapter?.num));
+      }
+      groups.sort((x, y) => collate(x.chapter?.num, y.chapter?.num));
       return groups;
     },
     /** chapters/sub-chapters that have items in this BOQ (sidebar, פרקים mode) */

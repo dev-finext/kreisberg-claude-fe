@@ -78,7 +78,7 @@ const menuItems = [
   { key: "edit", label: "עריכה", icon: "pencil" },
   { key: "duplicate", label: "שכפול", icon: "copy" },
   { key: "tender", label: "יציאה למכרז", icon: "megaphone" },
-  { key: "print", label: "הדפסה / ייצוא", icon: "file" },
+  { key: "print", label: "הדפסה / ייצוא", icon: "printer" },
   { key: "delete", label: "מחיקה", icon: "trash", danger: true },
 ];
 function onMenuSelect(key) {
