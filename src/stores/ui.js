@@ -76,6 +76,9 @@ export const useUiStore = defineStore("ui", {
       notifyComments: true,
       notifyTender: true,
       notifyProjectStatus: false,
+      /* demo preview: the project screen without the page header, its identity
+         moved down onto the tab strip. Off by default — the classic layout. */
+      compactProjectHeader: false,
       digest: "weekly",
       ...loadPrefs(),
     },

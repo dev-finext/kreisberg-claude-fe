@@ -11,6 +11,24 @@ export const useProjectFormStore = defineStore("projectForm", {
     sourceId: null, // project id or null for a new project
     draft: emptyDraft(),
   }),
+  getters: {
+    /** has the draft moved away from what is stored? drives the tab's own save */
+    dirty(state) {
+      const db = useDbStore();
+      const d = state.draft;
+      const p = state.sourceId ? db.projects.find((x) => x.id === state.sourceId) : null;
+      if (!p) return !!(d.name.trim() || d.location.trim() || d.description.trim());
+      return (
+        d.name !== p.name ||
+        (d.location || "") !== (p.location || "") ||
+        (d.typeId ?? null) !== (p.typeId ?? null) ||
+        (d.templateId ?? null) !== (p.templateId ?? null) ||
+        (d.description || "") !== (p.description || "") ||
+        JSON.stringify(d.specialFields || []) !== JSON.stringify(p.specialFields || []) ||
+        JSON.stringify(d.assets || []) !== JSON.stringify(p.assets || [])
+      );
+    },
+  },
   actions: {
     loadProject(project) {
       if (project) {
@@ -28,6 +46,11 @@ export const useProjectFormStore = defineStore("projectForm", {
         this.sourceId = null;
         this.draft = emptyDraft();
       }
+    },
+    /** throws the draft away and reloads it from what is stored */
+    revert() {
+      const db = useDbStore();
+      this.loadProject(this.sourceId ? db.projects.find((x) => x.id === this.sourceId) : null);
     },
     /** persists the draft; returns the project id (creates the project when new) */
     save() {
