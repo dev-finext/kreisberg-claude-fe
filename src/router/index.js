@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 // Static (eager) imports: the whole demo ships as one bundle, so a redeploy can
 // never leave a client requesting a stale hashed route-chunk (blank-page bug).
 import ProjectsListView from "@/views/ProjectsListView.vue";
+import ProfileView from "@/views/ProfileView.vue";
 import ProjectView from "@/views/ProjectView.vue";
 import GeneralTab from "@/views/project/GeneralTab.vue";
 import ConditionsTab from "@/views/project/ConditionsTab.vue";
@@ -21,6 +22,7 @@ import ProjectTemplatesView from "@/views/system/ProjectTemplatesView.vue";
 const routes = [
   { path: "/", redirect: "/projects" },
   { path: "/projects", name: "projects", component: ProjectsListView },
+  { path: "/profile", name: "profile", component: ProfileView },
   {
     path: "/projects/:id",
     component: ProjectView,

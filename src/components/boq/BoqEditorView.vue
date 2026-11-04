@@ -2,7 +2,7 @@
 import { ref, computed, watch } from "vue";
 import { useDbStore } from "@/stores/db";
 import { useBoqStore } from "@/stores/boq";
-import { useUiStore } from "@/stores/ui";
+import { useUiStore, SUPPRESS_HINT } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
@@ -307,7 +307,10 @@ function deleteChecked() {
           <p class="m-msg">להוסיף את הסעיפים לכל המבנים?</p>
           <label class="m-dontask">
             <BaseCheckbox v-model="dontAskScope" size="small" />
-            <span>אל תציג הודעה זו שוב</span>
+            <span class="m-dontask-text">
+              אל תציג הודעה זו שוב
+              <span class="m-dontask-hint">{{ SUPPRESS_HINT }}</span>
+            </span>
           </label>
           <div class="m-actions">
             <button class="btn btn-primary" @click="resolveScope(true)">כן, לכל המבנים</button>
@@ -510,12 +513,23 @@ function deleteChecked() {
 }
 .m-dontask {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 16px;
   cursor: pointer;
+}
+.m-dontask-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+.m-dontask-hint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
 }
 .m-actions {
   display: flex;

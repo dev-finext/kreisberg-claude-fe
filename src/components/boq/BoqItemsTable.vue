@@ -2,7 +2,7 @@
 import { ref, computed, nextTick } from "vue";
 import { useBoqStore } from "@/stores/boq";
 import { useCatalogStore } from "@/stores/catalog";
-import { useUiStore } from "@/stores/ui";
+import { useUiStore, SUPPRESS_HINT } from "@/stores/ui";
 import { useDbStore } from "@/stores/db";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
@@ -627,7 +627,8 @@ const belowLabel = computed(() =>
             {{
               cascadeItems.length === 1 ? "קיים סעיף קשור אחד" : `קיימים ${cascadeItems.length} סעיפים קשורים`
             }}
-            עם אותה יחידת מידה. לעדכן גם את הכמות שלהם ל-{{ formatQty(pendingCascade.newQty) }}?
+            עם אותה יחידת מידה. לעדכן גם את הכמות
+            {{ cascadeItems.length === 1 ? "שלו" : "שלהם" }} ל-{{ formatQty(pendingCascade.newQty) }}?
           </p>
           <!-- which sections, by name, so the choice is made on the sections and not on a number -->
           <ul class="c-list scroll-slim">
@@ -642,7 +643,10 @@ const belowLabel = computed(() =>
           </ul>
           <label class="c-dontask">
             <BaseCheckbox v-model="dontAskAgain" size="small" />
-            <span>אל תציג הודעה זו שוב</span>
+            <span class="c-dontask-text">
+              אל תציג הודעה זו שוב
+              <span class="c-dontask-hint">{{ SUPPRESS_HINT }}</span>
+            </span>
           </label>
           <div class="c-actions">
             <button class="btn btn-primary" @click="confirmCascade(true)">עדכן הכל</button>
@@ -964,12 +968,22 @@ const belowLabel = computed(() =>
 }
 .c-dontask {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 18px;
   cursor: pointer;
+}
+.c-dontask-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.c-dontask-hint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
 }
 .c-actions {
   display: flex;
