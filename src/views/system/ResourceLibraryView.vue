@@ -29,6 +29,7 @@ const columns = computed(() => [
     add-label="הוספת משאב"
     empty-text="עדיין אין משאבים בספרייה"
     collection="constructors"
+    table-width="none"
     :columns="columns"
     :make-new="
       () => ({

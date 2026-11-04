@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import { useUiStore } from "@/stores/ui";
 import { useProjectFormStore } from "@/stores/projectForm";
@@ -8,6 +8,7 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 
 const route = useRoute();
+const router = useRouter();
 const db = useDbStore();
 const ui = useUiStore();
 const form = useProjectFormStore();
@@ -19,6 +20,29 @@ const project = computed(() =>
 watch(project, (p) => form.loadProject(p), { immediate: true });
 
 const draft = computed(() => form.draft);
+
+/* The compact layout has no page-level buttons, so the tab saves itself — and
+   only says so once something has actually changed. */
+const compact = computed(() => ui.prefs.compactProjectHeader);
+const dirty = computed(() => form.dirty);
+const isNew = computed(() => route.params.id === "new");
+function saveProject() {
+  const res = form.save();
+  if (res.error) {
+    ui.toast(res.error, "warning");
+    return;
+  }
+  ui.toast(res.created ? "הפרויקט נוצר בהצלחה!" : "הפרויקט עודכן בהצלחה!");
+  if (res.created) router.replace(`/projects/${res.id}/general`);
+}
+function revert() {
+  if (isNew.value) {
+    router.push("/projects");
+    return;
+  }
+  form.revert();
+  ui.toast("השינויים בוטלו");
+}
 
 /* ---------- assets (פרטי הנכס) ---------- */
 let assetSeq = -1;
@@ -49,165 +73,180 @@ function addSpecialField() {
 </script>
 
 <template>
-  <div class="general-tab">
-    <!-- right column: project details -->
-    <section class="col details">
-      <h3 class="section-title">פרטי הפרויקט</h3>
-      <div class="grid-2">
-        <div class="field">
-          <label class="field-label">שם הפרויקט</label>
-          <input v-model="draft.name" class="input" />
+  <div class="general-tab-wrap">
+    <div class="general-tab">
+      <!-- right column: project details -->
+      <section class="col details">
+        <h3 class="section-title">פרטי הפרויקט</h3>
+        <div class="grid-2">
+          <div class="field">
+            <label class="field-label">שם הפרויקט</label>
+            <input v-model="draft.name" class="input" />
+          </div>
+          <div class="field">
+            <label class="field-label">כתובת פרויקט</label>
+            <input v-model="draft.location" class="input" />
+          </div>
+          <div class="field">
+            <label class="field-label">סוג פרויקט</label>
+            <select v-model="draft.typeId" class="select">
+              <option :value="null">בחר סוג</option>
+              <option v-for="t in db.projectTypes" :key="t.id" :value="t.id">{{ t.name }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">תבניות פרויקט</label>
+            <select v-model="draft.templateId" class="select">
+              <option :value="null">בחר תבנית</option>
+              <option v-for="t in db.projectTemplates" :key="t.id" :value="t.id">{{ t.name }}</option>
+            </select>
+          </div>
         </div>
         <div class="field">
-          <label class="field-label">כתובת פרויקט</label>
-          <input v-model="draft.location" class="input" />
+          <label class="field-label">תיאור חופשי</label>
+          <textarea v-model="draft.description" class="input textarea" rows="3" />
         </div>
-        <div class="field">
-          <label class="field-label">סוג פרויקט</label>
-          <select v-model="draft.typeId" class="select">
-            <option :value="null">בחר סוג</option>
-            <option v-for="t in db.projectTypes" :key="t.id" :value="t.id">{{ t.name }}</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label">תבניות פרויקט</label>
-          <select v-model="draft.templateId" class="select">
-            <option :value="null">בחר תבנית</option>
-            <option v-for="t in db.projectTemplates" :key="t.id" :value="t.id">{{ t.name }}</option>
-          </select>
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label">תיאור חופשי</label>
-        <textarea v-model="draft.description" class="input textarea" rows="3" />
-      </div>
 
-      <h3 class="section-title mt">מדיה</h3>
-      <div class="grid-2">
-        <div class="field">
-          <label class="field-label">הוספת תמונת רקע</label>
-          <label class="upload">
-            <input type="file" accept="image/*" hidden @change="ui.toast('התמונה נשמרה לפרויקט')" />
-            <AppIcon name="plus" :size="14" />
-            <span>טען או גרור תמונה / קובץ מדיה</span>
-          </label>
+        <h3 class="section-title mt">מדיה</h3>
+        <div class="grid-2">
+          <div class="field">
+            <label class="field-label">הוספת תמונת רקע</label>
+            <label class="upload">
+              <input type="file" accept="image/*" hidden @change="ui.toast('התמונה נשמרה לפרויקט')" />
+              <AppIcon name="plus" :size="14" />
+              <span>טען או גרור תמונה / קובץ מדיה</span>
+            </label>
+          </div>
+          <div class="field">
+            <label class="field-label">הוספת לוגו</label>
+            <label class="upload">
+              <input type="file" accept="image/*" hidden @change="ui.toast('הלוגו נשמר לפרויקט')" />
+              <AppIcon name="plus" :size="14" />
+              <span>טען או גרור תמונה / קובץ מדיה</span>
+            </label>
+          </div>
         </div>
-        <div class="field">
-          <label class="field-label">הוספת לוגו</label>
-          <label class="upload">
-            <input type="file" accept="image/*" hidden @change="ui.toast('הלוגו נשמר לפרויקט')" />
-            <AppIcon name="plus" :size="14" />
-            <span>טען או גרור תמונה / קובץ מדיה</span>
-          </label>
-        </div>
-      </div>
 
-      <div class="special-head">
-        <button class="ghost-btn" @click="addSpecialField">
-          <span>הוספת שדה מיוחד</span>
-          <AppIcon name="plus-circle" :size="18" />
+        <div class="special-head">
+          <button class="ghost-btn" @click="addSpecialField">
+            <span>הוספת שדה מיוחד</span>
+            <AppIcon name="plus-circle" :size="18" />
+          </button>
+          <h3 class="section-title inline">
+            שדות מיוחדים
+            <AppIcon name="info" :size="15" />
+          </h3>
+        </div>
+        <div v-for="(sf, i) in draft.specialFields" :key="i" class="grid-2">
+          <div class="field">
+            <label class="field-label">שם שדה מיוחד</label>
+            <input v-model="sf.name" class="input" placeholder="נתוני שדה מיוחד" />
+          </div>
+          <div class="field">
+            <label class="field-label">ערך</label>
+            <input v-model="sf.value" class="input" placeholder="נתוני שדה מיוחד" />
+          </div>
+        </div>
+      </section>
+
+      <div class="col-divider" />
+
+      <!-- left column: assets -->
+      <section class="col assets">
+        <div class="assets-head">
+          <button class="ghost-btn filled" @click="addAsset">
+            <span>הוספת נכס חדש</span>
+            <span class="plus-disc"><AppIcon name="plus" :size="12" /></span>
+          </button>
+          <h3 class="section-title">פרטי הנכס</h3>
+        </div>
+        <div class="assets-card">
+          <table class="assets-table">
+            <thead>
+              <tr>
+                <th>שם הנכס <AppIcon name="chevron-down" :size="12" /></th>
+                <th>גוש <AppIcon name="chevron-down" :size="12" /></th>
+                <th>חלקה <AppIcon name="chevron-down" :size="12" /></th>
+                <th>תת חלקה <AppIcon name="chevron-down" :size="12" /></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody v-if="draft.assets.length">
+              <tr v-for="a in draft.assets" :key="a.id">
+                <template v-if="editingAsset === a.id">
+                  <td><input v-model="a.name" class="input asset-input" placeholder="שם הנכס" /></td>
+                  <td><input v-model="a.block" class="input asset-input num" /></td>
+                  <td><input v-model="a.parcel" class="input asset-input num" /></td>
+                  <td><input v-model="a.subParcel" class="input asset-input num" /></td>
+                  <td class="td-act">
+                    <button class="btn-text" @click="saveAsset(a)">שמירה</button>
+                  </td>
+                </template>
+                <template v-else>
+                  <td>{{ a.name || "—" }}</td>
+                  <td class="num">{{ a.block || "—" }}</td>
+                  <td class="num">{{ a.parcel || "—" }}</td>
+                  <td class="num">{{ a.subParcel || "—" }}</td>
+                  <td class="td-act">
+                    <button class="icon-btn" @click="editingAsset = a.id">
+                      <AppIcon name="pencil" :size="15" />
+                    </button>
+                    <button class="icon-btn danger" @click="deleteAsset = a">
+                      <AppIcon name="trash" :size="15" />
+                    </button>
+                  </td>
+                </template>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="!draft.assets.length" class="assets-empty">
+            <svg width="110" height="96" viewBox="0 0 110 96" fill="none">
+              <ellipse cx="55" cy="86" rx="40" ry="6" fill="#EEF2FA" />
+              <rect
+                x="30"
+                y="14"
+                width="34"
+                height="70"
+                rx="3"
+                stroke="#BBC5CF"
+                stroke-width="2.2"
+                fill="#fff"
+              />
+              <rect
+                x="64"
+                y="38"
+                width="20"
+                height="46"
+                rx="3"
+                stroke="#BBC5CF"
+                stroke-width="2.2"
+                fill="#fff"
+              />
+              <path
+                d="M36 24h6M46 24h6M36 34h6M46 34h6M36 44h6M46 44h6M36 54h6M46 54h6M69 46h4M77 46h4M69 56h4M77 56h4M69 66h4M77 66h4"
+                stroke="#BBC5CF"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <p>הנכסים שתוסיף יופיעו כאן</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- the tab saves itself once the page-level buttons are gone -->
+    <div v-if="compact && dirty" class="save-bar">
+      <span class="save-note">
+        {{ isNew ? "הפרויקט טרם נשמר" : "יש שינויים שלא נשמרו" }}
+      </span>
+      <div class="save-actions">
+        <button class="btn btn-primary" @click="saveProject">
+          {{ isNew ? "יצירת הפרויקט" : "שמירת שינויים" }}
         </button>
-        <h3 class="section-title inline">
-          שדות מיוחדים
-          <AppIcon name="info" :size="15" />
-        </h3>
+        <button class="btn btn-secondary" @click="revert">ביטול</button>
       </div>
-      <div v-for="(sf, i) in draft.specialFields" :key="i" class="grid-2">
-        <div class="field">
-          <label class="field-label">שם שדה מיוחד</label>
-          <input v-model="sf.name" class="input" placeholder="נתוני שדה מיוחד" />
-        </div>
-        <div class="field">
-          <label class="field-label">ערך</label>
-          <input v-model="sf.value" class="input" placeholder="נתוני שדה מיוחד" />
-        </div>
-      </div>
-    </section>
-
-    <div class="col-divider" />
-
-    <!-- left column: assets -->
-    <section class="col assets">
-      <div class="assets-head">
-        <button class="ghost-btn filled" @click="addAsset">
-          <span>הוספת נכס חדש</span>
-          <span class="plus-disc"><AppIcon name="plus" :size="12" /></span>
-        </button>
-        <h3 class="section-title">פרטי הנכס</h3>
-      </div>
-      <div class="assets-card">
-        <table class="assets-table">
-          <thead>
-            <tr>
-              <th>שם הנכס <AppIcon name="chevron-down" :size="12" /></th>
-              <th>גוש <AppIcon name="chevron-down" :size="12" /></th>
-              <th>חלקה <AppIcon name="chevron-down" :size="12" /></th>
-              <th>תת חלקה <AppIcon name="chevron-down" :size="12" /></th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody v-if="draft.assets.length">
-            <tr v-for="a in draft.assets" :key="a.id">
-              <template v-if="editingAsset === a.id">
-                <td><input v-model="a.name" class="input asset-input" placeholder="שם הנכס" /></td>
-                <td><input v-model="a.block" class="input asset-input num" /></td>
-                <td><input v-model="a.parcel" class="input asset-input num" /></td>
-                <td><input v-model="a.subParcel" class="input asset-input num" /></td>
-                <td class="td-act">
-                  <button class="btn-text" @click="saveAsset(a)">שמירה</button>
-                </td>
-              </template>
-              <template v-else>
-                <td>{{ a.name || "—" }}</td>
-                <td class="num">{{ a.block || "—" }}</td>
-                <td class="num">{{ a.parcel || "—" }}</td>
-                <td class="num">{{ a.subParcel || "—" }}</td>
-                <td class="td-act">
-                  <button class="icon-btn" @click="editingAsset = a.id">
-                    <AppIcon name="pencil" :size="15" />
-                  </button>
-                  <button class="icon-btn danger" @click="deleteAsset = a">
-                    <AppIcon name="trash" :size="15" />
-                  </button>
-                </td>
-              </template>
-            </tr>
-          </tbody>
-        </table>
-        <div v-if="!draft.assets.length" class="assets-empty">
-          <svg width="110" height="96" viewBox="0 0 110 96" fill="none">
-            <ellipse cx="55" cy="86" rx="40" ry="6" fill="#EEF2FA" />
-            <rect
-              x="30"
-              y="14"
-              width="34"
-              height="70"
-              rx="3"
-              stroke="#BBC5CF"
-              stroke-width="2.2"
-              fill="#fff"
-            />
-            <rect
-              x="64"
-              y="38"
-              width="20"
-              height="46"
-              rx="3"
-              stroke="#BBC5CF"
-              stroke-width="2.2"
-              fill="#fff"
-            />
-            <path
-              d="M36 24h6M46 24h6M36 34h6M46 34h6M36 44h6M46 44h6M36 54h6M46 54h6M69 46h4M77 46h4M69 56h4M77 56h4M69 66h4M77 66h4"
-              stroke="#BBC5CF"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-          <p>הנכסים שתוסיף יופיעו כאן</p>
-        </div>
-      </div>
-    </section>
+    </div>
 
     <DeleteConfirmModal
       v-if="deleteAsset"
@@ -221,6 +260,13 @@ function addSpecialField() {
 </template>
 
 <style scoped>
+/* the form scrolls; the save bar stays pinned under it */
+.general-tab-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
 .general-tab {
   display: flex;
   flex-direction: row;
@@ -231,6 +277,26 @@ function addSpecialField() {
   overflow-y: auto;
   box-sizing: border-box;
 }
+.save-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px;
+  border-top: 1px solid var(--divider);
+  background: var(--surface-subtle);
+}
+.save-note {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.save-actions {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 12px;
+}
+
 .col {
   flex: 1;
   min-width: 0;

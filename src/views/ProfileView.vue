@@ -18,36 +18,48 @@ const boq = useBoqStore();
 
 const user = computed(() => db.currentUser);
 
-/* ---------- פרטים אישיים ---------- */
+/* ---------- פרטים אישיים ----------
+   The system identifies a person by their full name — it is what every comment,
+   history line and project author is matched against — so the two fields are
+   edited separately and written back as one name. The mail address is the
+   account itself and is not edited here. */
 const editing = ref(false);
-const draft = reactive({ name: "", title: "", role: "", email: "", phone: "" });
+const draft = reactive({ firstName: "", lastName: "", title: "", role: "", phone: "" });
+function splitName(name) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/);
+  return { firstName: parts.shift() || "", lastName: parts.join(" ") };
+}
 function startEdit() {
+  const { firstName, lastName } = splitName(user.value.name);
   Object.assign(draft, {
-    name: user.value.name || "",
+    firstName,
+    lastName,
     title: user.value.title || "",
     role: user.value.role || "",
-    email: user.value.email || "",
     phone: user.value.phone || "",
   });
   editing.value = true;
 }
 function saveDetails() {
-  if (!draft.name.trim()) {
-    ui.toast("שם המשתמש לא יכול להיות ריק", "error");
+  const name = `${draft.firstName.trim()} ${draft.lastName.trim()}`.trim();
+  if (!draft.firstName.trim()) {
+    ui.toast("נא להזין שם פרטי", "error");
     return;
   }
   const live = db.db.users.find((u) => u.id === user.value.id);
   Object.assign(live, {
-    name: draft.name.trim(),
+    name,
     title: draft.title.trim(),
     role: draft.role.trim(),
-    email: draft.email.trim(),
     phone: draft.phone.trim(),
   });
   db.persist();
   editing.value = false;
   ui.toast("הפרטים עודכנו בהצלחה");
 }
+const nameParts = computed(() => splitName(user.value.name));
 
 const initials = computed(() =>
   (user.value.name || "")
@@ -191,8 +203,12 @@ function resetDemo() {
 
         <dl v-if="!editing" class="fields">
           <div class="field-line">
-            <dt>שם מלא</dt>
-            <dd>{{ user.name }}</dd>
+            <dt>שם פרטי</dt>
+            <dd>{{ nameParts.firstName || "—" }}</dd>
+          </div>
+          <div class="field-line">
+            <dt>שם משפחה</dt>
+            <dd>{{ nameParts.lastName || "—" }}</dd>
           </div>
           <div class="field-line">
             <dt>תפקיד</dt>
@@ -218,8 +234,12 @@ function resetDemo() {
 
         <div v-else class="fields">
           <label class="field-line">
-            <span class="lbl">שם מלא</span>
-            <input v-model="draft.name" class="input" />
+            <span class="lbl">שם פרטי</span>
+            <input v-model="draft.firstName" class="input" />
+          </label>
+          <label class="field-line">
+            <span class="lbl">שם משפחה</span>
+            <input v-model="draft.lastName" class="input" />
           </label>
           <label class="field-line">
             <span class="lbl">תפקיד</span>
@@ -229,14 +249,18 @@ function resetDemo() {
             <span class="lbl">הרשאה</span>
             <input v-model="draft.role" class="input" />
           </label>
-          <label class="field-line">
+          <div class="field-line">
             <span class="lbl">דוא"ל</span>
-            <input v-model="draft.email" class="input ltr" />
-          </label>
+            <span class="read-only ltr">{{ user.email || "—" }}</span>
+          </div>
           <label class="field-line">
             <span class="lbl">טלפון</span>
             <input v-model="draft.phone" class="input num" />
           </label>
+          <p class="read-only-note">
+            כתובת הדוא"ל משמשת להתחברות ולזיהוי החשבון, ואינה ניתנת לעריכה מכאן. לשינויה יש לפנות למנהל
+            המערכת.
+          </p>
         </div>
       </section>
 
@@ -528,6 +552,17 @@ function resetDemo() {
   direction: ltr;
   unicode-bidi: isolate;
   text-align: right;
+}
+/* the mail address is the account itself — shown, never edited from here */
+.read-only {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-secondary);
+}
+.read-only-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-top: 4px;
 }
 /* ---- sections ---- */
 .sec-head {

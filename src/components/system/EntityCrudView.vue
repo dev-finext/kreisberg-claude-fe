@@ -22,6 +22,8 @@ const props = defineProps({
   columns: { type: Array, required: true },
   /** factory returning a blank row (without id) */
   makeNew: { type: Function, required: true },
+  /** a two-column list reads better narrow; a wide one takes the card */
+  tableWidth: { type: String, default: "780px" },
 });
 
 const db = useDbStore();
@@ -108,7 +110,7 @@ function confirmDelete() {
         <SearchPill v-model="search" placeholder="חיפוש" />
       </div>
 
-      <table class="crud-table">
+      <table class="crud-table" :style="{ maxWidth: tableWidth }">
         <thead>
           <tr>
             <th v-for="c in columns" :key="c.key">
@@ -234,7 +236,6 @@ function confirmDelete() {
 }
 .crud-table {
   width: 100%;
-  max-width: 780px;
   border-collapse: collapse;
   margin-left: auto;
 }

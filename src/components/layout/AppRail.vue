@@ -98,11 +98,6 @@ function toggleSystem() {
             ><AppIcon name="menu-projects" :size="20"
           /></span>
         </button>
-        <!-- דו"חות -->
-        <button class="rail-item disabled" title='דו"חות — לא זמין בדמו' @click="disabledMsg">
-          <span v-if="expanded" class="ri-label">דו"חות</span>
-          <span class="ri-icon"><AppIcon name="menu-reports" :size="20" /></span>
-        </button>
         <!-- מערכת -->
         <button
           class="rail-item"
