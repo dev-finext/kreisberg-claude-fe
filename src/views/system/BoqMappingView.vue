@@ -160,7 +160,7 @@ function finishImport() {
       boqId: boq.id,
       itemId: it.id,
       priority: it.priority,
-      forSummary: it.priority !== "optional",
+      forSummary: true,
       amortization: it.amortization || 0,
       resourceTypeId: it.resourceTypeId,
       resourceId: null,

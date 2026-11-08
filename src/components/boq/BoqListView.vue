@@ -5,14 +5,12 @@ import { useDbStore } from "@/stores/db";
 import { useBoqStore } from "@/stores/boq";
 import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
-import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import SlaDonut from "./SlaDonut.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
 import TenderModal from "./TenderModal.vue";
-import BoqExportModal from "./BoqExportModal.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 import ImportBoqDialog from "./ImportBoqDialog.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
@@ -32,9 +30,7 @@ const menu = ref(null); // {header, x, y}
 const showCreate = ref(false);
 const editHeader = ref(null);
 const deleteTarget = ref(null);
-const checked = ref([]);
 const tenderHeader = ref(null);
-const exportHeader = ref(null);
 const showImport = ref(false);
 const expandedIds = ref([]);
 const renamingDoc = ref(false);
@@ -86,8 +82,11 @@ function onMenuSelect(key) {
   menu.value = null;
   if (key === "edit") editHeader.value = h;
   else if (key === "tender") tenderHeader.value = h;
-  else if (key === "print") exportHeader.value = h;
-  else if (key === "duplicate") {
+  else if (key === "print") {
+    /* the whole כתב כמויות, in a tab of its own */
+    const { href } = router.resolve({ name: "boq-print", params: { boqId: h.id } });
+    window.open(href, "_blank");
+  } else if (key === "duplicate") {
     const copy = boqStore.duplicateBoqHeader(h.id);
     if (copy) ui.toast(`התצורה שוכפלה: ${copy.name}`);
   } else if (key === "delete") deleteTarget.value = h;
@@ -96,10 +95,6 @@ function confirmDelete() {
   boqStore.deleteBoqHeader(deleteTarget.value.id);
   ui.toast("כתב הכמויות נמחק");
   deleteTarget.value = null;
-}
-function toggleChecked(id, v) {
-  if (v && !checked.value.includes(id)) checked.value.push(id);
-  if (!v) checked.value = checked.value.filter((x) => x !== id);
 }
 </script>
 
@@ -161,10 +156,6 @@ function toggleChecked(id, v) {
                 <span class="row-expand" @click="toggleExpanded(h.id)">
                   <AppIcon :name="expandedIds.includes(h.id) ? 'chevron-down' : 'chevron-left'" :size="14" />
                 </span>
-                <BaseCheckbox
-                  :model-value="checked.includes(h.id)"
-                  @update:model-value="(v) => toggleChecked(h.id, v)"
-                />
               </td>
               <td class="td-name">{{ h.name }}</td>
               <td class="td-detail ellipsis">{{ h.detail || "-" }}</td>
@@ -259,7 +250,6 @@ function toggleChecked(id, v) {
       @close="menu = null"
     />
     <TenderModal v-if="tenderHeader" :boq-id="tenderHeader.id" @close="tenderHeader = null" />
-    <BoqExportModal v-if="exportHeader" :boq-id="exportHeader.id" @close="exportHeader = null" />
     <ImportBoqDialog v-if="showImport" :project-id="projectId" @close="showImport = false" />
     <CreateBoqModal
       v-if="showCreate || editHeader"

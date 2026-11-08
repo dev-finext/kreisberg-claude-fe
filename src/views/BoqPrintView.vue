@@ -1,22 +1,28 @@
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted, nextTick } from "vue";
+import { useRoute } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import { useCatalogStore } from "@/stores/catalog";
 import { PRIORITY_LABELS } from "@/constants";
 import { formatDate } from "@/utils/format";
 import AppIcon from "@/components/shared/AppIcon.vue";
-import { useEscape } from "@/composables/useEscape";
 
-const props = defineProps({
-  boqId: { type: Number, required: true },
+/**
+ * The printable כתב כמויות, opened in a tab of its own so the system stays where
+ * it was. It carries the לסיכום sections only, and when it was opened from
+ * פרקים, only the sub-chapters that were ticked there (?subs=1,2,3).
+ */
+const route = useRoute();
+const boqId = computed(() => Number(route.params.boqId));
+const subsFilter = computed(() => {
+  const raw = String(route.query.subs || "").trim();
+  return raw ? new Set(raw.split(",").map(Number).filter(Boolean)) : null;
 });
-const emit = defineEmits(["close"]);
-useEscape(() => emit("close"));
 
 const db = useDbStore();
 const cat = useCatalogStore();
 
-const header = computed(() => db.boqHeaders.find((h) => h.id === props.boqId) || null);
+const header = computed(() => db.boqHeaders.find((h) => h.id === boqId.value) || null);
 const project = computed(() => db.projects.find((p) => p.id === header.value?.projectId) || null);
 const resourceType = computed(
   () => db.resourceTypes.find((t) => t.id === header.value?.resourceTypeId)?.name || ""
@@ -26,7 +32,7 @@ const resource = computed(() => db.constructors.find((c) => c.id === header.valu
 /** the printed document carries the לסיכום sections only, grouped פרק → תת פרק
     and ordered by chapter number, with the quantities summed over the structure */
 const groups = computed(() => {
-  const seis = db.structureElementItems.filter((s) => s.boqId === props.boqId);
+  const seis = db.structureElementItems.filter((s) => s.boqId === boqId.value);
   const byItem = new Map();
   for (const s of seis) {
     if (!byItem.has(s.itemId)) byItem.set(s.itemId, 0);
@@ -37,7 +43,7 @@ const groups = computed(() => {
   for (const [itemId, qty] of byItem) {
     const item = cat.item(itemId);
     if (!item) continue;
-    const bi = db.boqItems.find((b) => b.boqId === props.boqId && b.itemId === itemId);
+    const bi = db.boqItems.find((b) => b.boqId === boqId.value && b.itemId === itemId);
     const row = {
       item,
       qty,
@@ -57,6 +63,7 @@ const groups = computed(() => {
       g.subGroups.push(sg);
     }
     if (!row.forSummary) continue; // only לסיכום sections are printed
+    if (subsFilter.value && !subsFilter.value.has(item.subChapterId)) continue; // only what was ticked
     g.bySub.get(item.subChapterId).rows.push(row);
   }
   for (const g of out) delete g.bySub;
@@ -82,113 +89,123 @@ function resourceTypeName(id) {
 function print() {
   window.print();
 }
+function closeTab() {
+  window.close();
+}
+
+/* the tab was opened to print, so the print dialog comes up on its own */
+onMounted(async () => {
+  document.title = `הדפסה — ${header.value?.name || "כתב כמויות"}`;
+  await nextTick();
+  setTimeout(() => window.print(), 350);
+});
 </script>
 
 <template>
-  <Teleport to="body">
-    <div class="export-overlay">
-      <!-- toolbar (hidden when printing) -->
-      <div class="export-toolbar no-print">
-        <div class="tb-left">
-          <button class="btn btn-primary" @click="print">
-            <AppIcon name="printer" :size="17" />
-            <span>הדפסה / ייצוא PDF</span>
-          </button>
-          <button class="btn btn-secondary" @click="emit('close')">סגירה</button>
-        </div>
-        <span class="tb-hint">המסמך כולל את הסעיפים לסיכום בלבד — בחלון ההדפסה ניתן לשמור כ-PDF</span>
+  <div class="print-page">
+    <!-- toolbar (hidden when printing) -->
+    <div class="export-toolbar no-print">
+      <div class="tb-left">
+        <button class="btn btn-primary" @click="print">
+          <AppIcon name="printer" :size="17" />
+          <span>הדפסה / ייצוא PDF</span>
+        </button>
+        <button class="btn btn-secondary" @click="closeTab">סגירת הלשונית</button>
       </div>
-
-      <!-- printable document -->
-      <div class="export-doc">
-        <header class="doc-head">
-          <div class="brand">
-            <div class="brand-name">KREISBERG</div>
-            <div class="brand-sub">When quantity meets quality</div>
-          </div>
-          <div class="doc-meta">
-            <h1 class="doc-h1">כתב כמויות</h1>
-            <div class="doc-title">{{ header?.name }}</div>
-          </div>
-        </header>
-
-        <section class="meta-grid">
-          <div>
-            <span class="m-label">פרויקט</span><span class="m-value">{{ project?.name }}</span>
-          </div>
-          <div>
-            <span class="m-label">כתובת</span><span class="m-value">{{ project?.location }}</span>
-          </div>
-          <div>
-            <span class="m-label">סיווג</span
-            ><span class="m-value">{{ header?.classification === "spec" ? "מפרט" : "תמחור" }}</span>
-          </div>
-          <div>
-            <span class="m-label">סוג משאב</span><span class="m-value">{{ resourceType || "--" }}</span>
-          </div>
-          <div>
-            <span class="m-label">זיהוי משאב</span><span class="m-value">{{ resource || "--" }}</span>
-          </div>
-          <div>
-            <span class="m-label">תאריך</span
-            ><span class="m-value num">{{ formatDate(new Date().toISOString()) }}</span>
-          </div>
-        </section>
-
-        <table class="doc-table">
-          <thead>
-            <tr>
-              <th class="c-code">מס' סעיף</th>
-              <th class="c-name">שם הסעיף</th>
-              <th class="c-rt">סוג משאב</th>
-              <th class="c-unit">יח' מידה</th>
-              <th class="c-qty">כמות</th>
-              <th class="c-prio">עדיפות</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="g in groups" :key="g.chapter.id">
-              <tr class="g-chapter">
-                <td colspan="6">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</td>
-              </tr>
-              <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
-                <tr class="g-sub">
-                  <td colspan="6">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</td>
-                </tr>
-                <tr v-for="r in sg.rows" :key="r.item.id">
-                  <td class="num">{{ r.item.code }}</td>
-                  <td>{{ r.item.name }}</td>
-                  <td>{{ resourceTypeName(r.resourceTypeId) }}</td>
-                  <td>{{ r.item.unit }}</td>
-                  <td class="num">{{ Number(r.qty).toFixed(2) }}</td>
-                  <td>{{ PRIORITY_LABELS[r.priority] }}</td>
-                </tr>
-              </template>
-            </template>
-            <tr v-if="!groups.length">
-              <td colspan="6" class="empty">אין סעיפים לסיכום בכתב כמויות זה</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <footer class="doc-foot">
-          <span
-            >סה"כ סעיפים לסיכום: <span class="num">{{ totals.summary }}</span></span
-          >
-          <span class="foot-note">הופק ממערכת "חישובים בראש טוב"</span>
-        </footer>
-      </div>
+      <span class="tb-hint">
+        {{
+          subsFilter ? "המסמך כולל את הסעיפים לסיכום בפרקים שנבחרו בלבד" : "המסמך כולל את הסעיפים לסיכום בלבד"
+        }}
+        — בחלון ההדפסה ניתן לשמור כ-PDF
+      </span>
     </div>
-  </Teleport>
+
+    <!-- printable document -->
+    <div class="export-doc">
+      <header class="doc-head">
+        <div class="brand">
+          <div class="brand-name">KREISBERG</div>
+          <div class="brand-sub">When quantity meets quality</div>
+        </div>
+        <div class="doc-meta">
+          <h1 class="doc-h1">כתב כמויות</h1>
+          <div class="doc-title">{{ header?.name }}</div>
+        </div>
+      </header>
+
+      <section class="meta-grid">
+        <div>
+          <span class="m-label">פרויקט</span><span class="m-value">{{ project?.name }}</span>
+        </div>
+        <div>
+          <span class="m-label">כתובת</span><span class="m-value">{{ project?.location }}</span>
+        </div>
+        <div>
+          <span class="m-label">סיווג</span
+          ><span class="m-value">{{ header?.classification === "spec" ? "מפרט" : "תמחור" }}</span>
+        </div>
+        <div>
+          <span class="m-label">סוג משאב</span><span class="m-value">{{ resourceType || "--" }}</span>
+        </div>
+        <div>
+          <span class="m-label">זיהוי משאב</span><span class="m-value">{{ resource || "--" }}</span>
+        </div>
+        <div>
+          <span class="m-label">תאריך</span
+          ><span class="m-value num">{{ formatDate(new Date().toISOString()) }}</span>
+        </div>
+      </section>
+
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th class="c-code">מס' סעיף</th>
+            <th class="c-name">שם הסעיף</th>
+            <th class="c-rt">סוג משאב</th>
+            <th class="c-unit">יח' מידה</th>
+            <th class="c-qty">כמות</th>
+            <th class="c-prio">עדיפות</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="g in groups" :key="g.chapter.id">
+            <tr class="g-chapter">
+              <td colspan="6">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</td>
+            </tr>
+            <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
+              <tr class="g-sub">
+                <td colspan="6">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</td>
+              </tr>
+              <tr v-for="r in sg.rows" :key="r.item.id">
+                <td class="num">{{ r.item.code }}</td>
+                <td>{{ r.item.name }}</td>
+                <td>{{ resourceTypeName(r.resourceTypeId) }}</td>
+                <td>{{ r.item.unit }}</td>
+                <td class="num">{{ Number(r.qty).toFixed(2) }}</td>
+                <td>{{ PRIORITY_LABELS[r.priority] }}</td>
+              </tr>
+            </template>
+          </template>
+          <tr v-if="!groups.length">
+            <td colspan="6" class="empty">אין סעיפים לסיכום בכתב כמויות זה</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <footer class="doc-foot">
+        <span
+          >סה"כ סעיפים לסיכום: <span class="num">{{ totals.summary }}</span></span
+        >
+        <span class="foot-note">הופק ממערכת "חישובים בראש טוב"</span>
+      </footer>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.export-overlay {
-  position: fixed;
-  inset: 0;
+.print-page {
+  min-height: 100vh;
   background: var(--page-bg);
-  z-index: 80;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -344,5 +361,22 @@ function print() {
   text-align: center;
   color: var(--text-muted);
   padding: 30px 0;
+}
+
+@media print {
+  .print-page {
+    background: #fff;
+    padding: 0;
+    display: block;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .export-doc {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
 }
 </style>

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch } from "vue";
+import { useRouter } from "vue-router";
 import { useDbStore } from "@/stores/db";
 import { useBoqStore } from "@/stores/boq";
 import { useUiStore, SUPPRESS_HINT } from "@/stores/ui";
@@ -16,7 +17,6 @@ import ChapterNotesModal from "./ChapterNotesModal.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
 import TenderModal from "./TenderModal.vue";
 import AddTagModal from "./AddTagModal.vue";
-import BoqExportModal from "./BoqExportModal.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { BOQ_STATUS_LABELS, CLASSIFICATION_LABELS, SIDEBAR_MODE } from "@/constants";
 
@@ -27,6 +27,7 @@ const props = defineProps({
 const db = useDbStore();
 const boq = useBoqStore();
 const ui = useUiStore();
+const router = useRouter();
 
 boq.openBoq(Number(props.boqId));
 watch(
@@ -62,7 +63,19 @@ const replaceScopeAsk = ref(null); // {oldItemId, newItemId}
 const dontAskScope = ref(false);
 const showTender = ref(false);
 const showAddTag = ref(false);
-const showExport = ref(false);
+/* printing opens the document in a tab of its own. In פרקים it carries only the
+   sub-chapters ticked on the right — the same selection the table is showing. */
+const printInChapters = computed(() => boq.sidebarMode === SIDEBAR_MODE.CHAPTERS);
+const printEnabled = computed(() => !printInChapters.value || boq.checkedSubChapterIds.length > 0);
+const printTitle = computed(() =>
+  printInChapters.value ? "הדפסת הפרקים שנבחרו (נפתח בלשונית חדשה)" : "הדפסת כתב הכמויות (נפתח בלשונית חדשה)"
+);
+function openPrint() {
+  if (!header.value || !printEnabled.value) return;
+  const query = printInChapters.value ? { subs: boq.checkedSubChapterIds.join(",") } : {};
+  const { href } = router.resolve({ name: "boq-print", params: { boqId: header.value.id }, query });
+  window.open(href, "_blank");
+}
 /** catalog item ids of the checked table rows (targets for a new tag) */
 const checkedItemIds = computed(() => {
   const ids = new Set();
@@ -177,7 +190,12 @@ function deleteChecked() {
         <button class="tender-btn" title="יציאה למכרז" @click="showTender = true">
           <AppIcon name="megaphone" :size="16" />
         </button>
-        <button class="tender-btn" title="הדפסה / ייצוא כתב הכמויות" @click="showExport = true">
+        <button
+          class="tender-btn"
+          :disabled="!printEnabled"
+          :title="printEnabled ? printTitle : 'סמן פרקים ברשימה שמימין כדי להדפיס אותם'"
+          @click="openPrint"
+        >
           <AppIcon name="printer" :size="17" />
         </button>
       </div>
@@ -193,9 +211,11 @@ function deleteChecked() {
             <AppIcon name="plus-circle" :size="20" />
             <span>סעיף</span>
           </button>
+          <!-- a tag is put on sections, so it waits for at least one to be ticked -->
           <button
             class="tb-btn"
-            :title="hasChecked ? 'שיוך תגית לסעיפים המסומנים' : 'יצירת תגית חדשה'"
+            :disabled="!hasChecked"
+            :title="hasChecked ? 'שיוך תגית לסעיפים המסומנים' : 'סמן לפחות סעיף אחד כדי לשייך תגית'"
             @click="showAddTag = true"
           >
             <AppIcon name="plus-circle" :size="20" />
@@ -271,7 +291,6 @@ function deleteChecked() {
     />
     <TenderModal v-if="showTender && header" :boq-id="header.id" @close="showTender = false" />
     <AddTagModal v-if="showAddTag" :item-ids="checkedItemIds" @close="showAddTag = false" />
-    <BoqExportModal v-if="showExport && header" :boq-id="header.id" @close="showExport = false" />
     <DeleteConfirmModal
       v-if="deleteRowsConfirm"
       title="הסרת סעיפים"
@@ -410,8 +429,12 @@ function deleteChecked() {
   color: var(--text-secondary);
   padding: 3px;
 }
-.tender-btn:hover {
+.tender-btn:hover:not(:disabled) {
   color: var(--brand-primary);
+}
+.tender-btn:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
 }
 .doc-start {
   display: flex;
