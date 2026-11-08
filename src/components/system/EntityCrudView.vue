@@ -6,6 +6,7 @@ import PageHeader from "@/components/layout/PageHeader.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
+import BaseModal from "@/components/shared/BaseModal.vue";
 
 /**
  * Generic list + inline-CRUD screen for the simple מערכת (system) collections
@@ -24,7 +25,15 @@ const props = defineProps({
   makeNew: { type: Function, required: true },
   /** a two-column list reads better narrow; a wide one takes the card */
   tableWidth: { type: String, default: "780px" },
+  /** 'row' edits in place; 'modal' opens a popup with every field, for edit and create */
+  editIn: { type: String, default: "row" },
+  /** singular noun for the popup titles, e.g. "משאב" → "משאב חדש" / "עריכת משאב" */
+  noun: { type: String, default: "רשומה" },
 });
+const inModal = computed(() => props.editIn === "modal");
+const modalTitle = computed(() => (editingId.value === "new" ? `${props.noun} חדש` : `עריכת ${props.noun}`));
+/* the field the list is named by is required; the rest may stay empty */
+const requiredKey = computed(() => props.columns.find((c) => c.editor !== "select")?.key);
 
 const db = useDbStore();
 const ui = useUiStore();
@@ -62,7 +71,10 @@ function startEdit(row) {
   focusFirst();
 }
 function focusFirst() {
-  nextTick(() => firstInput.value?.[0]?.focus?.());
+  nextTick(() => {
+    const el = firstInput.value;
+    (Array.isArray(el) ? el[0] : el)?.focus?.();
+  });
 }
 function cancel() {
   editingId.value = null;
@@ -120,7 +132,7 @@ function confirmDelete() {
           </tr>
         </thead>
         <tbody>
-          <tr v-if="editingId === 'new'" class="edit-row">
+          <tr v-if="!inModal && editingId === 'new'" class="edit-row">
             <td v-for="(c, i) in columns" :key="c.key">
               <select v-if="c.editor === 'select'" v-model="draft[c.key]" class="cell-input">
                 <option v-for="o in c.options" :key="o.value" :value="o.value">{{ o.label }}</option>
@@ -142,7 +154,7 @@ function confirmDelete() {
             <td class="td-act"></td>
           </tr>
           <template v-for="row in rows" :key="row.id">
-            <tr v-if="editingId === row.id" class="edit-row">
+            <tr v-if="!inModal && editingId === row.id" class="edit-row">
               <td v-for="(c, i) in columns" :key="c.key">
                 <select v-if="c.editor === 'select'" v-model="draft[c.key]" class="cell-input">
                   <option v-for="o in c.options" :key="o.value" :value="o.value">{{ o.label }}</option>
@@ -177,12 +189,42 @@ function confirmDelete() {
               </td>
             </tr>
           </template>
-          <tr v-if="!rows.length && editingId !== 'new'">
+          <tr v-if="!rows.length && (inModal || editingId !== 'new')">
             <td :colspan="columns.length + 1" class="empty">{{ emptyText }}</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <BaseModal
+      v-if="inModal && editingId !== null"
+      :title="modalTitle"
+      width="640px"
+      :confirm-label="editingId === 'new' ? 'הוספה' : 'שמירה'"
+      @close="cancel"
+      @confirm="save"
+    >
+      <form class="crud-form" @submit.prevent="save">
+        <label v-for="(c, i) in columns" :key="c.key" class="crud-field" :class="{ wide: c.wide }">
+          <span class="crud-label">
+            {{ c.label }}<span v-if="c.key === requiredKey" class="req"> *</span>
+          </span>
+          <select v-if="c.editor === 'select'" v-model="draft[c.key]" class="input">
+            <option v-for="o in c.options" :key="o.value" :value="o.value">{{ o.label }}</option>
+          </select>
+          <input
+            v-else
+            :ref="i === 0 ? (el) => (firstInput = el) : undefined"
+            v-model="draft[c.key]"
+            class="input"
+            :class="c.align"
+            :type="c.type || 'text'"
+            :placeholder="c.placeholder || ''"
+          />
+        </label>
+        <button type="submit" hidden />
+      </form>
+    </BaseModal>
 
     <DeleteConfirmModal
       v-if="deleteTarget"
@@ -195,6 +237,28 @@ function confirmDelete() {
 </template>
 
 <style scoped>
+/* ---- popup form ---- */
+.crud-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+.crud-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.crud-field.wide {
+  grid-column: 1 / -1;
+}
+.crud-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+}
+.req {
+  color: var(--danger);
+}
 /* email and other latin values read left-to-right inside the RTL table */
 .ltr {
   direction: ltr;

@@ -16,10 +16,17 @@ const columns = computed(() => [
     options: db.resourceTypes.map((t) => ({ value: t.id, label: t.name })),
   },
   { key: "contactName", label: "איש קשר", editor: "text" },
-  { key: "phone", label: "טלפון", editor: "text", align: "num" },
-  { key: "email", label: 'דוא"ל', editor: "text", align: "ltr" },
+  { key: "phone", label: "טלפון", editor: "text", align: "num", type: "tel", placeholder: "05X-XXXXXXX" },
+  {
+    key: "email",
+    label: 'דוא"ל',
+    editor: "text",
+    align: "ltr",
+    type: "email",
+    placeholder: "mail@example.com",
+  },
   { key: "hp", label: "ח.פ / ע.מ", editor: "text", align: "num" },
-  { key: "address", label: "כתובת", editor: "text" },
+  { key: "address", label: "כתובת", editor: "text", wide: true, placeholder: "רחוב ומספר, עיר" },
 ]);
 </script>
 
@@ -30,6 +37,8 @@ const columns = computed(() => [
     empty-text="עדיין אין משאבים בספרייה"
     collection="constructors"
     table-width="none"
+    edit-in="modal"
+    noun="משאב"
     :columns="columns"
     :make-new="
       () => ({
