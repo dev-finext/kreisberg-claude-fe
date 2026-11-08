@@ -636,12 +636,16 @@ for (const boqId of [1, 5, 6]) {
   const used = [...new Set(structureElementItems.filter((s) => s.boqId === boqId).map((s) => s.itemId))];
   for (const itemId of used) {
     const item = itemById.get(itemId);
+    /* the draw that used to decide לסיכום is still taken, so the rest of the seed
+       — which shares this random sequence — comes out exactly as before */
+    if (item.priority !== "mandatory" && item.priority !== "optional") rand();
     boqItems.push({
       id: biId++,
       boqId,
       itemId,
       priority: item.priority,
-      forSummary: item.priority === "mandatory" ? true : item.priority === "optional" ? false : rand() < 0.7,
+      /* every section starts in the summary; עדיפות no longer decides it */
+      forSummary: true,
       amortization: item.amortization || 0,
       resourceTypeId: item.resourceTypeId,
       resourceId: null,
@@ -767,7 +771,7 @@ const tenders = [
 
 /* ---------------- emit ---------------- */
 const db = {
-  generatedAt: "2026-11-04-v7",
+  generatedAt: "2026-11-08-v8",
   currentUserId,
   catalog: { ...catalogMeta, chapters },
   catalogs,
