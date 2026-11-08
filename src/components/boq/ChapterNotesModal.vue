@@ -97,13 +97,8 @@ function removeNote(id) {
 </script>
 
 <template>
-  <BaseModal
-    :title="title"
-    width="822px"
-    confirm-label="שמירה"
-    @close="emit('close')"
-    @confirm="emit('close')"
-  >
+  <!-- no footer: a note is saved by its own ✓, and the modal closes from its X -->
+  <BaseModal :title="title" width="822px" hide-footer @close="emit('close')">
     <!-- Figma: הוספת הערה on the right, search pill on the left -->
     <div class="notes-head">
       <button class="add-btn" :disabled="adding" @click="startAdd">
@@ -120,41 +115,40 @@ function removeNote(id) {
       <template v-for="r in rows" :key="r.key">
         <!-- rich-text editor card (Figma "rich text": toolbar strip, text, ✓ / ✕) -->
         <div v-if="r.editor" class="editor-card" @keydown.esc="cancelEdit">
-          <div class="editor-row">
-            <RichTextEditor
-              ref="draftEl"
-              v-model="draft"
-              class="draft"
-              placeholder="כתוב הערה..."
-              min-height="72px"
-            />
-            <div class="editor-actions">
-              <button class="act" title="אישור" @click="commitEdit">
-                <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="12" fill="#5b93ef" />
-                  <path
-                    d="M7 12.5l3 3 7-7"
-                    fill="none"
-                    stroke="#fff"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
-              <button class="act" title="ביטול" @click="cancelEdit">
-                <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="11" fill="none" stroke="#bbc5cf" stroke-width="1.5" />
-                  <path
-                    d="M8.5 8.5l7 7M15.5 8.5l-7 7"
-                    stroke="#70869e"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
+          <!-- ✓ / ✕ sit above the editor, on the right, clear of the text -->
+          <div class="editor-actions">
+            <button class="act" title="אישור" @click="commitEdit">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                <circle cx="12" cy="12" r="12" fill="#5b93ef" />
+                <path
+                  d="M7 12.5l3 3 7-7"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+            <button class="act" title="ביטול" @click="cancelEdit">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                <circle cx="12" cy="12" r="11" fill="none" stroke="#bbc5cf" stroke-width="1.5" />
+                <path
+                  d="M8.5 8.5l7 7M15.5 8.5l-7 7"
+                  stroke="#70869e"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
           </div>
+          <RichTextEditor
+            ref="draftEl"
+            v-model="draft"
+            class="draft"
+            placeholder="כתוב הערה..."
+            min-height="72px"
+          />
         </div>
 
         <!-- note card: text, with edit / delete revealed on hover (Figma "Note") -->
@@ -297,20 +291,16 @@ function removeNote(id) {
   background: var(--surface);
   border-radius: 6px;
 }
-.editor-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
 .draft {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
 }
+/* RTL: flex-start is the right edge */
 .editor-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
-  padding-top: 8px;
+  margin-bottom: 6px;
 }
 .act {
   background: none;

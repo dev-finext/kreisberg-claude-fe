@@ -212,25 +212,11 @@ textarea {
 }
 
 /* ---------- Print (BOQ export document) ---------- */
+/* the printable document opens in a tab of its own (BoqPrintView), which carries
+   its own print rules; elsewhere the app chrome stays out of a printout */
 @media print {
   .app-layout {
     display: none !important;
-  }
-  .export-overlay {
-    position: static !important;
-    overflow: visible !important;
-    background: #fff !important;
-    padding: 0 !important;
-    display: block !important;
-  }
-  .export-overlay .no-print {
-    display: none !important;
-  }
-  .export-overlay .export-doc {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    box-shadow: none !important;
   }
 }
 

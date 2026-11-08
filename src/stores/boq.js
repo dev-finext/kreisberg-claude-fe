@@ -93,28 +93,34 @@ export const useBoqStore = defineStore("boq", {
      *  - branch/root: aggregated read-only sums over descendant leaves
      */
     assignmentRows() {
-      if (this.selectedElementId === null) return { editable: false, rows: [], belowRows: [] };
+      if (this.selectedElementId === null) return { editable: false, rows: [] };
       const isRootAll = this.selectedElementId === 0;
-      const mine = isRootAll ? [] : this.seisOfElements([this.selectedElementId]);
-      const belowIds = isRootAll
-        ? this.elementsOfBoq.map((e) => e.id)
-        : this.descendantIds(this.selectedElementId);
-      const below = this.seisOfElements(belowIds);
 
-      /* the element's own sections are editable here; what sits in the structures
-         under it is shown summed and read-only, edited where it was attached */
-      const rows = mine.map((s) => this.rowFromSei(s)).sort(byCatalogOrder(this.catalog));
-      const byItem = new Map();
-      for (const s of below) {
-        if (!byItem.has(s.itemId)) byItem.set(s.itemId, { itemId: s.itemId, qty: 0, seiIds: [] });
-        const agg = byItem.get(s.itemId);
-        agg.qty += s.qty;
-        agg.seiIds.push(s.id);
+      /* "הכל" sums the whole structure, read-only */
+      if (isRootAll) {
+        const byItem = new Map();
+        for (const s of this.seisOfElements(this.elementsOfBoq.map((e) => e.id))) {
+          if (!byItem.has(s.itemId)) byItem.set(s.itemId, { itemId: s.itemId, qty: 0, seiIds: [] });
+          const agg = byItem.get(s.itemId);
+          agg.qty += s.qty;
+          agg.seiIds.push(s.id);
+        }
+        return {
+          editable: false,
+          rows: [...byItem.values()]
+            .map((agg) => this.rowFromAggregate(agg))
+            .sort(byCatalogOrder(this.catalog)),
+        };
       }
-      const belowRows = [...byItem.values()]
-        .map((agg) => ({ ...this.rowFromAggregate(agg), below: true }))
-        .sort(byCatalogOrder(this.catalog));
-      return { editable: !isRootAll, rows, belowRows };
+
+      /* an element shows the sections attached to it — at whatever level it sits —
+         and nothing from the structures under it */
+      return {
+        editable: true,
+        rows: this.seisOfElements([this.selectedElementId])
+          .map((s) => this.rowFromSei(s))
+          .sort(byCatalogOrder(this.catalog)),
+      };
     },
     /**
      * פרקים mode: aggregated rows across ALL elements, grouped by chapter →
@@ -130,10 +136,11 @@ export const useBoqStore = defineStore("boq", {
         agg.qty += s.qty;
         agg.seiIds.push(s.id);
       }
-      let rows = [...byItem.values()].map((agg) => this.rowFromAggregate(agg));
-      if (this.checkedSubChapterIds.length) {
-        rows = rows.filter((r) => this.checkedSubChapterIds.includes(r.item?.subChapterId));
-      }
+      /* the tree on the right is the selection: what is ticked is shown, and
+         nothing ticked shows nothing — "בחר הכל" is how to see everything */
+      const rows = [...byItem.values()]
+        .map((agg) => this.rowFromAggregate(agg))
+        .filter((r) => this.checkedSubChapterIds.includes(r.item?.subChapterId));
       // group chapter -> sub-chapter
       const groups = [];
       const byChapter = new Map();
@@ -236,7 +243,8 @@ export const useBoqStore = defineStore("boq", {
           boqId: this.activeBoqId,
           itemId,
           priority: item?.priority || PRIORITY.RECOMMENDED,
-          forSummary: item?.priority === PRIORITY.MANDATORY ? true : item?.priority !== PRIORITY.OPTIONAL,
+          /* עדיפות and לסיכום are independent: a new section starts in the summary */
+          forSummary: true,
           amortization: item?.amortization || 0,
           resourceTypeId: item?.resourceTypeId || null,
           resourceId: null,
@@ -570,24 +578,16 @@ export const useBoqStore = defineStore("boq", {
     },
 
     /* =============== priority / summary / item edit =============== */
+    /* עדיפות and לסיכום are two separate decisions: changing one never moves the other */
     setPriority(itemId, priority) {
       const bi = this.ensureBoqItem(itemId);
-      const changes = [{ field: "priority", from: bi.priority, to: priority }];
+      if (bi.priority === priority) return;
+      this.recordHistory(itemId, [{ field: "priority", from: bi.priority, to: priority }]);
       bi.priority = priority;
-      if (priority === PRIORITY.MANDATORY && !bi.forSummary) {
-        changes.push({ field: "forSummary", from: "false", to: "true" });
-        bi.forSummary = true;
-      }
-      if (priority === PRIORITY.OPTIONAL && bi.forSummary) {
-        changes.push({ field: "forSummary", from: "true", to: "false" });
-        bi.forSummary = false;
-      }
-      this.recordHistory(itemId, changes);
       this.db.persist();
     },
     setForSummary(itemId, value) {
       const bi = this.ensureBoqItem(itemId);
-      if (bi.priority === PRIORITY.MANDATORY || bi.priority === PRIORITY.OPTIONAL) return false; // locked
       if (bi.forSummary !== value) {
         this.recordHistory(itemId, [{ field: "forSummary", from: String(bi.forSummary), to: String(value) }]);
         bi.forSummary = value;

@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 // never leave a client requesting a stale hashed route-chunk (blank-page bug).
 import ProjectsListView from "@/views/ProjectsListView.vue";
 import ProfileView from "@/views/ProfileView.vue";
+import BoqPrintView from "@/views/BoqPrintView.vue";
 import ProjectView from "@/views/ProjectView.vue";
 import GeneralTab from "@/views/project/GeneralTab.vue";
 import ConditionsTab from "@/views/project/ConditionsTab.vue";
@@ -23,6 +24,8 @@ const routes = [
   { path: "/", redirect: "/projects" },
   { path: "/projects", name: "projects", component: ProjectsListView },
   { path: "/profile", name: "profile", component: ProfileView },
+  /* opened in a tab of its own: no rail, no chrome, just the document */
+  { path: "/print/boq/:boqId", name: "boq-print", component: BoqPrintView, meta: { bare: true } },
   {
     path: "/projects/:id",
     component: ProjectView,

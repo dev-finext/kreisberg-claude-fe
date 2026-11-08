@@ -102,8 +102,8 @@ function applyFilters(rows) {
 }
 
 const assignment = computed(() => {
-  const { editable, rows, belowRows } = boq.assignmentRows;
-  return { editable, rows: applyFilters(rows), belowRows: applyFilters(belowRows) };
+  const { editable, rows } = boq.assignmentRows;
+  return { editable, rows: applyFilters(rows) };
 });
 const chapterGroups = computed(() => {
   const groups = boq.chaptersRows;
@@ -236,16 +236,9 @@ const cascadeItems = computed(() =>
 function onPriority(r, v) {
   boq.setPriority(r.item.id, v);
 }
+/* לסיכום is its own decision — the עדיפות never locks it */
 function onSummary(r, v) {
-  const ok = boq.setForSummary(r.item.id, v);
-  if (!ok)
-    ui.toast(
-      r.priority === PRIORITY.MANDATORY ? "סעיף חובה נכלל תמיד בסיכום" : "סעיף לא חובה אינו נכלל בסיכום",
-      "warning"
-    );
-}
-function summaryLocked(r) {
-  return r.priority === PRIORITY.MANDATORY || r.priority === PRIORITY.OPTIONAL;
+  boq.setForSummary(r.item.id, v);
 }
 
 /* ---------------- row actions ---------------- */
@@ -281,9 +274,6 @@ function subChapterNoteCount(scId) {
 }
 
 const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8));
-const belowLabel = computed(() =>
-  boq.selectedElementId === 0 ? "כל הסעיפים בכתב הכמויות" : "סעיפים במבנים שמתחת"
-);
 </script>
 
 <template>
@@ -361,11 +351,7 @@ const belowLabel = computed(() =>
               <PriorityControl :model-value="r.priority" @update:model-value="(v) => onPriority(r, v)" />
             </td>
             <td class="td-summary">
-              <BaseToggle
-                :model-value="r.forSummary"
-                :disabled="summaryLocked(r)"
-                @update:model-value="(v) => onSummary(r, v)"
-              />
+              <BaseToggle :model-value="r.forSummary" @update:model-value="(v) => onSummary(r, v)" />
             </td>
             <td class="td-actions">
               <button v-if="r.sei" class="row-trash" title="הסרת סעיף" @click="deleteRow = r">
@@ -409,40 +395,7 @@ const belowLabel = computed(() =>
           </tr>
         </template>
 
-        <!-- sections attached further down the structure, summed and read-only:
-             they are edited where they hang, not from here -->
-        <template v-if="assignment.belowRows.length">
-          <tr class="group-row">
-            <td :colspan="colCount">
-              <div class="group-inner">
-                <span class="group-label strong">{{ belowLabel }}</span>
-              </div>
-            </td>
-          </tr>
-          <tr v-for="r in assignment.belowRows" :key="r.key" class="item-row below-row">
-            <td class="td-check">
-              <BaseCheckbox :model-value="false" disabled />
-            </td>
-            <td class="td-code">
-              <span class="item-code">{{ r.code }}</span>
-            </td>
-            <td v-full-title class="td-name ellipsis">{{ r.name }}</td>
-            <td class="td-rt">{{ db.resourceTypes.find((t) => t.id === r.resourceTypeId)?.name || "--" }}</td>
-            <td class="td-unit">{{ r.unit || "--" }}</td>
-            <td class="td-qty">
-              <span class="qty-text num">{{ formatQty(r.qty) }}</span>
-            </td>
-            <td class="td-prio">
-              <PriorityControl :model-value="r.priority" disabled />
-            </td>
-            <td class="td-summary">
-              <BaseToggle :model-value="r.forSummary" disabled />
-            </td>
-            <td class="td-actions"></td>
-          </tr>
-        </template>
-
-        <tr v-if="!assignment.rows.length && !assignment.belowRows.length">
+        <tr v-if="!assignment.rows.length">
           <td :colspan="colCount">
             <div class="table-empty">
               <EmptyClipboard />
@@ -544,11 +497,7 @@ const belowLabel = computed(() =>
                   <PriorityControl :model-value="r.priority" @update:model-value="(v) => onPriority(r, v)" />
                 </td>
                 <td class="td-summary">
-                  <BaseToggle
-                    :model-value="r.forSummary"
-                    :disabled="summaryLocked(r)"
-                    @update:model-value="(v) => onSummary(r, v)"
-                  />
+                  <BaseToggle :model-value="r.forSummary" @update:model-value="(v) => onSummary(r, v)" />
                 </td>
               </tr>
               <!-- composite: "פרטים" line, then the sub-sections inline -->
@@ -609,8 +558,14 @@ const belowLabel = computed(() =>
           <td :colspan="colCount">
             <div class="table-empty">
               <EmptyClipboard />
-              <p class="empty-title">עדיין אין כאן סעיפים</p>
-              <p class="empty-sub">הם יופיעו כאן ברגע שיתווספו או יבחרו מהתפריט</p>
+              <template v-if="!boq.checkedSubChapterIds.length">
+                <p class="empty-title">לא נבחרו פרקים</p>
+                <p class="empty-sub">סמן פרקים ברשימה שמימין, או “בחר הכל” כדי להציג את כל הסעיפים</p>
+              </template>
+              <template v-else>
+                <p class="empty-title">עדיין אין כאן סעיפים</p>
+                <p class="empty-sub">הם יופיעו כאן ברגע שיתווספו</p>
+              </template>
             </div>
           </td>
         </tr>
@@ -835,10 +790,6 @@ const belowLabel = computed(() =>
   pointer-events: none;
 }
 /* group rows */
-/* a summed line from somewhere else in the structure: readable, not editable */
-.below-row td {
-  color: var(--text-secondary);
-}
 .group-row td {
   background: var(--surface-subtle);
   height: 38px;

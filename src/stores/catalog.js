@@ -3,6 +3,7 @@ import { useDbStore } from "./db";
 
 /* a numeric run matches with or without its leading zeros, so "7" finds פרק 07 */
 const stripZeros = (s) => String(s || "").replace(/(^|\D)0+(\d)/g, "$1$2");
+const byNum = (a, b) => String(a ?? "").localeCompare(String(b ?? ""), "he", { numeric: true });
 
 /**
  * Catalog domain: lookups + the picker's cascading query logic
@@ -52,16 +53,15 @@ export const useCatalogStore = defineStore("catalog", {
     childrenOf(itemId) {
       return useDbStore().allItems.filter((i) => i.parentId === itemId);
     },
-    /** sub-chapters of a chapter, sorted alphabetically (picker rule) */
-    subChaptersOf(chapterId, { alphabetical = true } = {}) {
+    /** sub-chapters of a chapter, in מספר תת פרק order — the order the catalog reads in */
+    subChaptersOf(chapterId) {
       const ch = this.chapterById.get(chapterId);
       if (!ch) return [];
-      const list = [...ch.subChapters];
-      if (alphabetical) list.sort((a, b) => a.name.localeCompare(b.name, "he"));
-      return list;
+      return [...ch.subChapters].sort((a, b) => byNum(a.num, b.num));
     },
+    /** chapters in מספר פרק order, not by name */
     chaptersSorted() {
-      return [...useDbStore().chapters].sort((a, b) => a.name.localeCompare(b.name, "he"));
+      return [...useDbStore().chapters].sort((a, b) => byNum(a.num, b.num));
     },
     /**
      * Tags relevant to the current chapter/sub-chapter scope:
