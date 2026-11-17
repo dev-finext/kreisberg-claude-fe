@@ -1,12 +1,37 @@
 <script setup>
-import { useRouter } from "vue-router";
+import { ref, watch, nextTick } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
 
 const ui = useUiStore();
 const router = useRouter();
+const route = useRoute();
 
 const GLYPH = { success: "check", warning: "alert", error: "alert", info: "info" };
+
+/*
+ * The stack sits just under the page's header row, so it never covers that
+ * row's buttons (פרויקט חדש, שמירה, ביטול) — they are the ones just clicked.
+ * Screens without a header row (or with it scrolled away) keep the window's
+ * top-left corner.
+ */
+const TOP = 16;
+const GAP = 8;
+const top = ref(TOP);
+function place() {
+  const row = document.querySelector(".page-header .title-row");
+  const bottom = row ? row.getBoundingClientRect().bottom : 0;
+  top.value = Math.max(TOP, Math.round(bottom + GAP));
+}
+watch(
+  () => ui.toasts.length,
+  (n, old) => n > old && nextTick(place)
+);
+watch(
+  () => route.fullPath,
+  () => ui.toasts.length && nextTick(place)
+);
 
 function follow(t) {
   ui.dismissToast(t.id);
@@ -15,8 +40,8 @@ function follow(t) {
 </script>
 
 <template>
-  <!-- top-left of the window, out of the way of the RTL content and the rail -->
-  <div class="toast-host">
+  <!-- top-left, out of the way of the RTL content and the rail, under the header row -->
+  <div class="toast-host" :style="{ top: top + 'px' }">
     <transition-group name="toast">
       <div v-for="t in ui.toasts" :key="t.id" class="toast" :class="'toast-' + t.type">
         <span class="toast-icon">
@@ -44,6 +69,7 @@ function follow(t) {
   align-items: flex-end;
   gap: 8px;
   pointer-events: none;
+  transition: top 0.2s ease;
 }
 .toast {
   pointer-events: auto;
