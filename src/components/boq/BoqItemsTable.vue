@@ -222,7 +222,8 @@ function confirmCascade(cascade) {
   pendingCascade.value = null;
 }
 
-/* the linked sections the cascade dialog is about to touch, named rather than counted */
+/* the linked sections the cascade dialog is about to touch, named rather than counted,
+   each with the quantity it has now and the one it would get */
 const cascadeItems = computed(() =>
   (pendingCascade.value?.childSeis || [])
     .map((cs) => {
@@ -230,7 +231,19 @@ const cascadeItems = computed(() =>
       return item && { ...item, qty: cs.qty };
     })
     .filter(Boolean)
+    .sort((a, b) => String(a.code).localeCompare(String(b.code), "he", { numeric: true }))
 );
+/* the section being edited, and where — so the dialog says what it is about */
+const cascadeSource = computed(() => {
+  const p = pendingCascade.value;
+  if (!p) return null;
+  return {
+    item: cat.item(p.sei.itemId),
+    from: p.sei.qty,
+    to: p.newQty,
+    path: boq.elementPath(p.sei.elementId).join(" > "),
+  };
+});
 
 /* ---------------- priority / summary ---------------- */
 function onPriority(r, v) {
@@ -577,25 +590,64 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
       <div v-if="pendingCascade" class="cascade-overlay">
         <div class="cascade-modal">
           <h3 class="c-title">עדכון סעיפים קשורים</h3>
+          <!-- the section that was edited, where, and the change -->
+          <div v-if="cascadeSource" class="c-source">
+            <div class="c-source-name">
+              <span class="num">{{ cascadeSource.item?.code }}</span>
+              <span class="c-source-title">{{ cascadeSource.item?.name }}</span>
+            </div>
+            <div class="c-source-meta">
+              <span>מבנה: {{ cascadeSource.path }}</span>
+              <span class="c-dot">•</span>
+              <span>
+                כמות:
+                <span class="num">{{ formatQty(cascadeSource.from) }}</span>
+                ←
+                <span class="num strong">{{ formatQty(cascadeSource.to) }}</span>
+                {{ cascadeSource.item?.unit }}
+              </span>
+            </div>
+          </div>
           <p class="c-msg">
-            לסעיף זה
             {{
-              cascadeItems.length === 1 ? "קיים סעיף קשור אחד" : `קיימים ${cascadeItems.length} סעיפים קשורים`
+              cascadeItems.length === 1
+                ? "לסעיף זה קיים סעיף קשור אחד"
+                : `לסעיף זה קיימים ${cascadeItems.length} סעיפים קשורים`
             }}
-            עם אותה יחידת מידה. לעדכן גם את הכמות
-            {{ cascadeItems.length === 1 ? "שלו" : "שלהם" }} ל-{{ formatQty(pendingCascade.newQty) }}?
+            באותו מבנה ועם אותה יחידת מידה. לעדכן גם את הכמות
+            {{ cascadeItems.length === 1 ? "שלו" : "שלהם" }} ל-<span class="num strong">{{
+              formatQty(pendingCascade.newQty)
+            }}</span
+            >?
           </p>
-          <!-- which sections, by name, so the choice is made on the sections and not on a number -->
-          <ul class="c-list scroll-slim">
-            <li v-for="it in cascadeItems" :key="it.id" class="c-item">
-              <div class="c-item-head">
-                <span class="c-item-name">{{ it.name }}</span>
-                <span class="c-item-code num">{{ it.code }}</span>
-                <span class="c-item-unit">({{ it.unit }})</span>
-              </div>
-              <p v-if="stripHtml(it.description)" class="c-item-desc">{{ stripHtml(it.description) }}</p>
-            </li>
-          </ul>
+          <!-- which sections, by code and name, so the choice is made on the sections and not on a number -->
+          <div class="c-table-wrap scroll-slim">
+            <table class="c-table">
+              <thead>
+                <tr>
+                  <th class="c-col-code">מס' סעיף</th>
+                  <th>שם סעיף</th>
+                  <th class="c-col-unit">יח' מידה</th>
+                  <th class="c-col-qty">כמות נוכחית</th>
+                  <th class="c-col-qty">כמות חדשה</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="it in cascadeItems" :key="it.id">
+                  <td class="num">{{ it.code }}</td>
+                  <td>
+                    <div class="c-item-name">{{ it.name }}</div>
+                    <p v-if="stripHtml(it.description)" class="c-item-desc">
+                      {{ stripHtml(it.description) }}
+                    </p>
+                  </td>
+                  <td>{{ it.unit }}</td>
+                  <td class="num">{{ formatQty(it.qty) }}</td>
+                  <td class="num strong">{{ formatQty(pendingCascade.newQty) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <label class="c-dontask">
             <BaseCheckbox v-model="dontAskAgain" size="small" />
             <span class="c-dontask-text">
@@ -864,7 +916,8 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
   background: var(--surface);
   border-radius: 6px;
   padding: 24px 28px;
-  width: 430px;
+  width: 620px;
+  max-width: calc(100vw - 32px);
   box-shadow: var(--shadow-modal);
   text-align: right;
 }
@@ -878,33 +931,85 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
   font-size: 14px;
   margin-bottom: 12px;
 }
-.c-list {
-  list-style: none;
-  margin: 0 0 16px;
-  padding: 8px 12px;
-  max-height: 180px;
-  overflow-y: auto;
+.c-source {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-right: 3px solid var(--brand-primary);
   background: var(--surface-subtle);
+  border-radius: 4px;
+}
+.c-source-name {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.c-source-name .num {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.c-source-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.c-dot {
+  color: var(--text-muted);
+}
+.strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.c-table-wrap {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  border: 1px solid var(--divider);
   border-radius: 6px;
 }
-.c-item + .c-item {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--divider);
-}
-.c-item-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+.c-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 13px;
+}
+.c-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--divider);
+  white-space: nowrap;
+}
+.c-table td {
+  padding: 8px 10px;
+  text-align: right;
+  vertical-align: top;
+  border-bottom: 1px solid var(--divider);
+}
+.c-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.c-col-code {
+  width: 104px;
+}
+.c-col-unit {
+  width: 64px;
+}
+.c-col-qty {
+  width: 84px;
 }
 .c-item-name {
   font-weight: 600;
   color: var(--text-primary);
-}
-.c-item-code,
-.c-item-unit {
-  color: var(--text-secondary);
 }
 .c-item-desc {
   margin-top: 2px;

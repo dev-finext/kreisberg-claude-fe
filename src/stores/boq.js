@@ -183,10 +183,22 @@ export const useBoqStore = defineStore("boq", {
       }
       return tree;
     },
-    /** items already present anywhere in this BOQ (picker "כבר נבחר") */
+    /** items present anywhere in this BOQ (the filter options) */
     itemIdsInBoq() {
       return new Set(
         this.db.structureElementItems.filter((s) => s.boqId === this.activeBoqId).map((s) => s.itemId)
+      );
+    },
+    /** items attached to the selected structure itself — the picker's "כבר נבחר".
+        A section may sit on a floor and again on its rooms (or on any other
+        structure), but never twice on the same one. */
+    itemIdsInSelectedElement() {
+      const elId = this.selectedElementId;
+      if (!elId) return new Set();
+      return new Set(
+        this.db.structureElementItems
+          .filter((s) => s.boqId === this.activeBoqId && s.elementId === elId)
+          .map((s) => s.itemId)
       );
     },
   },
@@ -394,9 +406,10 @@ export const useBoqStore = defineStore("boq", {
     },
 
     /* =============== add items =============== */
-    /** related (parent/children) catalog items of a selection, not yet in the BOQ */
+    /** related (parent/children) catalog items of a selection, not yet on the
+        selected structure — linked quantities are kept per structure */
     relatedItemsOf(itemIds) {
-      const present = this.itemIdsInBoq;
+      const present = this.itemIdsInSelectedElement;
       const rel = new Set();
       for (const id of itemIds) {
         const item = this.catalog.item(id);
@@ -645,7 +658,23 @@ export const useBoqStore = defineStore("boq", {
           s.itemId === oldItemId &&
           (elementIds ? elementIds.includes(s.elementId) : true)
       );
-      for (const s of seis) s.itemId = newItemId;
+      /* a structure never carries the same section twice: where the new section
+         already sits, the old one's quantity joins it instead of a second row */
+      const merged = new Set();
+      for (const s of seis) {
+        const twin = this.db.structureElementItems.find(
+          (t) => t.boqId === this.activeBoqId && t.elementId === s.elementId && t.itemId === newItemId
+        );
+        if (twin) {
+          twin.qty += s.qty;
+          merged.add(s.id);
+        } else {
+          s.itemId = newItemId;
+        }
+      }
+      if (merged.size) {
+        this.db.db.structureElementItems = this.db.db.structureElementItems.filter((s) => !merged.has(s.id));
+      }
       const oldBi = this.boqItemOf(oldItemId);
       const newBi = this.ensureBoqItem(newItemId);
       if (oldBi) {

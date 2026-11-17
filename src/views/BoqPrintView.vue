@@ -5,6 +5,7 @@ import { useDbStore } from "@/stores/db";
 import { useCatalogStore } from "@/stores/catalog";
 import { PRIORITY_LABELS } from "@/constants";
 import { formatDate } from "@/utils/format";
+import { sanitizeHtml, stripHtml } from "@/utils/html";
 import AppIcon from "@/components/shared/AppIcon.vue";
 
 /**
@@ -83,6 +84,27 @@ const totals = computed(() => {
   return { summary };
 });
 
+/* the notes go into the document on every level they were written on — פרק,
+   תת פרק and סעיף — each under its own heading or row, in the order they were
+   written. A note belongs to this כתב כמויות, or to the catalog (boqId null). */
+function notesFor(scope, refId) {
+  return db.comments
+    .filter((c) => c.scope === scope && c.refId === refId && (c.boqId == null || c.boqId === boqId.value))
+    .filter((c) => stripHtml(c.text))
+    .sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+}
+const notesCount = computed(() => {
+  let n = 0;
+  for (const g of groups.value) {
+    n += notesFor("chapter", g.chapter.id).length;
+    for (const sg of g.subGroups) {
+      n += notesFor("subChapter", sg.subChapter.id).length;
+      for (const r of sg.rows) n += notesFor("item", r.item.id).length;
+    }
+  }
+  return n;
+});
+
 function resourceTypeName(id) {
   return db.resourceTypes.find((t) => t.id === id)?.name || "--";
 }
@@ -114,7 +136,9 @@ onMounted(async () => {
       </div>
       <span class="tb-hint">
         {{
-          subsFilter ? "המסמך כולל את הסעיפים לסיכום בפרקים שנבחרו בלבד" : "המסמך כולל את הסעיפים לסיכום בלבד"
+          subsFilter
+            ? "המסמך כולל את הסעיפים לסיכום בפרקים שנבחרו בלבד, עם ההערות שלהם"
+            : "המסמך כולל את הסעיפים לסיכום בלבד, עם ההערות שלהם"
         }}
         — בחלון ההדפסה ניתן לשמור כ-PDF
       </span>
@@ -172,18 +196,65 @@ onMounted(async () => {
             <tr class="g-chapter">
               <td colspan="6">פרק {{ g.chapter.num }} - {{ g.chapter.name }}</td>
             </tr>
+            <tr v-if="notesFor('chapter', g.chapter.id).length" class="n-row n-chapter">
+              <td colspan="6">
+                <div class="n-box">
+                  <span class="n-label">הערות לפרק</span>
+                  <ul class="n-list">
+                    <li
+                      v-for="n in notesFor('chapter', g.chapter.id)"
+                      :key="n.id"
+                      class="n-text"
+                      v-html="sanitizeHtml(n.text)"
+                    />
+                  </ul>
+                </div>
+              </td>
+            </tr>
             <template v-for="sg in g.subGroups" :key="sg.subChapter.id">
               <tr class="g-sub">
                 <td colspan="6">תת פרק {{ sg.subChapter.num }} - {{ sg.subChapter.name }}</td>
               </tr>
-              <tr v-for="r in sg.rows" :key="r.item.id">
-                <td class="num">{{ r.item.code }}</td>
-                <td>{{ r.item.name }}</td>
-                <td>{{ resourceTypeName(r.resourceTypeId) }}</td>
-                <td>{{ r.item.unit }}</td>
-                <td class="num">{{ Number(r.qty).toFixed(2) }}</td>
-                <td>{{ PRIORITY_LABELS[r.priority] }}</td>
+              <tr v-if="notesFor('subChapter', sg.subChapter.id).length" class="n-row n-sub">
+                <td colspan="6">
+                  <div class="n-box">
+                    <span class="n-label">הערות לתת פרק</span>
+                    <ul class="n-list">
+                      <li
+                        v-for="n in notesFor('subChapter', sg.subChapter.id)"
+                        :key="n.id"
+                        class="n-text"
+                        v-html="sanitizeHtml(n.text)"
+                      />
+                    </ul>
+                  </div>
+                </td>
               </tr>
+              <template v-for="r in sg.rows" :key="r.item.id">
+                <tr :class="{ 'has-notes': notesFor('item', r.item.id).length }">
+                  <td class="num">{{ r.item.code }}</td>
+                  <td>{{ r.item.name }}</td>
+                  <td>{{ resourceTypeName(r.resourceTypeId) }}</td>
+                  <td>{{ r.item.unit }}</td>
+                  <td class="num">{{ Number(r.qty).toFixed(2) }}</td>
+                  <td>{{ PRIORITY_LABELS[r.priority] }}</td>
+                </tr>
+                <tr v-if="notesFor('item', r.item.id).length" class="n-row n-item">
+                  <td colspan="6">
+                    <div class="n-box">
+                      <span class="n-label">הערות לסעיף</span>
+                      <ul class="n-list">
+                        <li
+                          v-for="n in notesFor('item', r.item.id)"
+                          :key="n.id"
+                          class="n-text"
+                          v-html="sanitizeHtml(n.text)"
+                        />
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </template>
           </template>
           <tr v-if="!groups.length">
@@ -195,6 +266,9 @@ onMounted(async () => {
       <footer class="doc-foot">
         <span
           >סה"כ סעיפים לסיכום: <span class="num">{{ totals.summary }}</span></span
+        >
+        <span v-if="notesCount"
+          >הערות: <span class="num">{{ notesCount }}</span></span
         >
         <span class="foot-note">הופק ממערכת "חישובים בראש טוב"</span>
       </footer>
@@ -341,6 +415,64 @@ onMounted(async () => {
   padding: 5px 8px;
   padding-right: 18px;
 }
+/* ---- notes, under the heading or the row they were written on ---- */
+.n-row td {
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--divider);
+}
+.n-chapter td {
+  padding-top: 6px;
+}
+.n-sub td {
+  padding-right: 18px;
+  padding-top: 6px;
+}
+.n-item td {
+  padding-right: 104px; /* under the section's name, past its code */
+}
+.has-notes td {
+  border-bottom: none;
+}
+.n-box {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px 10px;
+  border-right: 2px solid var(--border-strong);
+  background: #fafbfd;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.n-label {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #444;
+  padding-top: 1px;
+}
+.n-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 0;
+}
+.n-text {
+  font-size: 11px;
+  line-height: 16px;
+  color: #333;
+}
+.n-text + .n-text {
+  margin-top: 3px;
+}
+.n-text :deep(p) {
+  margin: 0;
+}
+.n-text :deep(ul),
+.n-text :deep(ol) {
+  margin: 2px 0;
+  padding-right: 18px;
+}
 .doc-foot {
   display: flex;
   gap: 28px;
@@ -371,6 +503,10 @@ onMounted(async () => {
   }
   .no-print {
     display: none !important;
+  }
+  .n-box {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .export-doc {
     width: 100% !important;

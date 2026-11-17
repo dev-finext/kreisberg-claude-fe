@@ -101,6 +101,13 @@ const pasteEnabled = computed(
     boq.selectedElementId !== ui.clipboard.sourceElementId
 );
 
+/* "כבר נבחר" in the picker: what already sits on the selected structure. The same
+   section may still go on a nested structure (a floor and its rooms) or any other
+   one. Without a single structure in focus (הכל, or פרקים) it is the whole BOQ. */
+const pickerTaken = computed(() => [
+  ...(elementSelected.value ? boq.itemIdsInSelectedElement : boq.itemIdsInBoq),
+]);
+
 function openPicker() {
   if (!header.value?.catalogId) {
     ui.toast("לא נמצא קטלוג משויך", "error");
@@ -269,7 +276,7 @@ function deleteChecked() {
       v-if="showPicker"
       :mode="pickerMode"
       :catalog-name="db.catalog.name"
-      :already-selected="[...boq.itemIdsInBoq]"
+      :already-selected="pickerTaken"
       @close="
         showPicker = false;
         replaceContext = null;
