@@ -175,7 +175,7 @@ function confirmDelete() {
             <AppIcon :name="selectedFolderId === f.id ? 'folder-open' : 'folder'" :size="18" />
             <span class="folder-name ellipsis">{{ f.name }}</span>
           </button>
-          <button class="folder-kebab" @click.stop="openFolderMenu(f, $event)">
+          <button class="folder-kebab" title="פעולות" @click.stop="openFolderMenu(f, $event)">
             <AppIcon name="kebab" :size="16" />
           </button>
         </div>
@@ -241,7 +241,7 @@ function confirmDelete() {
             <td class="num">{{ formatDate(d.createdAt) }}</td>
             <td class="num">{{ formatDateTime(d.updatedAt) }}</td>
             <td class="td-kebab">
-              <button class="icon-btn" @click="openRowMenu(d, $event)">
+              <button class="icon-btn" title="פעולות" @click="openRowMenu(d, $event)">
                 <AppIcon name="kebab" :size="16" />
               </button>
             </td>

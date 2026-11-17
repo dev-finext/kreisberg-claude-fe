@@ -215,7 +215,7 @@ function finishImport() {
               @click="selectedId = m.id"
             >
               <span class="ellipsis">{{ m.name }}</span>
-              <button class="kebab" @click.stop="openMenu(m, $event)">
+              <button class="kebab" title="פעולות" @click.stop="openMenu(m, $event)">
                 <AppIcon name="kebab" :size="16" />
               </button>
             </div>

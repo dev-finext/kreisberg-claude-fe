@@ -6,6 +6,7 @@ import { useUiStore } from "@/stores/ui";
 import { PRIORITY, PRIORITY_LABELS } from "@/constants";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import { useEscape } from "@/composables/useEscape";
+import { useFloating } from "@/composables/useFloating";
 import ItemPickerModal from "@/components/boq/ItemPickerModal.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import RichTextEditor from "@/components/shared/RichTextEditor.vue";
@@ -142,6 +143,18 @@ const tagMatches = computed(() => {
 const canCreateTag = computed(() => {
   const q = tagDraft.value.trim();
   return !!q && !db.tags.some((t) => t.name === q);
+});
+/* the list floats above the modal (it sits at the bottom of the form, where the
+   modal's body would cut it) and opens upward when there is no room below */
+const tagsField = ref(null);
+const tagMenu = ref(null);
+const tagMenuShown = computed(() => tagOpen.value && (tagMatches.value.length > 0 || canCreateTag.value));
+const { style: tagMenuStyle } = useFloating(tagMenuShown, {
+  trigger: tagsField,
+  panel: tagMenu,
+  close: () => (tagOpen.value = false),
+  align: "stretch",
+  maxHeight: 208,
 });
 function openTags() {
   tagOpen.value = true;
@@ -470,7 +483,12 @@ function remove() {
                 </div>
                 <div class="field tag-field">
                   <label class="field-label">תגיות</label>
-                  <div class="tags-field" :class="{ open: tagOpen }" @click="tagInput?.focus()">
+                  <div
+                    ref="tagsField"
+                    class="tags-field"
+                    :class="{ open: tagOpen }"
+                    @click="tagInput?.focus()"
+                  >
                     <span v-for="t in chosenTags" :key="t.id" class="tag-chip">
                       {{ t.name }}
                       <button class="chip-x" title="הסרה" @click.stop="removeTag(t.id)">
@@ -489,26 +507,28 @@ function remove() {
                     <AppIcon class="tag-caret" name="chevron-down" :size="24" />
                   </div>
                   <!-- existing-tag picker -->
-                  <div v-if="tagOpen && (tagMatches.length || canCreateTag)" class="tag-menu scroll-slim">
-                    <button
-                      v-for="(t, i) in tagMatches"
-                      :key="t.id"
-                      class="tag-opt"
-                      :class="{ hl: i === tagIdx }"
-                      @mousedown.prevent="pickTag(t)"
-                    >
-                      {{ t.name }}
-                    </button>
-                    <button
-                      v-if="canCreateTag"
-                      class="tag-opt create"
-                      :class="{ hl: tagIdx === tagMatches.length }"
-                      @mousedown.prevent="createTag"
-                    >
-                      <AppIcon name="plus-circle" :size="16" />
-                      <span>יצירת התגית "{{ tagDraft.trim() }}"</span>
-                    </button>
-                  </div>
+                  <Teleport to="body">
+                    <div v-if="tagMenuShown" ref="tagMenu" class="tag-menu scroll-slim" :style="tagMenuStyle">
+                      <button
+                        v-for="(t, i) in tagMatches"
+                        :key="t.id"
+                        class="tag-opt"
+                        :class="{ hl: i === tagIdx }"
+                        @mousedown.prevent="pickTag(t)"
+                      >
+                        {{ t.name }}
+                      </button>
+                      <button
+                        v-if="canCreateTag"
+                        class="tag-opt create"
+                        :class="{ hl: tagIdx === tagMatches.length }"
+                        @mousedown.prevent="createTag"
+                      >
+                        <AppIcon name="plus-circle" :size="16" />
+                        <span>יצירת התגית "{{ tagDraft.trim() }}"</span>
+                      </button>
+                    </div>
+                  </Teleport>
                 </div>
               </div>
               <div class="res-col res-left">
@@ -898,13 +918,6 @@ function remove() {
   color: var(--text-disabled);
 }
 .tag-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  left: 0;
-  z-index: 5;
-  max-height: 208px;
-  overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;

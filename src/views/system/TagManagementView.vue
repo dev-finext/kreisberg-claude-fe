@@ -18,7 +18,37 @@ const cat = useCatalogStore();
 const ui = useUiStore();
 
 const catalog = computed(() => db.catalogs.find((c) => c.id === 2) || db.catalogs[0]);
-const active = ref(true);
+
+/* the catalog's name and פעיל are the catalog's own — the same ones the catalog
+   screen edits — not a copy that forgets itself */
+const renamingCatalog = ref(false);
+const catalogNameDraft = ref("");
+const catalogNameInput = ref(null);
+function startCatalogRename() {
+  if (!catalog.value) return;
+  catalogNameDraft.value = catalog.value.name;
+  renamingCatalog.value = true;
+  nextTick(() => catalogNameInput.value?.focus());
+}
+function commitCatalogRename() {
+  if (!renamingCatalog.value) return;
+  const name = catalogNameDraft.value.trim();
+  if (name && name !== catalog.value.name) {
+    catalog.value.name = name;
+    catalog.value.updatedAt = new Date().toISOString();
+    db.persist();
+    ui.toast("שם הקטלוג עודכן");
+  }
+  renamingCatalog.value = false;
+}
+const active = computed({
+  get: () => catalog.value?.active !== false,
+  set: (v) => {
+    if (!catalog.value) return;
+    catalog.value.active = v;
+    db.persist();
+  },
+});
 const search = ref("");
 
 /* ---------- tags panel ---------- */
@@ -145,8 +175,19 @@ function saveAll() {
       <!-- sub header -->
       <div class="sub-header">
         <div class="sh-end">
-          <h3 class="cat-name">{{ catalog?.name }}</h3>
-          <button class="icon-btn" title="שינוי שם קטלוג"><AppIcon name="pencil" :size="18" /></button>
+          <input
+            v-if="renamingCatalog"
+            ref="catalogNameInput"
+            v-model="catalogNameDraft"
+            class="rename-input"
+            @keyup.enter="commitCatalogRename"
+            @keyup.esc="renamingCatalog = false"
+            @blur="commitCatalogRename"
+          />
+          <h3 v-else class="cat-name" @dblclick="startCatalogRename">{{ catalog?.name }}</h3>
+          <button class="icon-btn" title="שינוי שם קטלוג" @click="startCatalogRename">
+            <AppIcon name="pencil" :size="18" />
+          </button>
           <span class="dot" />
           <span class="active-lbl">פעיל</span>
           <BaseToggle v-model="active" />
@@ -221,7 +262,7 @@ function saveAll() {
                 @click.stop
               />
               <span v-else class="tag-name ellipsis">{{ t.name }}</span>
-              <button class="tag-kebab" @click.stop="openTagMenu(t, $event)">
+              <button class="tag-kebab" title="פעולות" @click.stop="openTagMenu(t, $event)">
                 <AppIcon name="kebab" :size="16" />
               </button>
             </div>
@@ -361,6 +402,16 @@ function saveAll() {
   height: 4px;
   border-radius: 50%;
   background: var(--text-disabled);
+}
+.rename-input {
+  border: 1px solid #6952ef;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  outline: none;
+  width: 180px;
 }
 .active-lbl {
   font-size: 13px;

@@ -182,93 +182,95 @@ function projectStatus(p) {
     </PageHeader>
 
     <div class="card">
-      <!-- summary tiles -->
-      <div class="tiles">
-        <div class="tile">
-          <h3 class="tile-title">סוגי פרויקטים</h3>
-          <div class="tile-body types">
-            <div class="donut-wrap">
-              <svg width="96" height="96" viewBox="0 0 96 96">
-                <circle cx="48" cy="48" :r="R" fill="none" stroke="var(--divider)" stroke-width="9" />
-                <circle
-                  v-for="s in typeSegments"
-                  :key="s.name"
-                  cx="48"
-                  cy="48"
-                  :r="R"
-                  fill="none"
-                  :stroke="s.color"
-                  stroke-width="9"
-                  stroke-linecap="round"
-                  :stroke-dasharray="s.dasharray"
-                  :stroke-dashoffset="s.dashoffset"
-                  transform="rotate(-90 48 48)"
-                />
-                <text
-                  x="48"
-                  y="57"
-                  text-anchor="middle"
-                  font-size="26"
-                  font-weight="700"
-                  fill="var(--text-primary)"
-                >
-                  {{ totalProjects }}
-                </text>
-              </svg>
-            </div>
-            <div class="type-legend">
-              <div v-for="t in typeCounts" :key="t.name" class="tl-row">
-                <span class="tl-count num">{{ t.count }}</span>
-                <span class="tl-name">{{ t.name }}</span>
-                <span class="tl-dot" :style="{ background: t.color }" />
+      <!-- summary tiles: four in a row, or two by two where four do not fit -->
+      <div class="tiles-wrap">
+        <div class="tiles">
+          <div class="tile">
+            <h3 class="tile-title">סוגי פרויקטים</h3>
+            <div class="tile-body types">
+              <div class="donut-wrap">
+                <svg width="96" height="96" viewBox="0 0 96 96">
+                  <circle cx="48" cy="48" :r="R" fill="none" stroke="var(--divider)" stroke-width="9" />
+                  <circle
+                    v-for="s in typeSegments"
+                    :key="s.name"
+                    cx="48"
+                    cy="48"
+                    :r="R"
+                    fill="none"
+                    :stroke="s.color"
+                    stroke-width="9"
+                    stroke-linecap="round"
+                    :stroke-dasharray="s.dasharray"
+                    :stroke-dashoffset="s.dashoffset"
+                    transform="rotate(-90 48 48)"
+                  />
+                  <text
+                    x="48"
+                    y="57"
+                    text-anchor="middle"
+                    font-size="26"
+                    font-weight="700"
+                    fill="var(--text-primary)"
+                  >
+                    {{ totalProjects }}
+                  </text>
+                </svg>
+              </div>
+              <div class="type-legend">
+                <div v-for="t in typeCounts" :key="t.name" class="tl-row">
+                  <span class="tl-count num">{{ t.count }}</span>
+                  <span class="tl-name">{{ t.name }}</span>
+                  <span class="tl-dot" :style="{ background: t.color }" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="tile">
-          <h3 class="tile-title">שליחת תמחור SLA</h3>
-          <div class="tile-body sla-big">
-            <SlaDonut :sla="slaAgg" layout="tile" class="sla-scaled" />
+          <div class="tile">
+            <h3 class="tile-title">שליחת תמחור SLA</h3>
+            <div class="tile-body sla-big">
+              <SlaDonut :sla="slaAgg" layout="tile" class="sla-scaled" />
+            </div>
           </div>
-        </div>
 
-        <div class="tile">
-          <h3 class="tile-title">עדכונים</h3>
-          <div class="tile-body updates">
-            <svg width="90" height="64" viewBox="0 0 90 64" fill="none">
-              <ellipse cx="45" cy="54" rx="34" ry="6" fill="#EEF2FA" />
-              <path
-                d="M14 34L74 12l-18 34-12-10-8 14-4-16z"
-                stroke="#BBC5CF"
-                stroke-width="2"
-                fill="#fff"
-                stroke-linejoin="round"
-              />
-              <path d="M74 12L44 36" stroke="#BBC5CF" stroke-width="2" />
-              <path
-                d="M8 16c3-2 6 1 4 4M80 40c-3 2-6-1-4-4"
-                stroke="#DCE3EF"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
-            <p class="updates-empty">אין עדכונים חדשים</p>
+          <div class="tile">
+            <h3 class="tile-title">עדכונים</h3>
+            <div class="tile-body updates">
+              <svg width="90" height="64" viewBox="0 0 90 64" fill="none">
+                <ellipse cx="45" cy="54" rx="34" ry="6" fill="#EEF2FA" />
+                <path
+                  d="M14 34L74 12l-18 34-12-10-8 14-4-16z"
+                  stroke="#BBC5CF"
+                  stroke-width="2"
+                  fill="#fff"
+                  stroke-linejoin="round"
+                />
+                <path d="M74 12L44 36" stroke="#BBC5CF" stroke-width="2" />
+                <path
+                  d="M8 16c3-2 6 1 4 4M80 40c-3 2-6-1-4-4"
+                  stroke="#DCE3EF"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <p class="updates-empty">אין עדכונים חדשים</p>
+            </div>
           </div>
-        </div>
 
-        <div class="tile">
-          <h3 class="tile-title">סטטוס</h3>
-          <div class="tile-body statuses">
-            <div class="stepper">
-              <template v-for="(s, i) in statusSteps" :key="s.label">
-                <div class="step">
-                  <span class="step-dot" />
-                  <span class="step-count num">{{ s.count }}</span>
-                  <span class="step-pill" :class="s.cls">{{ s.label }}</span>
-                </div>
-                <span v-if="i < statusSteps.length - 1" class="step-line" />
-              </template>
+          <div class="tile">
+            <h3 class="tile-title">סטטוס</h3>
+            <div class="tile-body statuses">
+              <div class="stepper">
+                <template v-for="(s, i) in statusSteps" :key="s.label">
+                  <div class="step">
+                    <span class="step-dot" />
+                    <span class="step-count num">{{ s.count }}</span>
+                    <span class="step-pill" :class="s.cls">{{ s.label }}</span>
+                  </div>
+                  <span v-if="i < statusSteps.length - 1" class="step-line" />
+                </template>
+              </div>
             </div>
           </div>
         </div>
@@ -318,7 +320,7 @@ function projectStatus(p) {
             <td class="td-type" :title="p.typeName">
               <AppIcon :name="typeIcons[p.typeName] || 'type-other'" :size="20" />
             </td>
-            <td class="td-desc ellipsis">{{ p.description || "---" }}</td>
+            <td v-full-title class="td-desc ellipsis">{{ p.description || "---" }}</td>
             <td class="num">{{ formatDate(p.createdAt) }}</td>
             <td>
               <span class="pill pill-info">{{ projectStatus(p) }}</span>
@@ -346,12 +348,22 @@ function projectStatus(p) {
   min-height: calc(100vh - 130px);
 }
 /* tiles */
+.tiles-wrap {
+  container-type: inline-size;
+}
 .tiles {
   display: grid;
   grid-template-columns: 1.25fr 1.25fr 0.9fr 1.6fr;
   direction: rtl;
   gap: 16px;
   margin-bottom: 22px;
+}
+/* the SLA ring and the status chart have a width of their own; below the room
+   for all four, the tiles go two by two instead of pushing the page sideways */
+@container (max-width: 1010px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .tile {
   border: 1px solid var(--border);

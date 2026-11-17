@@ -536,7 +536,7 @@ function setActive(v) {
                         <span class="item-code">{{ item.code }}</span>
                       </td>
                       <td v-full-title class="td-name ellipsis">{{ item.name }}</td>
-                      <td class="td-desc ellipsis">{{ stripHtml(item.description) }}</td>
+                      <td v-full-title class="td-desc ellipsis">{{ stripHtml(item.description) }}</td>
                       <td>{{ item.unit }}</td>
                       <td>{{ resourceTypeName(item) }}</td>
                       <td class="num">{{ parentCode(item) }}</td>
