@@ -7,6 +7,7 @@ import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { anchorRect } from "@/utils/anchor";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import SlaDonut from "./SlaDonut.vue";
 import CreateBoqModal from "./CreateBoqModal.vue";
@@ -68,7 +69,7 @@ function openBoq(h) {
 }
 function openMenu(h, e) {
   const rect = e.currentTarget.getBoundingClientRect();
-  menu.value = { header: h, x: rect.left - 180, y: rect.bottom + 4 };
+  menu.value = { header: h, x: rect.left - 180, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 const menuItems = [
   { key: "edit", label: "עריכה", icon: "pencil" },
@@ -246,6 +247,7 @@ function confirmDelete() {
       :items="menuItems"
       :x="menu.x"
       :y="menu.y"
+      :anchor="menu.anchor"
       @select="onMenuSelect"
       @close="menu = null"
     />

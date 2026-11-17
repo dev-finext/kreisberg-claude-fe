@@ -8,6 +8,7 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { anchorRect } from "@/utils/anchor";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 
 const route = useRoute();
@@ -80,7 +81,7 @@ function commitRename() {
 }
 function openMenu(m, e) {
   const rect = e.currentTarget.getBoundingClientRect();
-  menu.value = { mapping: m, x: rect.left - 150, y: rect.bottom + 4 };
+  menu.value = { mapping: m, x: rect.left - 150, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 function onMenu(key) {
   const m = menu.value.mapping;
@@ -309,6 +310,7 @@ function finishImport() {
       ]"
       :x="menu.x"
       :y="menu.y"
+      :anchor="menu.anchor"
       @select="onMenu"
       @close="menu = null"
     />

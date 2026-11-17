@@ -5,6 +5,7 @@ import { useUiStore } from "@/stores/ui";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { anchorRect } from "@/utils/anchor";
 import StructureTreeRow from "./StructureTreeRow.vue";
 import StructureElementModal from "./StructureElementModal.vue";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
@@ -44,7 +45,7 @@ function saveElement(data) {
 /* ---------- kebab ---------- */
 function openKebab({ node, event }) {
   const rect = event.currentTarget.getBoundingClientRect();
-  menu.value = { node, x: rect.left - 150, y: rect.bottom + 4 };
+  menu.value = { node, x: rect.left - 150, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 const kebabItems = [
   { key: "edit", label: "עריכה", icon: "pencil" },
@@ -222,6 +223,7 @@ function toggleChapterExpand(chId) {
       :items="kebabItems"
       :x="menu.x"
       :y="menu.y"
+      :anchor="menu.anchor"
       @select="onKebabSelect"
       @close="menu = null"
     />
