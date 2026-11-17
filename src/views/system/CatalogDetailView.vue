@@ -14,6 +14,7 @@ import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { anchorRect } from "@/utils/anchor";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import PriorityControl from "@/components/boq/PriorityControl.vue";
 import ChapterNotesModal from "@/components/boq/ChapterNotesModal.vue";
@@ -282,7 +283,7 @@ function confirmDeleteItems() {
 /* per-row kebab (shows on hover, like the master list) */
 function openRowMenu(item, e) {
   const rect = e.currentTarget.getBoundingClientRect();
-  rowMenu.value = { item, x: rect.left - 120, y: rect.bottom + 4 };
+  rowMenu.value = { item, x: rect.left - 120, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 function onRowMenu(key) {
   const item = rowMenu.value.item;
@@ -663,6 +664,7 @@ function setActive(v) {
       ]"
       :x="rowMenu.x"
       :y="rowMenu.y"
+      :anchor="rowMenu.anchor"
       @select="onRowMenu"
       @close="rowMenu = null"
     />

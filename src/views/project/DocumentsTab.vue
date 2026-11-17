@@ -8,6 +8,7 @@ import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { anchorRect } from "@/utils/anchor";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import BaseModal from "@/components/shared/BaseModal.vue";
 import AddDocumentModal from "@/components/project/AddDocumentModal.vue";
@@ -101,7 +102,7 @@ function saveFolder() {
 }
 function openFolderMenu(f, e) {
   const rect = e.currentTarget.getBoundingClientRect();
-  folderMenu.value = { folder: f, x: rect.left - 150, y: rect.bottom + 4 };
+  folderMenu.value = { folder: f, x: rect.left - 150, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 function onFolderMenu(key) {
   const f = folderMenu.value.folder;
@@ -128,7 +129,7 @@ const rowMenu = ref(null);
 const deleteTarget = ref(null); // doc or 'checked'
 function openRowMenu(d, e) {
   const rect = e.currentTarget.getBoundingClientRect();
-  rowMenu.value = { doc: d, x: rect.left - 150, y: rect.bottom + 4 };
+  rowMenu.value = { doc: d, x: rect.left - 150, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 function onRowMenu(key) {
   const d = rowMenu.value.doc;
@@ -299,6 +300,7 @@ function confirmDelete() {
       ]"
       :x="folderMenu.x"
       :y="folderMenu.y"
+      :anchor="folderMenu.anchor"
       @select="onFolderMenu"
       @close="folderMenu = null"
     />
@@ -310,6 +312,7 @@ function confirmDelete() {
       ]"
       :x="rowMenu.x"
       :y="rowMenu.y"
+      :anchor="rowMenu.anchor"
       @select="onRowMenu"
       @close="rowMenu = null"
     />

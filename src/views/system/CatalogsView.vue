@@ -8,6 +8,7 @@ import PageHeader from "@/components/layout/PageHeader.vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { anchorRect } from "@/utils/anchor";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 import { useFlash } from "@/composables/useFlash";
@@ -62,7 +63,7 @@ const MENU_ITEMS = [
 
 function openMenu(c, e) {
   const rect = e.currentTarget.getBoundingClientRect();
-  menu.value = { catalog: c, x: rect.left - 160, y: rect.bottom + 4 };
+  menu.value = { catalog: c, x: rect.left - 160, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 function onMenu(key) {
   const c = menu.value.catalog;
@@ -255,6 +256,7 @@ function confirmDelete() {
       :items="MENU_ITEMS"
       :x="menu.x"
       :y="menu.y"
+      :anchor="menu.anchor"
       @select="onMenu"
       @close="menu = null"
     />

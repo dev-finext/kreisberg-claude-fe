@@ -11,6 +11,7 @@ import PriorityControl from "./PriorityControl.vue";
 import ItemRowPanel from "./ItemRowPanel.vue";
 import EmptyClipboard from "@/components/shared/EmptyClipboard.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { anchorRect } from "@/utils/anchor";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { formatQty } from "@/utils/format";
 import { stripHtml } from "@/utils/html";
@@ -265,7 +266,7 @@ function confirmDeleteRow() {
 }
 function openRowMenu(r, e) {
   const rect = e.currentTarget.getBoundingClientRect();
-  rowMenu.value = { row: r, x: rect.left - 160, y: rect.bottom + 4 };
+  rowMenu.value = { row: r, x: rect.left - 160, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 const rowMenuItems = [
   { key: "edit", label: "עריכה", icon: "pencil" },
@@ -668,6 +669,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
       :items="rowMenuItems"
       :x="rowMenu.x"
       :y="rowMenu.y"
+      :anchor="rowMenu.anchor"
       @select="onRowMenu"
       @close="rowMenu = null"
     />

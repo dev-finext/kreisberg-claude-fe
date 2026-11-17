@@ -9,6 +9,7 @@ import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 import BaseToggle from "@/components/shared/BaseToggle.vue";
 import SearchPill from "@/components/shared/SearchPill.vue";
 import ContextMenu from "@/components/shared/ContextMenu.vue";
+import { anchorRect } from "@/utils/anchor";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal.vue";
 import { useFlash } from "@/composables/useFlash";
 
@@ -63,7 +64,7 @@ function commitTag() {
 }
 function openTagMenu(tag, e) {
   const rect = e.currentTarget.getBoundingClientRect();
-  tagMenu.value = { tag, x: rect.left - 150, y: rect.bottom + 4 };
+  tagMenu.value = { tag, x: rect.left - 150, y: rect.bottom + 4, anchor: anchorRect(rect) };
 }
 function onTagMenu(key) {
   const t = tagMenu.value.tag;
@@ -297,6 +298,7 @@ function saveAll() {
       ]"
       :x="tagMenu.x"
       :y="tagMenu.y"
+      :anchor="tagMenu.anchor"
       @select="onTagMenu"
       @close="tagMenu = null"
     />
