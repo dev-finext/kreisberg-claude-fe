@@ -108,6 +108,13 @@ const pickerTaken = computed(() => [
   ...(elementSelected.value ? boq.itemIdsInSelectedElement : boq.itemIdsInBoq),
 ]);
 
+/* why הדבק is off: nothing copied yet, no structure in focus, or the one they came from */
+const pasteHint = computed(() => {
+  if (!ui.clipboard.seiIds.length) return "העתק סעיפים כדי להדביק אותם";
+  if (!elementSelected.value) return "בחר מבנה מהרשימה כדי להדביק";
+  return "בחר מבנה אחר מזה שממנו הועתקו הסעיפים";
+});
+
 function openPicker() {
   if (!header.value?.catalogId) {
     ui.toast("לא נמצא קטלוג משויך", "error");
@@ -185,7 +192,7 @@ function deleteChecked() {
     <!-- document bar: title side first (rightmost in RTL) -->
     <div class="doc-bar">
       <div class="doc-end">
-        <h3 class="doc-title">{{ header?.name }}</h3>
+        <h3 v-full-title class="doc-title ellipsis">{{ header?.name }}</h3>
         <template v-for="(c, i) in chips" :key="i">
           <span class="chip">{{ c }}</span>
           <span class="chip-dot" />
@@ -228,15 +235,30 @@ function deleteChecked() {
             <AppIcon name="plus-circle" :size="20" />
             <span>תגית</span>
           </button>
-          <button class="tb-btn" :disabled="!hasChecked" @click="deleteRowsConfirm = true">
+          <button
+            class="tb-btn"
+            :disabled="!hasChecked"
+            :title="hasChecked ? 'הסרת הסעיפים המסומנים' : 'סמן לפחות סעיף אחד כדי למחוק'"
+            @click="deleteRowsConfirm = true"
+          >
             <AppIcon name="trash" :size="18" />
             <span>מחק</span>
           </button>
-          <button class="tb-btn" :disabled="!pasteEnabled" @click="boq.pasteItems()">
+          <button
+            class="tb-btn"
+            :disabled="!pasteEnabled"
+            :title="pasteEnabled ? 'הדבקת הסעיפים שהועתקו למבנה זה' : pasteHint"
+            @click="boq.pasteItems()"
+          >
             <AppIcon name="paste" :size="18" />
             <span>הדבק</span>
           </button>
-          <button class="tb-btn" :disabled="!hasChecked" @click="boq.copyCheckedItems()">
+          <button
+            class="tb-btn"
+            :disabled="!hasChecked"
+            :title="hasChecked ? 'העתקת הסעיפים המסומנים' : 'סמן לפחות סעיף אחד כדי להעתיק'"
+            @click="boq.copyCheckedItems()"
+          >
             <AppIcon name="copy" :size="18" />
             <span>העתק</span>
           </button>
@@ -372,19 +394,25 @@ function deleteChecked() {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* on a narrow window the toolbar takes a line of its own under the title,
+     rather than being pushed off the window */
+  flex-wrap: wrap;
   min-height: 44px;
   margin-bottom: 6px;
-  gap: 12px;
+  gap: 8px 12px;
 }
 .doc-end {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-direction: row;
-  flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 .doc-start {
   min-width: 0;
+  /* alone on its line it keeps to the left, where it sits beside the title */
+  margin-inline-start: auto;
 }
 .doc-search {
   flex-shrink: 1;
@@ -395,6 +423,8 @@ function deleteChecked() {
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
+  min-width: 0;
+  max-width: 420px;
 }
 .chip {
   font-size: 12px;

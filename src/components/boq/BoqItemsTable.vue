@@ -371,7 +371,7 @@ const colCount = computed(() => (props.mode === SIDEBAR_MODE.ASSIGNMENT ? 9 : 8)
               <button v-if="r.sei" class="row-trash" title="הסרת סעיף" @click="deleteRow = r">
                 <AppIcon name="trash" :size="17" />
               </button>
-              <button class="row-kebab" @click="openRowMenu(r, $event)">
+              <button class="row-kebab" title="פעולות" @click="openRowMenu(r, $event)">
                 <AppIcon name="kebab" :size="16" />
               </button>
             </td>

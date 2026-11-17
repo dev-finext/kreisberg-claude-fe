@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useFloating } from "@/composables/useFloating";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import BaseCheckbox from "@/components/shared/BaseCheckbox.vue";
 
@@ -16,6 +17,24 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue", "clear"]);
 
 const openKey = ref(null);
+/* one list at a time, floating above the page against the filter that opened it */
+const anchor = ref(null);
+const menu = ref(null);
+const openDef = computed(() => props.defs.find((d) => d.key === openKey.value) || null);
+const { style: menuStyle } = useFloating(openKey, {
+  trigger: anchor,
+  panel: menu,
+  close: () => (openKey.value = null),
+  maxHeight: 260,
+});
+function toggleMenu(def, e) {
+  if (openKey.value === def.key) {
+    openKey.value = null;
+    return;
+  }
+  anchor.value = e.currentTarget;
+  openKey.value = def.key;
+}
 
 function selectionOf(key) {
   return props.modelValue[key] || [];
@@ -47,33 +66,39 @@ function clearAll() {
   <div class="filter-row">
     <div class="filters">
       <div v-for="def in defs" :key="def.key" class="filter">
-        <button class="filter-btn" @click.stop="openKey = openKey === def.key ? null : def.key">
+        <button
+          class="filter-btn"
+          :class="{ open: openKey === def.key }"
+          @click.stop="toggleMenu(def, $event)"
+        >
           <span class="f-label">{{ def.label }}</span>
           <span class="f-value">{{ valueLabel(def) }}</span>
           <AppIcon name="chevron-down" :size="14" />
         </button>
-        <div v-if="openKey === def.key" class="filter-menu scroll-slim" @mouseleave="openKey = null">
-          <label class="f-opt">
-            <BaseCheckbox
-              size="small"
-              :model-value="!selectionOf(def.key).length"
-              @update:model-value="(v) => setAll(def, v)"
-            />
-            <span>הכל</span>
-          </label>
-          <div class="f-divider" />
-          <label v-for="opt in def.options" :key="opt.value" class="f-opt">
-            <BaseCheckbox
-              size="small"
-              :model-value="selectionOf(def.key).includes(opt.value)"
-              @update:model-value="(v) => toggleOption(def, opt, v)"
-            />
-            <span class="ellipsis">{{ opt.label }}</span>
-          </label>
-          <p v-if="!def.options.length" class="f-empty">אין ערכים לסינון</p>
-        </div>
       </div>
     </div>
+    <Teleport to="body">
+      <div v-if="openDef" ref="menu" class="filter-menu scroll-slim" :style="menuStyle">
+        <label class="f-opt">
+          <BaseCheckbox
+            size="small"
+            :model-value="!selectionOf(openDef.key).length"
+            @update:model-value="(v) => setAll(openDef, v)"
+          />
+          <span>הכל</span>
+        </label>
+        <div class="f-divider" />
+        <label v-for="opt in openDef.options" :key="opt.value" class="f-opt">
+          <BaseCheckbox
+            size="small"
+            :model-value="selectionOf(openDef.key).includes(opt.value)"
+            @update:model-value="(v) => toggleOption(openDef, opt, v)"
+          />
+          <span v-full-title class="ellipsis">{{ opt.label }}</span>
+        </label>
+        <p v-if="!openDef.options.length" class="f-empty">אין ערכים לסינון</p>
+      </div>
+    </Teleport>
     <div class="filter-actions">
       <slot name="actions" />
       <button class="btn-text" @click="clearAll">ניקוי</button>
@@ -118,17 +143,11 @@ function clearAll() {
   font-weight: 600;
 }
 .filter-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 30;
   background: var(--surface);
   border-radius: 8px;
   box-shadow: var(--shadow-menu);
   padding: 6px;
-  width: 210px;
-  max-height: 260px;
-  overflow-y: auto;
+  width: 240px;
   display: flex;
   flex-direction: column;
 }

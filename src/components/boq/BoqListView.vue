@@ -159,7 +159,7 @@ function confirmDelete() {
                 </span>
               </td>
               <td class="td-name">{{ h.name }}</td>
-              <td class="td-detail ellipsis">{{ h.detail || "-" }}</td>
+              <td v-full-title class="td-detail ellipsis">{{ h.detail || "-" }}</td>
               <td class="num">{{ formatDate(h.exitDate) }}</td>
               <td><SlaDonut :sla="h.sla" /></td>
               <td>
@@ -174,7 +174,7 @@ function confirmDelete() {
               </td>
               <td class="td-notes ellipsis">{{ h.notes || "-" }}</td>
               <td class="td-kebab" @click.stop>
-                <button class="icon-btn" @click="openMenu(h, $event)">
+                <button class="icon-btn" title="פעולות" @click="openMenu(h, $event)">
                   <AppIcon name="kebab" :size="18" />
                 </button>
               </td>

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import AppIcon from "@/components/shared/AppIcon.vue";
+import { useFloating } from "@/composables/useFloating";
 
 /**
  * Rich-text editor drawn to the Figma "rich text" toolbar: 19 controls at 24px,
@@ -94,7 +95,16 @@ function run(cmd, value = null) {
   popover.value = null;
   emitChange();
 }
-function toggle(name) {
+/* the colour, emoji, alignment and list choices float above the page, centred
+   under their button, so a short editor (or the modal around it) cannot cut them */
+const popAnchor = ref(null);
+const popEl = ref(null);
+const { style: popStyle } = useFloating(
+  computed(() => !!popover.value),
+  { trigger: popAnchor, panel: popEl, close: () => (popover.value = null), align: "center" }
+);
+function toggle(name, e) {
+  if (e) popAnchor.value = e.currentTarget.closest(".rt-wrap") || e.currentTarget;
   popover.value = popover.value === name ? null : name;
 }
 
@@ -218,45 +228,66 @@ function onPaste(e) {
       </button>
 
       <span class="rt-wrap">
-        <button class="rt" :class="{ on: popover === 'fore' }" title="צבע טקסט" @click.stop="toggle('fore')">
+        <button
+          class="rt"
+          :class="{ on: popover === 'fore' }"
+          title="צבע טקסט"
+          @click.stop="toggle('fore', $event)"
+        >
           <AppIcon name="rt-text-color" :size="24" />
         </button>
-        <span v-if="popover === 'fore'" class="rt-pop swatches" @click.stop>
-          <button
-            v-for="c in TEXT_COLORS"
-            :key="c"
-            class="sw"
-            :style="{ background: c }"
-            :title="c"
-            @click="run('foreColor', c)"
-          />
-        </span>
+        <Teleport to="body">
+          <span v-if="popover === 'fore'" ref="popEl" class="rt-pop swatches" :style="popStyle" @click.stop>
+            <button
+              v-for="c in TEXT_COLORS"
+              :key="c"
+              class="sw"
+              :style="{ background: c }"
+              :title="c"
+              @click="run('foreColor', c)"
+            />
+          </span>
+        </Teleport>
       </span>
 
       <span class="rt-wrap">
-        <button class="rt" :class="{ on: popover === 'back' }" title="צבע הדגשה" @click.stop="toggle('back')">
+        <button
+          class="rt"
+          :class="{ on: popover === 'back' }"
+          title="צבע הדגשה"
+          @click.stop="toggle('back', $event)"
+        >
           <AppIcon name="rt-fill" :size="24" />
         </button>
-        <span v-if="popover === 'back'" class="rt-pop swatches" @click.stop>
-          <button
-            v-for="c in BACK_COLORS"
-            :key="c"
-            class="sw"
-            :class="{ none: c === 'transparent' }"
-            :style="{ background: c }"
-            :title="c === 'transparent' ? 'ללא' : c"
-            @click="run('hiliteColor', c)"
-          />
-        </span>
+        <Teleport to="body">
+          <span v-if="popover === 'back'" ref="popEl" class="rt-pop swatches" :style="popStyle" @click.stop>
+            <button
+              v-for="c in BACK_COLORS"
+              :key="c"
+              class="sw"
+              :class="{ none: c === 'transparent' }"
+              :style="{ background: c }"
+              :title="c === 'transparent' ? 'ללא' : c"
+              @click="run('hiliteColor', c)"
+            />
+          </span>
+        </Teleport>
       </span>
 
       <span class="rt-wrap">
-        <button class="rt" :class="{ on: popover === 'emoji' }" title="אימוג׳י" @click.stop="toggle('emoji')">
+        <button
+          class="rt"
+          :class="{ on: popover === 'emoji' }"
+          title="אימוג׳י"
+          @click.stop="toggle('emoji', $event)"
+        >
           <AppIcon name="rt-emoji" :size="24" />
         </button>
-        <span v-if="popover === 'emoji'" class="rt-pop emojis" @click.stop>
-          <button v-for="e in EMOJI" :key="e" class="em" @click="run('insertText', e)">{{ e }}</button>
-        </span>
+        <Teleport to="body">
+          <span v-if="popover === 'emoji'" ref="popEl" class="rt-pop emojis" :style="popStyle" @click.stop>
+            <button v-for="e in EMOJI" :key="e" class="em" @click="run('insertText', e)">{{ e }}</button>
+          </span>
+        </Teleport>
       </span>
 
       <button class="rt" :class="{ on: marks }" title="הצגת סימני עיצוב" @click="marks = !marks">
@@ -264,12 +295,19 @@ function onPaste(e) {
       </button>
 
       <span class="rt-wrap">
-        <button class="rt" :class="{ on: popover === 'align' }" title="יישור" @click.stop="toggle('align')">
+        <button
+          class="rt"
+          :class="{ on: popover === 'align' }"
+          title="יישור"
+          @click.stop="toggle('align', $event)"
+        >
           <AppIcon name="rt-align" :size="24" />
         </button>
-        <span v-if="popover === 'align'" class="rt-pop menu" @click.stop>
-          <button v-for="a in ALIGN" :key="a.cmd" class="mi" @click="run(a.cmd)">{{ a.label }}</button>
-        </span>
+        <Teleport to="body">
+          <span v-if="popover === 'align'" ref="popEl" class="rt-pop menu" :style="popStyle" @click.stop>
+            <button v-for="a in ALIGN" :key="a.cmd" class="mi" @click="run(a.cmd)">{{ a.label }}</button>
+          </span>
+        </Teleport>
       </span>
 
       <span class="rt-wrap">
@@ -277,15 +315,17 @@ function onPaste(e) {
           class="rt"
           :class="{ on: popover === 'ol' || active.insertOrderedList }"
           title="רשימה ממוספרת"
-          @click.stop="toggle('ol')"
+          @click.stop="toggle('ol', $event)"
         >
           <AppIcon name="rt-ol" :size="24" />
         </button>
-        <span v-if="popover === 'ol'" class="rt-pop menu" @click.stop>
-          <button v-for="s in OL_STYLES" :key="s.v" class="mi" @click="applyList('insertOrderedList', s.v)">
-            {{ s.label }}
-          </button>
-        </span>
+        <Teleport to="body">
+          <span v-if="popover === 'ol'" ref="popEl" class="rt-pop menu" :style="popStyle" @click.stop>
+            <button v-for="s in OL_STYLES" :key="s.v" class="mi" @click="applyList('insertOrderedList', s.v)">
+              {{ s.label }}
+            </button>
+          </span>
+        </Teleport>
       </span>
 
       <span class="rt-wrap">
@@ -293,15 +333,22 @@ function onPaste(e) {
           class="rt"
           :class="{ on: popover === 'ul' || active.insertUnorderedList }"
           title="רשימת תבליטים"
-          @click.stop="toggle('ul')"
+          @click.stop="toggle('ul', $event)"
         >
           <AppIcon name="rt-ul" :size="24" />
         </button>
-        <span v-if="popover === 'ul'" class="rt-pop menu" @click.stop>
-          <button v-for="s in UL_STYLES" :key="s.v" class="mi" @click="applyList('insertUnorderedList', s.v)">
-            {{ s.label }}
-          </button>
-        </span>
+        <Teleport to="body">
+          <span v-if="popover === 'ul'" ref="popEl" class="rt-pop menu" :style="popStyle" @click.stop>
+            <button
+              v-for="s in UL_STYLES"
+              :key="s.v"
+              class="mi"
+              @click="applyList('insertUnorderedList', s.v)"
+            >
+              {{ s.label }}
+            </button>
+          </span>
+        </Teleport>
       </span>
 
       <button class="rt" title="הגדלת כניסה" @click="run('indent')">
@@ -401,11 +448,6 @@ function onPaste(e) {
   display: inline-flex;
 }
 .rt-pop {
-  position: absolute;
-  top: 30px;
-  right: 50%;
-  transform: translateX(50%);
-  z-index: 20;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;

@@ -105,7 +105,7 @@ function onDrop(e) {
       <span class="eye" :class="{ off: !node.visible }" @click.stop="boq.toggleElementVisibility(node.id)">
         <AppIcon :name="node.visible ? 'eye' : 'eye-closed'" :size="18" />
       </span>
-      <span class="kebab" @click.stop="emit('kebab', { node, event: $event })">
+      <span class="kebab" title="פעולות" @click.stop="emit('kebab', { node, event: $event })">
         <AppIcon name="kebab" :size="16" />
       </span>
     </span>

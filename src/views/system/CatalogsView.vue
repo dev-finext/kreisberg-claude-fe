@@ -234,7 +234,7 @@ function confirmDelete() {
             <td class="num">{{ formatDate(c.uploadedAt) }}</td>
             <td class="num">{{ formatStamp(c.updatedAt) }}</td>
             <td class="td-kebab" @click.stop>
-              <button class="icon-btn" @click="openMenu(c, $event)">
+              <button class="icon-btn" title="פעולות" @click="openMenu(c, $event)">
                 <AppIcon name="kebab" :size="16" />
               </button>
             </td>

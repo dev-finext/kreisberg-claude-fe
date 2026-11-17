@@ -327,7 +327,7 @@ function resetDemo() {
               class="act-line"
               @click="router.push(`/projects/${p.id}`)"
             >
-              <span class="act-main">{{ p.name }}</span>
+              <span v-full-title class="act-main">{{ p.name }}</span>
               <span class="act-meta">{{ p.location }}</span>
             </button>
             <p v-if="!myProjects.length" class="act-empty">אין פרויקטים רשומים על שמך</p>
@@ -336,7 +336,7 @@ function resetDemo() {
           <div class="act-col">
             <h4 class="act-title">ההערות האחרונות שלי</h4>
             <div v-for="c in myNotes" :key="c.id" class="act-line static">
-              <span class="act-main">{{ stripHtml(c.text) }}</span>
+              <span v-full-title class="act-main">{{ stripHtml(c.text) }}</span>
               <span class="act-meta">{{ noteScope(c) }} · {{ formatDateTime(c.ts) }}</span>
             </div>
             <p v-if="!myNotes.length" class="act-empty">עדיין לא כתבת הערות</p>
@@ -345,7 +345,7 @@ function resetDemo() {
           <div class="act-col">
             <h4 class="act-title">שינויים אחרונים</h4>
             <div v-for="h in myHistory" :key="h.id" class="act-line static">
-              <span class="act-main">{{ h.changes.length }} שדות עודכנו</span>
+              <span v-full-title class="act-main">{{ h.changes.length }} שדות עודכנו</span>
               <span class="act-meta">{{ formatDateTime(h.ts) }}</span>
             </div>
             <p v-if="!myHistory.length" class="act-empty">אין שינויים רשומים</p>

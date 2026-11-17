@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
+import { useFloating } from "@/composables/useFloating";
 import AppIcon from "@/components/shared/AppIcon.vue";
 import { PRIORITY_LABELS, PRIORITY_LEVELS } from "@/constants";
 
@@ -12,6 +13,14 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue"]);
 
 const open = ref(false);
+/* the list floats above the table, so the table's scroll area cannot cut it */
+const btn = ref(null);
+const menu = ref(null);
+const { style: menuStyle } = useFloating(open, {
+  trigger: btn,
+  panel: menu,
+  close: () => (open.value = false),
+});
 const label = computed(() => PRIORITY_LABELS[props.modelValue] || "מומלץ");
 const level = computed(() => PRIORITY_LEVELS[props.modelValue] || 2);
 
@@ -26,21 +35,23 @@ function choose(v) {
     <span v-for="i in 3" :key="i" class="sq" :class="{ on: i <= level }" />
   </div>
   <div v-else class="prio-dd" :class="{ disabled }">
-    <button class="prio-btn" :disabled="disabled" @click.stop="open = !open">
+    <button ref="btn" class="prio-btn" :disabled="disabled" @click.stop="open = !open">
       <span class="prio-label">{{ label }}</span>
       <AppIcon name="chevron-down" :size="14" />
     </button>
-    <div v-if="open" class="prio-menu" @mouseleave="open = false">
-      <button
-        v-for="(l, v) in PRIORITY_LABELS"
-        :key="v"
-        class="prio-opt"
-        :class="{ active: v === modelValue }"
-        @click.stop="choose(v)"
-      >
-        {{ l }}
-      </button>
-    </div>
+    <Teleport to="body">
+      <div v-if="open" ref="menu" class="prio-menu" :style="menuStyle">
+        <button
+          v-for="(l, v) in PRIORITY_LABELS"
+          :key="v"
+          class="prio-opt"
+          :class="{ active: v === modelValue }"
+          @click.stop="choose(v)"
+        >
+          {{ l }}
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -65,10 +76,6 @@ function choose(v) {
   cursor: not-allowed;
 }
 .prio-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 30;
   background: var(--surface);
   border-radius: 8px;
   box-shadow: var(--shadow-menu);
